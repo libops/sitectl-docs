@@ -3,7 +3,7 @@ title: Documentation
 description: How to edit, preview, and organize the Mintlify documentation in the sitectl repository.
 ---
 
-import { TUI } from "/docs/snippets/tui-tooltip.mdx";
+import { TUI } from "/snippets/tui-tooltip.mdx";
 
 The docs site is driven by Mintlify from this repository.
 
@@ -13,7 +13,7 @@ Mintlify reads:
 
 - [docs.json](https://github.com/libops/sitectl/blob/main/docs.json) for navigation and site settings
 - [index.mdx](https://github.com/libops/sitectl/blob/main/index.mdx) for the homepage
-- files under [`docs/`](https://github.com/libops/sitectl/tree/main/docs) for the rest of the documentation
+- files under the [repository root](https://github.com/libops/sitectl/tree/main) for the rest of the documentation
 
 ## Local development
 
@@ -39,7 +39,7 @@ make docs-host
 
 When you update the docs:
 
-- keep pages in `docs/` unless the page is the root homepage, which lives at `index.mdx`
+- keep pages at the root unless the page is the root homepage, which lives at `index.mdx`
 - preserve the existing nav structure in `docs.json` and only add to it when needed
 - use MDX for new pages
 - keep contributor and operator guidance in the docs site instead of reviving `CONTRIBUTING.md`
