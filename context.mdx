@@ -1,0 +1,136 @@
+---
+title: Context
+description: How sitectl models sites, environments, and the saved connection information for each one.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import { SSH } from "/snippets/ssh-tooltip.mdx";
+import { YAML } from "/snippets/yaml-tooltip.mdx";
+
+A **context** is sitectl's saved record of how to reach a specific environment for a specific site.
+
+## The model
+
+sitectl organizes around three concepts:
+
+- A **site** is the project itself, for example `museum`.
+- An **environment** is where that site runs: `local`, `staging`, `prod`, and so on.
+- A **context** is the saved connection record for a site/environment pair.
+
+A single site typically has multiple contexts:
+
+```
+museum-local    → Docker running on your own machine
+museum-staging  → Docker on a remote server, reached over SSH
+museum-prod     → Docker on a production server, reached over SSH
+```
+
+Contexts are stored in a <YAML /> file at `~/.sitectl/config.yaml` and include everything sitectl needs to connect and operate: the <Compose /> project location, environment files, and for remote environments, the <SSH /> connection details.
+
+## Local vs remote
+
+**Local contexts** connect directly to Docker on your own machine. This is the standard setup for development.
+
+**Remote contexts** send Docker commands through an encrypted <SSH /> tunnel to a server. From your perspective the commands work the same way because sitectl handles the connection. You use `sitectl compose ps` whether the site is running locally or on a production server.
+
+## Context autodiscovery
+
+sitectl can infer the active context from your current working directory. If your terminal is inside a project directory that matches a context's project directory, sitectl uses that context automatically.
+
+The resolution order is:
+
+1. An explicit `--context` flag on the command
+2. A plugin claim for the current <Compose /> project directory
+3. The `current-context` set in `~/.sitectl/config.yaml`
+
+When your shell is inside a supported project checkout, the owning plugin can claim that directory by inspecting the Compose services and any stack-specific files. For example, an ISLE checkout has a `drupal` service and Islandora packages in `composer.json`, so the ISLE plugin can claim it.
+
+After a plugin claims the checkout, sitectl first looks for a saved local context with the same canonical project directory and plugin. If no saved local context exists, sitectl creates a transient in-memory context named `.` for the command. This does not write to `~/.sitectl/config.yaml`. You can use it explicitly:
+
+```bash
+cd /path/to/isle
+sitectl set iiif triplet
+sitectl component describe --context .
+```
+
+sitectl prints the detected project and plugin claim to stderr so you can see when the current working directory chose the context. If no plugin claims the directory, sitectl falls back to the configured default context. If a plugin-specific command is being run and the default context belongs to a different plugin, sitectl stops instead of running against the wrong stack.
+
+## Managing contexts
+
+The `sitectl config` subcommands manage your contexts.
+
+<Steps>
+  <Step title="View all contexts">
+    ```bash
+    sitectl config get-contexts
+    ```
+  </Step>
+  <Step title="Inspect a single context">
+    ```bash
+    sitectl config view museum-prod
+    ```
+  </Step>
+  <Step title="Switch the active context">
+    ```bash
+    sitectl config use-context museum-staging
+    ```
+  </Step>
+  <Step title="Delete a context">
+    ```bash
+    sitectl config delete-context museum-old
+    ```
+  </Step>
+</Steps>
+
+You can also create contexts interactively through the TUI when you connect to or create a site for the first time.
+
+## Targeting a specific context per command
+
+Any sitectl command accepts `--context` to target a specific environment without changing your current context:
+
+```bash
+sitectl compose logs --context museum-prod
+sitectl drupal drush cron --context museum-staging
+sitectl validate --context museum-prod
+```
+
+## Context fields
+
+<AccordionGroup>
+  <Accordion title="Core fields">
+
+    | Field | Description |
+    |---|---|
+    | `name` | Unique context identifier |
+    | `site` | Site name this context belongs to |
+    | `plugin` | The sitectl plugin that owns this context (e.g. `drupal`, `isle`) |
+    | `project-dir` | Absolute path to the <Compose /> project directory on the host |
+    | `docker-socket` | Path to the Docker socket (the file Docker listens on for commands) |
+    | `project-name` | Human-readable project name |
+    | `compose-project-name` | Value injected as `COMPOSE_PROJECT_NAME` |
+
+  </Accordion>
+  <Accordion title="Compose fields">
+
+    | Field | Description |
+    |---|---|
+    | `compose-file` | One or more <Compose /> file paths, injected as `-f` flags |
+    | `env-file` | One or more environment file paths, injected as `--env-file` flags |
+    | `compose-network` | Docker network name used to resolve service addresses |
+
+  </Accordion>
+  <Accordion title="Remote (SSH) fields">
+
+    | Field | Description |
+    |---|---|
+    | `ssh-hostname` | The server address to connect to |
+    | `ssh-user` | Your username on that server |
+    | `ssh-port` | SSH port (default: 22) |
+    | `ssh-key-path` | Path to your SSH private key file |
+
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Context names are case-insensitive when looked up by name.
+</Note>

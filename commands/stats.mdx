@@ -1,0 +1,38 @@
+---
+title: stats
+description: Print ingress URLs, published ports, and container runtime stats.
+---
+
+import StatsCmd from "/snippets/commands/sitectl-stats.mdx";
+
+Use `stats` when a script or operator needs the current public URL and runtime
+state for an active site. The command always prints pretty JSON. It combines the
+active context, plugin-declared ingress routes, Traefik router configuration,
+published host ports, and Docker container stats into one report.
+
+`ingress.public_url` is the primary application URL. Plugins may also return
+additional routes in `ingress.routes`, such as ArchivesSpace API/OAI endpoints
+or ISLE Fedora and IIIF endpoints. Each route includes a `status` so callers can
+tell whether the URL was resolved from Traefik or fell back to plugin defaults.
+
+The `ingress.ports` entries show the host port for Traefik's HTTP and HTTPS
+entrypoints. If Traefik is running, the port reflects the live container
+binding. If the stack is powered off, `state: "would_publish"` shows the port
+Compose would publish if the project started right now.
+
+## Reference
+
+<StatsCmd />
+
+## Common workflows
+
+```bash
+# Print the active context stats
+sitectl stats
+
+# Print stats for a checked-out project without switching contexts
+sitectl stats --path .
+
+# Read the primary public URL from JSON
+sitectl stats --format json | jq -r '.ingress.public_url'
+```

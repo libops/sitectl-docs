@@ -1,0 +1,37 @@
+---
+title: LibOps plugin
+description: LibOps platform workflows for authentication, organizations, projects, Sites, access controls, domains, runtime operations, and Task Agent tasks.
+---
+
+The LibOps plugin adds platform management commands to `sitectl`. The plugin binary is `sitectl-libops`; when installed through sitectl, commands run under the `libops` namespace.
+
+```bash
+sitectl libops login
+sitectl libops whoami
+```
+
+Use `--api-url` when you need to point at a non-default LibOps API endpoint.
+
+General Docker operations are handled by core `sitectl`, not the LibOps plugin. Use [`sitectl compose`](/commands/compose) and [`sitectl port-forward`](/commands/port-forward) for context-aware Docker operations.
+
+Use this section for LibOps plugin command syntax. For the platform resource model and broader operating surfaces, see [Resource Hierarchy](https://docs.libops.io/platform/resource-hierarchy) and [API and sitectl](https://docs.libops.io/platform/api-cli) in the main LibOps docs.
+
+## Terminology
+
+The LibOps dashboard labels the API resources as **Organizations**, **Projects**, and **Sites**. Core `sitectl` context documentation often uses **environment** for the runtime target behind a Site. The plugin supports both views:
+
+```bash
+sitectl libops list sites
+sitectl libops list environments
+```
+
+Both commands list the same LibOps Site records; `sites` matches the dashboard and `environments` matches the sitectl context model.
+
+## Commands
+
+- [Authentication](/plugins/libops/authentication) for browser login, session inspection, logout, account profile updates, SSH keys, and API keys
+- [Resources](/plugins/libops/resources) for organizations, projects, Sites, and environment listing
+- [Access controls](/plugins/libops/access-controls) for members, firewall rules, secrets, and settings
+- [Domains](/plugins/libops/domains) for custom Site domains
+- [Runtime workflows](/plugins/libops/runtime) for ping, SSH, checkout, and context updates
+- [Task Agent](/plugins/libops/task) for creating, inspecting, replying to, and canceling coding-agent tasks

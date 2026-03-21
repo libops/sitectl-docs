@@ -1,0 +1,40 @@
+---
+title: Solr service commands
+description: Core sitectl Solr operations and service inspection helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import StatusCmd from "/snippets/commands/sitectl-solr-status.mdx";
+import InfoCmd from "/snippets/commands/sitectl-solr-info.mdx";
+
+Solr is a core `sitectl` service namespace. Operators use `sitectl solr ...` from any context whose <Compose /> project has a Solr service.
+
+## Status
+
+Check the Solr container state:
+
+```bash
+sitectl solr status
+```
+
+## Info
+
+Run Solr's built-in status command inside the container:
+
+```bash
+sitectl solr info
+```
+
+Use `--service` when the Compose service is not named `solr`.
+
+Standalone Solr Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated Solr CLI plugin.
+
+## Reference
+
+### `status`
+
+<StatusCmd />
+
+### `info`
+
+<InfoCmd />

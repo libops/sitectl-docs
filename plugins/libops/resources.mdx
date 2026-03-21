@@ -1,0 +1,84 @@
+---
+title: Resources
+description: Create, inspect, update, list, and delete LibOps organizations, projects, and Sites.
+---
+
+The LibOps dashboard uses the resource names **Organizations**, **Projects**, and **Sites**.
+
+For the platform hierarchy behind these commands, see [Resource Hierarchy](https://docs.libops.io/platform/resource-hierarchy). For the dashboard-first provisioning path, see [Quickstart](https://docs.libops.io/quickstart).
+
+Core `sitectl` context docs often call a Site record an **environment**, because it is the runtime target for a site/codebase. The plugin keeps both commands available:
+
+```bash
+sitectl libops list sites
+sitectl libops list environments
+```
+
+Both call the LibOps Site API.
+
+## Create
+
+Create an organization, project, and Site:
+
+```bash
+sitectl libops create organization \
+  --name "Library" \
+  --location LOCATION_US \
+  --region us-central1
+
+sitectl libops create project \
+  --organization-id "$ORGANIZATION_ID" \
+  --name "Digital Collections" \
+  --region us-central1 \
+  --zone us-central1-f \
+  --machine-type e2-standard-2 \
+  --disk-size-gb 20
+
+sitectl libops create site \
+  --project-id "$PROJECT_ID" \
+  --name production \
+  --github-repository git@github.com:example/collections.git \
+  --github-ref heads/main \
+  --compose-path /mnt/disks/data/compose \
+  --compose-file docker-compose.yml \
+  --application-type islandora \
+  --up-cmd "sitectl compose up" \
+  --init-cmd "sitectl compose up" \
+  --rollout-cmd "sitectl compose build && sitectl compose up"
+```
+
+Site records define how LibOps finds and operates the repository, Compose files, and application lifecycle commands for that dashboard Site. `sitectl compose up` prepares declared init artifacts, builds missing local images when needed, and then starts the Compose stack.
+
+## List and get
+
+List resources across the account, or filter projects and Sites by parent resource:
+
+```bash
+sitectl libops list organizations
+sitectl libops list projects --organization-id "$ORGANIZATION_ID"
+sitectl libops list sites --project-id "$PROJECT_ID"
+sitectl libops list environments --project-id "$PROJECT_ID"
+
+sitectl libops get organization "$ORGANIZATION_ID"
+sitectl libops get project "$PROJECT_ID"
+sitectl libops get site "$SITE_ID"
+```
+
+List commands use the local resource cache by default. Pass `--no-cache` when you need fresh API results.
+
+## Edit and delete
+
+Update supported resource fields in place:
+
+```bash
+sitectl libops edit organization "$ORGANIZATION_ID" --name "Library Services"
+sitectl libops edit project "$PROJECT_ID" --machine-type e2-standard-4 --disk-size-gb 50
+sitectl libops edit site "$SITE_ID" --github-ref heads/main
+```
+
+Delete commands prompt before removing resources. Pass `--yes` for automation:
+
+```bash
+sitectl libops delete site "$SITE_ID"
+sitectl libops delete project "$PROJECT_ID" --yes
+```

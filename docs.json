@@ -1,0 +1,297 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "sitectl",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#07C983",
+    "dark": "#15803D"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Home",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "index",
+              "install",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "tui",
+              "context",
+              "apps",
+              "plugins",
+              "components"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              {
+                "group": "Setup",
+                "expanded": true,
+                "pages": [
+                  "commands/create",
+                  "commands/config"
+                ]
+              },
+              {
+                "group": "Workflow",
+                "expanded": true,
+                "pages": [
+                  "commands/validate",
+                  "commands/verify",
+                  "commands/converge",
+                  "commands/set",
+                  "commands/deploy"
+                ]
+              },
+              {
+                "group": "Operations",
+                "expanded": true,
+                "pages": [
+                  "commands/job",
+                  "commands/image",
+                  "commands/compose"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "expanded": true,
+                "pages": [
+                  "commands/healthcheck",
+                  "commands/stats",
+                  "commands/debug",
+                  "commands/port-forward",
+                  "commands/sequelace"
+                ]
+              },
+              {
+                "group": "Advanced",
+                "expanded": true,
+                "pages": [
+                  "commands/component"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Core service commands",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "plugins/core-services"
+            ]
+          },
+          {
+            "group": "MariaDB",
+            "pages": [
+              "plugins/mariadb"
+            ]
+          },
+          {
+            "group": "Memcached",
+            "pages": [
+              "plugins/memcached"
+            ]
+          },
+          {
+            "group": "Solr",
+            "pages": [
+              "plugins/solr"
+            ]
+          },
+          {
+            "group": "Traefik",
+            "pages": [
+              "plugins/traefik"
+            ]
+          },
+          {
+            "group": "Triplet",
+            "pages": [
+              "plugins/triplet"
+            ]
+          },
+          {
+            "group": "Valkey",
+            "pages": [
+              "plugins/valkey"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Application plugins",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "plugins/applications"
+            ]
+          },
+          {
+            "group": "ArchivesSpace",
+            "pages": [
+              "plugins/archivesspace",
+              "plugins/archivesspace/lifecycle",
+              "plugins/archivesspace/api",
+              "plugins/archivesspace/resources",
+              "plugins/archivesspace/scripts"
+            ]
+          },
+          {
+            "group": "Drupal",
+            "pages": [
+              "plugins/drupal",
+              "plugins/drupal/drush",
+              "plugins/drupal/dev",
+              "plugins/drupal/sync",
+              "plugins/drupal/uli"
+            ]
+          },
+          {
+            "group": "Islandora",
+            "pages": [
+              "plugins/isle",
+              "plugins/isle/fcrepo",
+              "plugins/isle/blazegraph",
+              "plugins/isle/iiif",
+              "plugins/isle/derivatives",
+              "plugins/isle/sync",
+              "plugins/isle/cache"
+            ]
+          },
+          {
+            "group": "Omeka Classic",
+            "pages": [
+              "plugins/omeka-classic",
+              "plugins/omeka-classic/lifecycle",
+              "plugins/omeka-classic/api",
+              "plugins/omeka-classic/resources"
+            ]
+          },
+          {
+            "group": "Omeka S",
+            "pages": [
+              "plugins/omeka-s",
+              "plugins/omeka-s/lifecycle",
+              "plugins/omeka-s/api",
+              "plugins/omeka-s/resources"
+            ]
+          },
+          {
+            "group": "OJS",
+            "pages": [
+              "plugins/ojs",
+              "plugins/ojs/lifecycle",
+              "plugins/ojs/tools",
+              "plugins/ojs/pkp-tools"
+            ]
+          },
+          {
+            "group": "WordPress",
+            "pages": [
+              "plugins/wordpress",
+              "plugins/wordpress/lifecycle",
+              "plugins/wordpress/wp-cli",
+              "plugins/wordpress/composer",
+              "plugins/wordpress/plugins-themes",
+              "plugins/wordpress/core-cache-db"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "LibOps plugin",
+        "groups": [
+          {
+            "group": "LibOps plugin",
+            "pages": [
+              "plugins/libops"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "plugins/libops/authentication"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "plugins/libops/resources"
+            ]
+          },
+          {
+            "group": "Task Agent",
+            "pages": [
+              "plugins/libops/task"
+            ]
+          },
+          {
+            "group": "Runtime workflows",
+            "pages": [
+              "plugins/libops/runtime"
+            ]
+          },
+          {
+            "group": "Access controls",
+            "pages": [
+              "plugins/libops/access-controls"
+            ]
+          },
+          {
+            "group": "Domains",
+            "pages": [
+              "plugins/libops/domains"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contributing",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/index",
+              "contributing/docs",
+              "contributing/architecture",
+              "contributing/plugin-hierarchy",
+              "contributing/compose-reconcile",
+              "contributing/app-template",
+              "contributing/components",
+              "contributing/service-components",
+              "contributing/development"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/libops-light.png",
+    "dark": "/logo/libops-dark.png"
+  },
+  "contextual": {
+    "options": [
+      "copy"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/libops/sitectl"
+    }
+  }
+}

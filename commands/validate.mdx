@@ -1,0 +1,38 @@
+---
+title: validate
+description: Validate the active context's configuration and project layout.
+---
+
+import ValidateCmd from "/snippets/commands/sitectl-validate.mdx";
+
+Run `validate` to catch configuration and project layout problems before they
+become runtime failures. It combines core sitectl checks with plugin-specific
+configuration checks in a single report.
+
+## Reference
+
+<ValidateCmd />
+
+## Output formats
+
+The `--format` flag controls how the report is rendered:
+
+| Format | Description |
+|--------|-------------|
+| `section` | Human-readable sections (default) |
+| `table` | Compact table |
+| `json` | Machine-readable JSON |
+| `yaml` | Machine-readable YAML |
+
+## When to run it
+
+- After `sitectl config set-context` to verify the new context is wired correctly.
+- Before deploying to confirm component state is consistent.
+- After changing `ingress` trusted IPs to confirm Traefik trusted IPs match app nginx real-IP settings.
+- When `sitectl compose up` fails with an unexpected error. Validate often points to the root cause.
+
+## Plugin validators
+
+If the active context's plugin registers a validate handler, its checks are merged automatically into the same report. For the ISLE plugin this includes: Drupal rootfs path, Traefik configuration, and per-component drift state.
+
+Plugin-specific flags such as `--codebase-rootfs` are promoted into typed RPC params when the core contract owns them. Other plugin-specific flags are passed through to the plugin's validator unchanged.

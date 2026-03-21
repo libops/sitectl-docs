@@ -1,0 +1,43 @@
+---
+title: sitectl
+description: Command line utility to interact with your local and remote Docker Compose sites.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import { TUI } from "/snippets/tui-tooltip.mdx";
+
+## Overview
+
+`sitectl` is a command-line utility for operating local and remote <Compose /> sites, built for the application stacks common in <Tooltip headline="LAC-GLAM" tip="Libraries, Archives, and Museums, plus the broader cultural heritage sector.">LAC-GLAM</Tooltip> institutions.
+
+The underlying application templates are still normal <Compose /> projects. If your team wants to copy a template and run it with the Docker Compose CLI on your own hardware, that should be a clean and documented path. `sitectl` becomes useful when you want saved contexts, app-aware plugin commands, service helpers, logs, rollouts, validation, and remote operations without leaving the Compose model.
+
+## Helping operators cover more ground
+
+`sitectl` is not about scaling servers for its own sake. It is about helping a small technical team operate more sites with less repeated work.
+
+By putting common <Compose /> operations behind repeatable commands, `sitectl` helps:
+* **Institutions:** Run the software they depend on without relying solely on a dedicated DevOps team.
+* **Individual contributors:** Spend less time on environment toil and more time on application work.
+
+
+## Turn best practices into code
+
+`sitectl` helps you operate sites and turns production <Compose /> practices into commands you can repeat.
+
+The more institutional knowledge that lives in the tool, the less it depends on any one person.
+
+<Columns cols={2}>
+  <Card title="Interactive operations" icon="terminal">
+    Use the <TUI /> for routine site setup, monitoring, and operator workflows.
+  </Card>
+  <Card title="Contexts" icon="server">
+    Track local and remote environments so sitectl can understand where a site lives and how to reach it.
+  </Card>
+  <Card title="Plugins" icon="plug">
+    Add stack-specific behavior for common technologies without abandoning the core <Compose /> workflow.
+  </Card>
+  <Card title="Components" icon="database">
+    Model reviewed stack defaults and operator choices in a more structured way than ad hoc <Compose /> notes.
+  </Card>
+</Columns>

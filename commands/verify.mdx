@@ -1,0 +1,62 @@
+---
+title: verify
+description: Run plugin behavioral verification checks for the active site.
+---
+
+import VerifyCmd from "/snippets/commands/sitectl-verify.mdx";
+
+Think of the checks in three layers: `validate` is for configuration and project
+layout, `healthcheck` is a basic status check for the running application, and
+`verify` is the healthcheck layer plus additional plugin-owned functionality
+tests.
+
+Use `verify` in CI after site updates to make sure important site behavior still
+works, beyond confirming that containers are running.
+
+## Reference
+
+<VerifyCmd />
+
+## Output formats
+
+The `--format` flag controls how the report is rendered:
+
+| Format | Description |
+|--------|-------------|
+| `section` | Human-readable sections (default) |
+| `table` | Compact table |
+| `json` | Machine-readable JSON |
+| `yaml` | Machine-readable YAML |
+
+## Common workflows
+
+```bash
+# Run the active plugin's default verification checks after an update
+sitectl verify
+
+# Render a compact CI-friendly report
+sitectl verify --format table
+
+# Verify expected Islandora component behavior
+sitectl verify --fcrepo off --iiif triplet --bot-mitigation on
+```
+
+Only failed results make the command exit non-zero. Warnings are rendered in the
+report but do not fail the command.
+
+## Plugin verification
+
+Core `sitectl` invokes the active context plugin's registered verify runner and
+renders the returned results with the same report formats used by `validate` and
+`healthcheck`. The plugin decides which functionality checks matter for that
+application.
+
+Flags that core does not consume are forwarded to the plugin's verify handler.
+For the Islandora plugin this includes expected-state flags such as `--fcrepo`,
+`--blazegraph`, `--iiif`, `--iiif-topology`, `--bot-mitigation`, and
+`--isle-file-system-uri`.
+
+Some plugin checks can intentionally mutate a disposable site. For example,
+Islandora's `--demo-objects` check creates demo content and verifies repository
+content grows, so it is meant for CI, preview, development, or staging contexts
+rather than production.

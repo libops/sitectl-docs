@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Copy the Drupal configuration from a source context to a target context.
+
+This exports config as a tarball from the source, transfers it, and imports it on the target
+using drush cim.
+
+```bash
+sitectl drupal sync config
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--drupal-rootfs` |   | Path to the Drupal web root on the target, relative to the project directory. |
+| `--source` |   | Source sitectl context. |
+| `--target` |   | Target sitectl context. |

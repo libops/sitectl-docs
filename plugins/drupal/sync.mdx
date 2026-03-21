@@ -1,0 +1,31 @@
+---
+title: sync
+description: Copy Drupal artifacts between sitectl contexts.
+---
+
+import DrupalSyncDatabase from "/snippets/commands/sitectl-drupal-sync-database.mdx";
+import DrupalSyncConfig from "/snippets/commands/sitectl-drupal-sync-config.mdx";
+
+Use `sync` to pull production data down to a local context for development, or to promote content between environments.
+
+## sync database
+
+<DrupalSyncDatabase />
+
+## sync config
+
+<DrupalSyncConfig />
+
+## Typical workflow
+
+Pull the production database to your local context before starting a new feature:
+
+```bash
+sitectl drupal sync database --source prod --target local
+```
+
+After updating configuration locally, push it back up:
+
+```bash
+sitectl drupal sync config --source local --target stage
+```

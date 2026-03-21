@@ -1,0 +1,28 @@
+---
+title: lifecycle
+description: Build, start, stop, inspect, and roll out an Omeka S stack with core sitectl commands.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Omeka S does not define its own lifecycle commands. Like every application plugin, an
+Omeka S stack is built, started, stopped, inspected, and rolled out with the **core**
+`sitectl` commands, which operate on whichever context is active:
+
+```bash
+sitectl create omeka-s        # scaffold the stack and its context
+sitectl compose build         # build images
+sitectl compose up -d         # start the stack
+sitectl compose ps            # service status
+sitectl compose logs -f       # follow logs
+sitectl compose down          # stop the stack
+sitectl deploy                # pull updates and restart (rollout)
+```
+
+`sitectl omeka-s ...` is reserved for Omeka S-specific operations. The
+[API helpers](/plugins/omeka-s/api) and [resource shortcuts](/plugins/omeka-s/resources).
+General <Compose /> lifecycle stays in the core CLI so the same operational contract
+applies to every stack.
+
+See [`sitectl create`](/commands/create), [`sitectl compose`](/commands/compose), and
+[`sitectl deploy`](/commands/deploy) for the full lifecycle reference.

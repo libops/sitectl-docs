@@ -1,0 +1,20 @@
+---
+title: scripts
+description: Run ArchivesSpace container scripts from the active stack.
+---
+
+Run ArchivesSpace container scripts from `/archivesspace/scripts`:
+
+```bash
+sitectl archivesspace script setup-database
+sitectl archivesspace script backup
+```
+
+There are also named helpers for common scripts:
+
+```bash
+sitectl archivesspace setup-database
+sitectl archivesspace backup
+```
+
+Use `script` when you need to call another script by name. Script names are normalized to `.sh`, so `setup-database` and `setup-database.sh` both run `/archivesspace/scripts/setup-database.sh`.

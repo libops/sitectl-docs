@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Destroy local Compose containers, volumes, and plugin init state.
+
+This command runs `docker compose down -v`, removes init artifacts declared by
+the active plugin, and clears the local compose reconcile cache entry. It is
+destructive: database volumes, uploaded files stored in named volumes, generated
+secrets, certificates, and env files declared by the plugin can be lost.
+
+```bash
+sitectl compose clean
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--yes` | `false` | Skip the destructive confirmation prompt. |

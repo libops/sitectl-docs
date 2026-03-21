@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Sync a MariaDB database artifact between contexts
+
+```bash
+sitectl mariadb sync
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--backup-dir` | `/tmp/sitectl-mariadb-jobs/db-backup` | Directory on the source host used to cache backup artifacts |
+| `--database` |   | Database to sync instead of all databases |
+| `--fresh` | `false` | Always take a fresh backup instead of reusing one from today |
+| `--service` | `mariadb` | MariaDB compose service name |
+| `--source` |   | Source sitectl context |
+| `--target` |   | Target sitectl context |
+| `--yolo` | `false` | Skip the confirmation prompt before importing |

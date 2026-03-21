@@ -1,0 +1,42 @@
+---
+title: core, cache, and database
+description: Run common WordPress core, cache, and database maintenance helpers.
+---
+
+import CoreCmd from "/snippets/commands/sitectl-wp-core.mdx";
+import CacheCmd from "/snippets/commands/sitectl-wp-cache.mdx";
+import DbCmd from "/snippets/commands/sitectl-wp-db.mdx";
+
+Run common maintenance commands:
+
+```bash
+sitectl wp core version
+sitectl wp core update-db
+sitectl wp cache flush
+sitectl wp db update
+```
+
+Export and import the database through the template Makefile:
+
+```bash
+sitectl wp db export /tmp/site.sql
+sitectl wp db import /tmp/site.sql
+```
+
+<Warning>
+  Importing a database replaces the target database. Use it only when the target environment can be overwritten.
+</Warning>
+
+## Reference
+
+### `core`
+
+<CoreCmd />
+
+### `cache`
+
+<CacheCmd />
+
+### `db`
+
+<DbCmd />

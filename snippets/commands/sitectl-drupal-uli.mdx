@@ -1,0 +1,18 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Generate a one-time login link and automatically open it in your default browser.
+
+This runs drush uli inside the Drupal container, captures the resulting URL, and opens it.
+Unlike running drush uli directly, this command handles browser launching for you.
+
+Examples:
+  sitectl isle uli           # Login as admin (user 1)
+  sitectl isle uli `--uid`=2   # Login as user ID 2
+
+```bash
+sitectl drupal uli
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--uid` | `1` | Drupal user ID to generate the login link for. |

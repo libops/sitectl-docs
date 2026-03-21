@@ -1,0 +1,27 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Pre-warm the Mirador IIIF viewer cache for paged content items.
+
+When the IIIF server has not yet cached a paged item's child images, the first visitor to that
+	page experiences slow load times while the server processes the images. This command fetches a
+	list of paged content URLs from either a JSON endpoint or a file, reads the Mirador settings
+	embedded in each page's Drupal settings JSON, and warms the related IIIF resources before real
+	visitors arrive.
+
+Pass exactly one of:
+  `--endpoint`   JSON endpoint returning URL objects
+  `--url-file`   text file with one URL per line
+
+```bash
+sitectl isle cache mirador
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--delay` | `1s` | How long to sleep between HTTP warm requests. |
+| `--endpoint` |   | JSON endpoint returning an array of objects with a url field. Mutually exclusive with `--url-file`. |
+| `--limit` | `0` | Maximum number of URLs to warm. Use 0 to paginate through all endpoint pages. |
+| `--mode` | `ttfb` | Mirador warm mode: ttfb, browse, or full. |
+| `--restart` | `false` | Discard saved Mirador warm progress and restart from the beginning. |
+| `--url-file` |   | Path to a file containing one URL per line. Mutually exclusive with `--endpoint`. |
+| `--workers` | `1` | Number of concurrent warm workers. |

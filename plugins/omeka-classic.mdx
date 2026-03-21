@@ -1,0 +1,26 @@
+---
+title: Omeka Classic plugin
+description: Omeka Classic sitectl workflows including template creation and REST API helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The Omeka Classic plugin adds REST API helpers on top of the standard LibOps <Compose /> template workflow.
+
+## Create
+
+Start a new Omeka Classic site from the LibOps template:
+
+```bash
+sitectl create omeka-classic
+```
+
+The created context uses `plugin: omeka-classic`, so `sitectl omeka-classic ...` commands run against that site's project directory and environment.
+
+## Commands
+
+The Omeka Classic plugin exposes focused helper pages for common operations:
+
+- [Lifecycle](/plugins/omeka-classic/lifecycle): building, starting, and rolling out the stack with core `sitectl` commands
+- [API](/plugins/omeka-classic/api) for direct Omeka Classic REST API calls
+- [Resources](/plugins/omeka-classic/resources) for common collection, item, file, user, and metadata reads

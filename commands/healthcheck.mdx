@@ -1,0 +1,44 @@
+---
+title: healthcheck
+description: Check whether the active site is online and healthy.
+---
+
+import HealthcheckCmd from "/snippets/commands/sitectl-healthcheck.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Use `healthcheck` for a basic status check of the running application. Core checks
+confirm the <Compose /> service containers are running and healthy. If the
+context's plugin registers a healthcheck handler, its runtime checks run too and
+are merged into the report. The command exits non-zero if any check still fails
+after the timeout, so it is safe to use in scripts and CI.
+
+Application plugins use shared helpers for common web stacks: route checks, MariaDB
+ping checks, optional HTTP service checks, and the expected `depends_on:
+condition: service_healthy` relationship between the app container and MariaDB.
+For route checks, plugins resolve the public URL from Traefik's Compose command,
+file-provider mount, dynamic router config, TLS settings, and locally published
+ports. That keeps healthchecks aligned with `ingress` changes such as switching
+between `http`, `https-default`, and `https-letsencrypt`, publishing a new
+domain, or using a local override like `8080:80`. Localhost-style URLs are tested
+from the host at the resolved public URL, so a failed route check points at the
+same URL an operator would open in a browser.
+
+## Reference
+
+<HealthcheckCmd />
+
+## Common workflows
+
+```bash
+# Check the active context
+sitectl healthcheck
+
+# Wait longer for a slow stack to come up
+sitectl healthcheck --timeout 10m --interval 15s
+
+# Render the report as a table
+sitectl healthcheck --format table
+```
+
+Flags that core does not consume are forwarded to the plugin's healthcheck handler,
+so plugin-specific flags such as `--codebase-rootfs` work here too.
