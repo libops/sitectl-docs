@@ -1,0 +1,100 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "sitectl",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#07C983",
+    "dark": "#15803D"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Home",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "index",
+              "install",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "tui",
+              "context",
+              "plugins",
+              "components"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "commands/compose"
+            ]
+          },
+          {
+            "group": "Plugins",
+            "pages": [
+              "plugins/drupal",
+              "plugins/isle"
+            ]
+          },
+          {
+            "group": "Contributors",
+            "pages": [
+              "contributors",
+              "contributors/docs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Drupal plugin",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "plugins/drupal/drush"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "ISLE plugin",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "plugins/isle/index"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "plugins/isle/fcrepo",
+              "plugins/isle/blazegraph"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/docs/logo/libops-light.png",
+    "dark": "/docs/logo/libops-dark.png"
+  },
+  "contextual": {
+    "options": [
+      "copy"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/libops/sitectl"
+    }
+  }
+}
