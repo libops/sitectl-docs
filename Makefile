@@ -1,4 +1,4 @@
-.PHONY: docs
+.PHONY: docs docs-host
 
 DOCS_PORT ?= 3000
 
@@ -9,4 +9,6 @@ docs:
 		-w /work \
 		node:22-bookworm \
 		sh -lc "npx mint dev --port $(DOCS_PORT) --host 0.0.0.0"
+docs-host:
+	npx mint dev
 

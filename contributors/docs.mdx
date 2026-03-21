@@ -1,6 +1,6 @@
 ---
 title: Documentation
-description: How to edit, preview, and organize the Mintlify documentation in the sitectl repository.
+description: How to edit, preview, and organize the Mintlify documentation in the [sitectl-docs](https://github.com/libops/sitectl-docs) repository.
 ---
 
 import { TUI } from "/snippets/tui-tooltip.mdx";
@@ -11,9 +11,9 @@ Mintlify's docs are available at https://www.mintlify.com/docs
 
 Mintlify reads:
 
-- [docs.json](https://github.com/libops/sitectl/blob/main/docs.json) for navigation and site settings
-- [index.mdx](https://github.com/libops/sitectl/blob/main/index.mdx) for the homepage
-- files under the [repository root](https://github.com/libops/sitectl/tree/main) for the rest of the documentation
+- [docs.json](https://github.com/libops/sitectl-docs/blob/main/docs.json) for navigation and site settings
+- [index.mdx](https://github.com/libops/sitectl-docs/blob/main/index.mdx) for the homepage
+- files under the [repository root](https://github.com/libops/sitectl-docs/tree/main) for the rest of the documentation
 
 ## Local development
 
@@ -39,22 +39,9 @@ make docs-host
 
 When you update the docs:
 
-- keep pages at the root unless the page is the root homepage, which lives at `index.mdx`
 - preserve the existing nav structure in `docs.json` and only add to it when needed
 - use MDX for new pages
 - keep contributor and operator guidance in the docs site instead of reviving `CONTRIBUTING.md`
-
-## <TUI /> content
-
-The <TUI /> tour reads:
-
-- `internal/tuitour/content/index.md`
-- `internal/tuitour/content/tui.md`
-- `internal/tuitour/content/context.md`
-- `internal/tuitour/content/plugins.md`
-- `internal/tuitour/content/components.md`
-
-That content is intentionally separate from the Mintlify docs so the in-app tour can stay plain markdown and keep its own presentation.
 
 ## Deployment
 
