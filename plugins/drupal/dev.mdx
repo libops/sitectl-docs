@@ -1,0 +1,20 @@
+---
+title: dev
+description: Local Drupal development mode for bind-mounted custom code.
+---
+
+The Drupal plugin participates in core component workflows. For local development, enable dev mode with `sitectl set` and apply it with `sitectl converge`:
+
+```bash
+sitectl set dev-mode enabled
+sitectl converge
+```
+
+Dev mode keeps the stack in the normal Compose model while adding the bind mounts expected for local custom module and theme work. Use ordinary git commands in the project checkout for branch, remote, and upstream management.
+
+Disable dev mode the same way:
+
+```bash
+sitectl set dev-mode disabled
+sitectl converge
+```

@@ -1,0 +1,28 @@
+---
+title: lifecycle
+description: Build, start, stop, inspect, and roll out an ArchivesSpace stack with core sitectl commands.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+ArchivesSpace does not define its own lifecycle commands. Like every application
+plugin, an ArchivesSpace stack is built, started, stopped, inspected, and rolled out
+with the **core** `sitectl` commands, which operate on whichever context is active:
+
+```bash
+sitectl create archivesspace   # scaffold the stack and its context
+sitectl compose build          # build images
+sitectl compose up -d          # start the stack
+sitectl compose ps             # service status
+sitectl compose logs -f        # follow logs
+sitectl compose down           # stop the stack
+sitectl deploy                 # pull updates and restart (rollout)
+```
+
+`sitectl archivesspace ...` is reserved for ArchivesSpace-specific operations. The
+[API helpers](/plugins/archivesspace/api), [resource shortcuts](/plugins/archivesspace/resources),
+and [container scripts](/plugins/archivesspace/scripts). General <Compose /> lifecycle
+stays in the core CLI so the same operational contract applies to every stack.
+
+See [`sitectl create`](/commands/create), [`sitectl compose`](/commands/compose), and
+[`sitectl deploy`](/commands/deploy) for the full lifecycle reference.

@@ -1,0 +1,49 @@
+---
+title: Triplet plugin
+description: Standalone Triplet sitectl workflows and reusable Triplet service component support.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The Triplet plugin provides a standalone Triplet <Compose /> template and exports the reusable `triplet` service component for application plugins.
+
+The plugin binary is `sitectl-triplet`. The command namespace is `sitectl triplet`, and contexts created by this plugin use `plugin: triplet`.
+
+## Create
+
+Start a standalone Triplet project:
+
+```bash
+sitectl create triplet
+```
+
+The create flow clones the Triplet template, configures a sitectl context, and uses the template's Makefile targets for initialization and lifecycle commands.
+
+## Lifecycle
+
+Run lifecycle commands against the active Triplet context:
+
+```bash
+sitectl triplet init
+sitectl triplet up
+sitectl triplet down
+sitectl triplet status
+sitectl triplet logs
+sitectl triplet rollout
+```
+
+Project discovery claims local Compose projects that contain a `triplet` service, so `--context .` can resolve a checked-out Triplet project without a saved context.
+
+## Service component
+
+Application plugins can import the Triplet component package and register it with their own target rules. The component supports `enabled`, `disabled`, and `distributed` dispositions.
+
+```bash
+sitectl component describe triplet
+sitectl component set triplet enabled
+sitectl component set triplet disabled
+sitectl component set triplet distributed
+```
+
+Use `distributed` when the application should point at an external Triplet service instead of managing Triplet in the current Compose project.
+

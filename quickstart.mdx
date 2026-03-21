@@ -1,0 +1,123 @@
+---
+title: Quickstart
+description: Get sitectl running and understand the core workflow in a few minutes.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import { TUI } from "/snippets/tui-tooltip.mdx";
+import { SSH } from "/snippets/ssh-tooltip.mdx";
+
+## First launch
+
+After [installing sitectl](/install), run:
+
+```bash
+sitectl
+```
+
+This opens the interactive <TUI />, a live dashboard showing your sites and their current state. From here you can connect to an existing site or create a new one.
+
+If you prefer to stay in the command line without the dashboard, every operation in the <TUI /> also has a direct command equivalent.
+
+## Setting up a site
+
+The first thing sitectl needs is a **context**: a saved record of how to connect to a site and which environment you're working with, such as local, staging, or production.
+
+You can create one through the <TUI /> setup flow, or with `sitectl config set-context` directly. See [Contexts](/context) for the full model.
+
+Once you have a context, sitectl knows:
+- Where the <Compose /> project files live
+- Whether to connect locally or over <SSH />
+- Which plugin owns this site (Drupal, ISLE, etc.)
+
+## Core workflow
+
+The core workflow commands form a natural progression:
+
+<Steps>
+  <Step title="Validate before you act">
+    Run `sitectl validate` to confirm the site configuration is consistent before making changes. It checks that the project files are present, the context is wired correctly, and that no components have drifted.
+
+    ```bash
+    sitectl validate
+    ```
+
+    Exits with an error if anything is wrong. Safe to run any time.
+  </Step>
+  <Step title="Record a configuration choice">
+    Use `sitectl set` to turn optional features on or off. This records your intent but does not immediately change project files.
+
+    ```bash
+    sitectl set fcrepo off
+    sitectl set iiif triplet
+    sitectl set ingress enabled --mode https-default --domain app.localhost
+    ```
+
+    New stacks default to `http://localhost`. Ingress settings such as TLS mode, domain, trusted proxies, and upload limits are handled by the `ingress` component.
+  </Step>
+  <Step title="Apply changes">
+    Use `sitectl converge` to bring project files into alignment with the current desired state. Run `--report` first to preview what would change.
+
+    ```bash
+    sitectl converge --report   # preview
+    sitectl converge            # apply
+    ```
+  </Step>
+  <Step title="Deploy updates">
+    Use `sitectl deploy` to apply an upstream update: pull the latest code, update container images, and restart services.
+
+    ```bash
+    sitectl deploy
+    sitectl deploy --branch main
+    ```
+  </Step>
+  <Step title="Confirm the app is running">
+    Run `sitectl healthcheck` for a basic status check of the running application.
+
+    ```bash
+    sitectl healthcheck
+    sitectl healthcheck --format table
+    ```
+  </Step>
+  <Step title="Verify site behavior">
+    Use `sitectl verify` after updates to run healthcheck-style status plus additional checks supplied by the active plugin. Wire this into CI to make sure important site functionality remains intact.
+
+    ```bash
+    sitectl verify
+    sitectl verify --format table
+    ```
+  </Step>
+</Steps>
+
+## Day-to-day operations
+
+Beyond the core workflow, a few commands come up regularly:
+
+```bash
+# Run any docker compose command against the active context
+sitectl compose ps
+sitectl compose logs drupal --tail 50
+
+# Run a Drush command inside the Drupal container
+sitectl drupal drush cr
+
+# Collect a diagnostic bundle when something is wrong
+sitectl debug
+
+# Forward a remote service port to your local machine
+sitectl port-forward
+```
+
+## Targeting a specific environment
+
+Every sitectl command accepts `--context` to target a specific environment without changing your default:
+
+```bash
+sitectl validate --context museum-prod
+sitectl compose logs --context museum-staging
+sitectl deploy --context museum-prod
+```
+
+## When to use the TUI vs direct commands
+
+The <TUI /> is best for monitoring, setup, and interactive exploration. Direct commands are better for one-off operations, automation, and scripting. Both modes work against the same contexts and share all underlying logic.

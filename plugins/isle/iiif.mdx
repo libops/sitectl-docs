@@ -1,0 +1,67 @@
+---
+title: IIIF components
+description: Choose Cantaloupe or Triplet and decide whether IIIF runs locally or externally.
+---
+
+The ISLE plugin manages IIIF with two related components:
+
+- `iiif` chooses the implementation: `cantaloupe` or `triplet`.
+- `iiif-topology` chooses where that implementation runs. `disabled` means local Compose. `distributed` means Drupal points at an external upstream while local development keeps the selected IIIF service in `docker-compose.dev.yml`.
+
+## Component reference
+
+| Component | Dispositions | Default | Managed changes |
+|---|---|---|---|
+| `iiif` | `cantaloupe`, `triplet` | `cantaloupe` | Compose services and volumes, `conf/traefik/cantaloupe.yml`, `conf/traefik/triplet.yml`, `conf/triplet/config.yaml`, Drupal's Cantaloupe URL, and `robots.txt` IIIF route hints. |
+| `iiif-topology` | `disabled`, `distributed` | `disabled` | Base Compose service placement, Drupal's Cantaloupe URL, Traefik `IIIF_UPSTREAM_URL`, and `docker-compose.dev.yml` local override settings. |
+
+## Use Triplet Locally
+
+```bash
+sitectl set iiif triplet
+```
+
+This removes the local Cantaloupe service and Traefik file, adds the Triplet service, writes `conf/triplet/config.yaml`, routes `/iiif`, and updates Drupal's Cantaloupe URL setting to `/iiif/3`.
+
+Triplet uses the existing Drupal public/private volumes and the fcrepo volume when fcrepo is present. It also adds a `triplet-cache` volume for derivatives.
+
+## Use Cantaloupe Locally
+
+```bash
+sitectl set iiif cantaloupe
+```
+
+This restores the Cantaloupe service and `/cantaloupe` Traefik routing, removes Triplet files, and points Drupal back at `/cantaloupe/iiif/2`.
+
+## Use External IIIF
+
+```bash
+sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+```
+
+Use `distributed` when Cantaloupe or Triplet runs outside the public site stack. sitectl removes the selected IIIF service from `docker-compose.yml`, updates Drupal's `DRUPAL_DEFAULT_CANTALOUPE_URL` to the upstream URL, sets `IIIF_UPSTREAM_URL` on Traefik, and keeps a local override service for development in `docker-compose.dev.yml`.
+
+The selected implementation still matters:
+
+- `iiif triplet` routes `/iiif` and uses a local Triplet override on port `8080`.
+- `iiif cantaloupe` routes `/cantaloupe` and uses a local Cantaloupe override on port `8182`.
+
+The development override resets Drupal and Traefik to the local service URL, so local `docker compose` workflows can still use the selected IIIF service even when the base stack is distributed.
+
+Return to local IIIF with:
+
+```bash
+sitectl set iiif-topology disabled
+```
+
+## Create Flags
+
+You can choose this setup during `sitectl create isle`:
+
+```bash
+sitectl create isle --iiif cantaloupe
+sitectl create isle --iiif triplet
+sitectl create isle --iiif triplet --iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+```
+
+If you do not pass topology flags, sitectl assumes local IIIF.

@@ -1,0 +1,105 @@
+---
+title: Architecture decisions
+description: Design decisions behind sitectl and the reasoning that makes it easier to contribute consistently.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+This page captures the reasoning behind the main architectural decisions in sitectl. Understanding the "why" makes it easier to contribute in a way that stays consistent with the project's direction.
+
+## Why sitectl does not use Docker Contexts alone
+
+While [Docker's native context feature](https://docs.docker.com/engine/manage-resources/contexts/) handles basic Docker daemon connections, `sitectl` is designed for <Compose /> projects and adds:
+
+<Columns cols={3}>
+  <Card title="Remote operations" icon="ethernet">
+    SFTP file operations and clearer SSH error handling beyond what Docker's own context system exposes.
+  </Card>
+  <Card title="Container utilities" icon="toolbox">
+    General helpers to resolve service names to containers, extract secrets and env vars for exec commands, and inspect container network details.
+  </Card>
+  <Card title={<><Compose />-first design</>} icon="code">
+    Automatically sets the equivalent of `DOCKER_HOST`, `COMPOSE_PROJECT_NAME`, `COMPOSE_FILE`, and `COMPOSE_ENV_FILES` from the active sitectl context.
+  </Card>
+</Columns>
+
+## Plugin model
+
+Plugins extend sitectl without requiring changes to the core binary. The core binary discovers plugins by name convention (`sitectl-<plugin>` on `$PATH`) and delegates commands to them. This means:
+
+- Stack-specific logic stays in the plugin, not in core
+- Plugins can be installed and upgraded independently
+- Plugins can include other plugins. ISLE includes Drupal, so operators of ISLE sites get Drupal commands automatically
+
+See [Plugin hierarchy](/contributing/plugin-hierarchy) for how dispatch works at the code level.
+
+Runtime fan-out uses a private JSON RPC entrypoint, `__sitectl-rpc`, instead of a hidden command per capability. A single transport command gives core sitectl a central enforcement point for protocol versioning, stdout/stderr behavior, structured errors, and SDK dispatch. Plugin authors still implement small typed handlers through the SDK.
+
+The RPC contract is versioned in lockstep between core and plugins. Request envelopes, response envelopes, params, and result payloads use explicit lower snake_case JSON tags, and typed request builders in `pkg/plugin` should be preferred over hand-written JSON maps.
+
+## Compose lifecycle metadata
+
+Plugin create definitions are the shared contract between `sitectl create` and local `sitectl compose up`. A `CreateSpec` declares the template repository, init commands, build commands, up/down/rollout commands, init artifacts, and image metadata for a Compose-backed project.
+
+Core `sitectl create` uses that metadata to scaffold a context. Core `sitectl compose up` uses the same metadata for command-scoped first-run reconcile on local plugin-owned contexts. The reconcile step can run missing init and build work before starting Compose, but it remains a synchronous CLI workflow, not a background controller.
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the detailed authoring contract and the boundary around Kubernetes-style terminology.
+
+## Service component ownership
+
+Reusable infrastructure services that are self-contained and cross-cutting belong in sitectl core, not in one plugin per service and not copied into every application plugin. Traefik, MariaDB, Solr, Valkey, and Memcached are core service command namespaces because many application stacks use them and the operational behavior is generic.
+
+Those services may still run as standalone Compose projects. Core owns the shared command surface and helpers, while application compose projects own target-specific wiring such as dependencies, environment variables, routes, and app-specific volume mounts.
+
+See [Service components](/contributing/service-components) for the full architecture.
+
+## SDK runner interfaces
+
+Where a core sitectl command needs plugin-specific behavior, the SDK defines a typed runner interface. The plugin implements the interface, registers it, and the SDK exposes it through the single private `__sitectl-rpc` entrypoint. This gives plugin authors a structured, type-safe extension point rather than requiring them to write raw transport code.
+
+Current runner interfaces:
+
+| Interface | Registered by | RPC method | User command |
+|---|---|---|---|
+| `DebugRunner` | `RegisterDebugRunner` | `debug.run` | `sitectl debug` |
+| `DeployRunner` | `RegisterDeployRunner` | `deploy.run` | `sitectl deploy` |
+| `ConvergeRunner` | `RegisterConvergeRunner` | `converge.run` | `sitectl converge` |
+| `SetRunner` | `RegisterSetRunner` | `set.run` | `sitectl set` |
+| `ValidateRunner` | `RegisterValidateRunner` | `validate.run` | `sitectl validate` |
+| `HealthcheckRunner` | `RegisterHealthcheckRunner` | `healthcheck.run` | `sitectl healthcheck` |
+| `VerifyRunner` | `RegisterVerifyRunner` | `verify.run` | `sitectl verify` |
+| `IngressRouteProvider` | `RegisterIngressRouteProvider` | `ingress.routes` | `sitectl stats`, `sitectl debug` ingress section |
+
+`sitectl validate`, `sitectl healthcheck`, and `sitectl verify` return structured check results instead of rendering directly. For `validate`, core runs its own validators first, then invokes the plugin's `validate.run` method and merges the returned results. For `healthcheck`, core checks Compose service runtime state first, then merges plugin runtime checks. For `verify`, core delegates behavioral verification to the active plugin and renders the returned results.
+
+`IngressRouteProvider` is a lightweight provider rather than a command runner.
+Plugins use it to declare the public routes they own, including secondary URLs
+such as an API, OAI endpoint, Fedora endpoint, or IIIF route. Core resolves those
+route descriptors through Traefik and local port bindings so `stats` and `debug`
+report the same URLs a healthcheck would use.
+
+Runner diagnostics, progress, and prompts should write to stderr. Stdout is captured by the RPC layer for the response envelope and may not be displayed directly by the caller.
+
+## Component model
+
+The component model was designed to solve two problems:
+
+1. **Initial setup:** make it easy to start a site with the right capabilities enabled, without manually editing <Compose /> files
+2. **Incremental adoption:** existing sites can adopt new upstream capabilities by turning a component on, rather than hand-editing files and hoping nothing breaks
+
+The conservative default is that the upstream project template ships as-is. Components are an explicit override. This keeps the barrier to entry low while giving experienced operators a structured path to customization.
+
+The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands backed by the same `__sitectl-rpc` protocol methods.
+
+See [Component development](/contributing/components) for how to define a new component.
+
+
+## Why <Compose />, not Kubernetes
+
+Though <Compose /> isn't designed for massive-scale orchestration, the applications hosted by most <Tooltip headline="LAC-GLAM" tip="Libraries, Archives, and Museums, the cultural heritage sector that sitectl is primarily built for.">LAC-GLAM</Tooltip> institutions rarely require more than modest scaling.
+
+The real advantage of <Compose /> is the developer experience. Because the same orchestration runs in both development and production with only minor environment-specific changes, you can reliably mirror production on your local machine. This gives you deployment safety long before your CI pipeline runs a single test.
+
+We could have spent resources building Kubernetes operators for various LAC-GLAM stacks instead of creating sitectl. But sitectl was a deliberate choice: it empowers institutions to adopt open-source projects without the hurdle of hiring a Kubernetes administrator or absorbing the heavy operational overhead of a Kubernetes cluster.
+
+The goal was to let institutions adopt open-source software without being blocked by infrastructure complexity.

@@ -1,0 +1,175 @@
+---
+title: Overview
+description: Contributor guidance for sitectl, including local development setup, UI architecture rules, and release publishing.
+---
+
+import { TUI } from "/snippets/tui-tooltip.mdx";
+
+# Contributing
+
+## Local Plugin Development
+
+`sitectl` has a core binary and optional plugin binaries named `sitectl-<plugin>`.
+
+The current local development plugin chain in this workspace is:
+
+- `sitectl`: core binary; owns the operator-facing commands
+- `sitectl-isle`: ISLE plugin; stack logic, component definitions, ISLE-specific jobs
+- `sitectl-drupal`: Drupal plugin; drush, sync, ULI; included by the ISLE plugin
+
+Core sitectl owns the operator-facing command shape. Plugins extend that behavior through the private `__sitectl-rpc` protocol dispatched based on the active context's plugin field.
+
+The SDK registers that private entrypoint automatically. Plugin code should register SDK handlers and runners, not define its own transport commands.
+
+Core commands that fan out to plugins:
+
+- `sitectl debug` → `debug.run`
+- `sitectl validate` → core validators + `validate.run` (results merged)
+- `sitectl healthcheck` → core Compose runtime checks + `healthcheck.run` (results merged)
+- `sitectl verify` → `verify.run` (results rendered by core)
+- `sitectl converge` → `converge.run`
+- `sitectl set` → `set.run`
+- `sitectl deploy` → `deploy.run`
+- `sitectl job run` → `job.run`
+- `sitectl component describe` → `component.describe`
+- `sitectl component set` → `component.set`
+
+When a context belongs to `isle`, core sitectl routes dispatch commands to `sitectl-isle`. The ISLE plugin can further invoke included plugins such as `sitectl-drupal`.
+
+See [Plugin hierarchy](/contributing/plugin-hierarchy) for the full protocol.
+
+## Local Install Workflow
+
+For local development, install the binaries into a directory on your `$PATH` so the core binary can discover and invoke plugin binaries. From the core repo:
+
+```bash
+make install
+```
+
+That target will:
+
+1. Build and install `sitectl`
+2. Change into `../sitectl-isle` and run `make install`
+3. Change into `../sitectl-drupal` and run `make install`
+
+The plugin `install` targets run `make work` before building so they use the local core `sitectl` checkout during development.
+
+If you are only working on a single plugin:
+
+```bash
+cd ../sitectl-isle && make install
+cd ../sitectl-drupal && make install
+```
+
+## Why `make install` matters
+
+If you only rebuild `sitectl` locally but do not install the plugin binaries into a directory on `PATH`, core command dispatch will not see the current local plugin builds. Installing the full chain keeps the stack aligned while you work on:
+
+- core command routing in `sitectl`
+- stack logic in `sitectl-isle`
+- Drupal-specific extensions in `sitectl-drupal`
+
+## UI Architecture
+
+`sitectl` supports two interaction modes:
+
+- one-off command execution such as `sitectl compose ps`
+- an embedded <TUI /> dashboard launched by running `sitectl` with no additional arguments
+
+Because both modes need to share behavior, interactive command UIs must be designed as composable Bubble Tea models instead of bespoke terminal flows.
+
+## Rule
+
+When a command needs interactive UI:
+
+- keep business logic separate from UI state and rendering
+- make the UI self-contained inside the command or shared UI package
+- ensure the same UI can run standalone or be embedded inside the dashboard
+
+In practice, command implementations should follow this split:
+
+- **service layer:** pure command logic and side effects
+- **UI layer:** Bubble Tea model and Bubbles-based components
+- **Cobra layer:** chooses between non-interactive execution and launching the UI
+
+## Required Libraries
+
+Interactive `sitectl` UIs should build on the shared <TUI /> stack already in use:
+
+- `bubbletea` for state, events, and screen management
+- `bubbles` for list, help, input, viewport, progress, and similar primitives
+- `lipgloss` for styling and layout
+- `bubblezone` for click targets and mouse hit detection where needed
+- `harmonica` for motion and transitions where appropriate
+- `ntcharts` for terminal charts where appropriate
+
+## What Not To Do
+
+Do not implement custom terminal widgets when the library stack already provides them:
+
+- do not hand-roll a select menu when `bubbles/list` fits
+- do not hand-roll a text input when `bubbles/textinput` or `textarea` fits
+- do not hand-roll help footers when `bubbles/help` fits
+- do not hand-roll scroll containers when `bubbles/viewport` fits
+
+`lipgloss` is for presentation and composition, not a replacement for Bubble Tea or Bubbles interaction primitives.
+
+## Shared Components
+
+Reusable interaction primitives should live in shared UI packages so commands and the dashboard can both consume them:
+
+- shared prompt, select, and input components belong in `pkg/ui`
+- command-specific interactive screens can live near the command, but should still be Bubble Tea models
+- older bespoke prompt implementations should be migrated to shared Bubble Tea and Bubbles components over time
+
+## Design Goal
+
+A command that has an interactive flow should be embeddable in the dashboard without rewriting its UI logic. That means a command UI should be structured so it can be:
+
+- launched directly from Cobra
+- pushed or mounted inside the dashboard <TUI />
+
+If a proposed command UI cannot be reused that way, it should be redesigned before being added.
+
+## Release Publishing
+
+GoReleaser builds the release artifacts, including Linux packages via `nfpms`.
+
+- GitHub release publishing: [goreleaser.yaml](https://github.com/libops/sitectl/blob/main/.github/workflows/goreleaser.yaml)
+
+### Linux package publishing
+
+This repo publishes Debian and RPM repositories through the shared libops packaging infrastructure.
+
+GitHub Actions workflows:
+
+- [publish-apt-repo.yaml](https://github.com/libops/sitectl/blob/main/.github/workflows/publish-apt-repo.yaml)
+- shared publishing script: [publish-package-repo.sh](https://github.com/libops/terraform-linux-packages/blob/main/scripts/publish-package-repo.sh)
+
+Required GitHub secrets:
+
+- `HOMEBREW_REPO`: token used by GoReleaser for release publishing
+
+Required GitHub variables:
+
+- `LIBOPS_PACKAGES_GCLOUD_OIDC_POOL`: Workload Identity provider resource name
+- `LIBOPS_PACKAGES_GCLOUD_PROJECT`: Google Cloud project ID that holds the package infrastructure
+- `LIBOPS_PACKAGES_GSA`: Google service account email used by GitHub Actions
+- `LIBOPS_PACKAGES_GCS_BUCKET`: bucket name that hosts the published package repository
+- `LIBOPS_PACKAGES_APTLY_GPG_KEY_ID`: GPG key ID or fingerprint to use for signing
+- `LIBOPS_PACKAGES_APTLY_GPG_PRIVATE_KEY_SECRET`: Secret Manager secret ID that stores the armored private key
+- `LIBOPS_PACKAGES_APTLY_GPG_PASSPHRASE_SECRET`: Secret Manager secret ID that stores the signing key passphrase
+
+Optional GitHub variables:
+
+- `GCS_BUCKET_PREFIX` default: empty
+- `APTLY_DISTRIBUTIONS` default: `bookworm`
+- `APTLY_COMPONENT` default: `main`
+- `APTLY_ARCHITECTURES` default: `amd64,arm64`
+- `APTLY_PUBLISH_PREFIX` default: `.`
+- `APTLY_ORIGIN` default: `libops`
+- `APTLY_LABEL` default: `sitectl`
+- `APTLY_PUBLIC_KEY_NAME` default: `sitectl-archive-keyring`
+- `RPM_REPOSITORY_PATH` default: `rpm`
+
+The workflow rebuilds Debian and RPM repository metadata from the current release artifacts only. That is sufficient for fresh installs and upgrades, but does not preserve older package versions for pinning or rollback.

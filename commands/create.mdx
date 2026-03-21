@@ -1,0 +1,75 @@
+---
+title: create
+description: Create a new stack from an installed plugin definition.
+---
+
+import CreateCmd from "/snippets/commands/sitectl-create.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The `create` command provisions a new <Compose /> stack using a create definition registered by an installed plugin. Run `sitectl create list` to see all available definitions, or omit arguments to be guided interactively.
+
+## Reference
+
+<CreateCmd />
+
+## Selecting a definition
+
+You can qualify the target as `plugin/definition` to skip prompts entirely:
+
+```bash
+sitectl create isle/default
+sitectl create drupal/default
+```
+
+Or just pass a definition name when it is unambiguous across installed plugins:
+
+```bash
+sitectl create default
+```
+
+## Flag ordering
+
+`create` forwards everything after it to the selected plugin's create runner, so it
+does not parse flags itself. Global `sitectl` flags such as `--context` and
+`--log-level` must therefore come **before** the `create` subcommand:
+
+```bash
+# correct: global flags before `create`, create flags after
+sitectl --context staging create drupal/default \
+  --path ./drupal --type local --checkout-source template --setup-only
+```
+
+Putting a global flag after `create` forwards it to the plugin, which rejects it:
+
+```bash
+# wrong: --context is forwarded to the plugin
+sitectl create drupal/default --path ./drupal --context staging
+# Error: unknown flag: --context
+```
+
+Plugin-specific create flags (for example `--path`, `--type`, `--checkout-source`,
+`--setup-only`, or ISLE's `--fcrepo` and `--blazegraph`) still go after the target,
+because they belong to the plugin's create runner.
+
+## Setup-Only and First Start
+
+`--setup-only` creates the local checkout and context without starting the stack. A fresh template checkout may still run clone-time init. For plugin-owned local contexts, the first later `sitectl compose up` checks the plugin's declared init artifacts and images, then runs any remaining init or build commands before starting Compose:
+
+```bash
+sitectl create ojs/default --path ./ojs --type local --checkout-source template --setup-only
+sitectl compose up
+```
+
+That handoff uses the plugin create definition as desired lifecycle metadata. See [Compose reconcile contract](/contributing/compose-reconcile) for contributor details.
+
+## Image and Build Overrides
+
+Compose template create runners can accept image override flags:
+
+```bash
+sitectl create wp/default --path ./wp --type local --tag wp=nginx-1.30.3-php84
+sitectl create ojs/default --path ./ojs --type local --image ojs=ghcr.io/example/ojs:pr-123
+sitectl create drupal/default --path ./drupal --type local --build-arg drupal.BASE_IMAGE=libops/drupal:php84
+```
+
+These flags write the same local `docker-compose.override.yml` file used by [`sitectl image set`](/commands/image). Use `sitectl image set` later when you need to change image or build-arg overrides for an existing local context.

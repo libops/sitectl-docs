@@ -1,0 +1,22 @@
+---
+title: OJS tools
+description: Run Open Journal Systems PHP tools from the active OJS stack.
+---
+
+Run OJS PHP tools from `/var/www/ojs/tools`:
+
+```bash
+sitectl ojs tool upgrade upgrade
+sitectl ojs tool importExport NativeImportExportPlugin usage
+sitectl ojs tool rebuildSearchIndex
+```
+
+There are also named helpers for the most common tools:
+
+```bash
+sitectl ojs upgrade
+sitectl ojs import-export NativeImportExportPlugin usage
+sitectl ojs rebuild-search-index
+```
+
+With no arguments, `sitectl ojs upgrade` runs the standard `upgrade` action.

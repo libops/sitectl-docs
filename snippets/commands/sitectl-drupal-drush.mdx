@@ -1,0 +1,18 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Run drush commands inside the Drupal container of the active context.
+
+This wraps "docker compose exec drupal drush" and automatically injects DRUPAL_DRUSH_URI
+so `--uri` does not need to be specified manually.
+
+Examples:
+  sitectl isle drush status                 # Check Drupal status
+  sitectl isle drush cr                     # Clear all caches
+  sitectl isle drush cex                    # Export configuration
+  sitectl isle drush cim                    # Import configuration
+  sitectl isle drush sqlq "SHOW TABLES"     # Run a SQL query
+  sitectl isle drush `--context` prod status  # Check status on the prod context
+
+```bash
+sitectl drupal drush [COMMAND]
+```

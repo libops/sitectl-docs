@@ -1,0 +1,31 @@
+---
+title: plugins and themes
+description: Manage WordPress plugins and themes through WP-CLI helpers.
+---
+
+import PluginCmd from "/snippets/commands/sitectl-wp-plugin.mdx";
+import ThemeCmd from "/snippets/commands/sitectl-wp-theme.mdx";
+
+Use the common WP-CLI plugin and theme workflows without remembering the full container command:
+
+```bash
+sitectl wp plugin list
+sitectl wp plugin status
+sitectl wp plugin update --all
+
+sitectl wp theme list
+sitectl wp theme status
+sitectl wp theme update --all
+```
+
+These helpers pass through additional WP-CLI arguments after the subcommand.
+
+## Reference
+
+### `plugin`
+
+<PluginCmd />
+
+### `theme`
+
+<ThemeCmd />

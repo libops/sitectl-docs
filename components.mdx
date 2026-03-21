@@ -1,0 +1,124 @@
+---
+title: Components
+description: How sitectl uses components to model optional stack capabilities and help operators turn features on and off safely.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Components are how sitectl models optional capabilities within a stack. Instead of treating a <Compose /> project as one large, all-or-nothing setup, components let each optional feature carry its own defaults, configuration rules, and operator guidance.
+
+## What a component does
+
+When a plugin defines a component, sitectl can:
+
+- **Ask about it during site creation**, prompting you to enable or disable it before the first launch.
+- **Report its current state.** `sitectl component describe` lists all components registered by the active context's plugin and shows whether each one is on, off, or out of alignment with the project files.
+- **Apply state changes safely.** `sitectl set <name> <on|off>` records the desired state, and `sitectl converge` applies the resulting file changes with a confirmation step before anything destructive happens.
+
+## Component states
+
+A component can be in one of two states:
+
+| State | Meaning |
+|---|---|
+| `on` | The component is active and its services, configuration, and Drupal modules are in place |
+| `off` | The component is inactive; its services and configuration are removed or suppressed |
+
+Within a state, a component also carries a **disposition** that records more detail about *how* it ended up there:
+
+| Disposition | Meaning |
+|---|---|
+| `enabled` | Explicitly turned on by an operator |
+| `disabled` | Explicitly turned off by an operator |
+| `superceded` | Replaced by a different component or approach. This is the current CLI spelling. |
+| `distributed` | Plugin-specific distributed topology, such as routing ISLE IIIF traffic to an external upstream |
+
+## Checking component state
+
+```bash
+# Show all components for the active context's plugin
+sitectl component describe
+
+# Target a specific project directory
+sitectl component describe --path /path/to/project
+```
+
+This reports every registered component: its name, current state, and whether the live project files match what sitectl expects. A `drifted` status means the project files no longer match the last applied component state, usually because something changed outside of sitectl.
+
+Use `--verbose` to show the failed checks behind a drifted component:
+
+```bash
+sitectl component describe --verbose
+sitectl component describe --component blazegraph --verbose
+```
+
+When a drifted component blocks another change, sitectl prints the files and checks that failed, such as a missing Drupal config sync file or an unexpected value in `docker-compose.yml`.
+
+## Turning components on and off
+
+```bash
+# Using the top-level set command
+sitectl set fcrepo off
+sitectl set blazegraph on
+
+# Using a plugin namespace when multiple plugins are involved
+sitectl set isle/fcrepo off
+```
+
+After running `sitectl set`, the desired state is recorded but project files are not yet changed. Follow up with `sitectl converge` to apply the change.
+
+<Warning>
+  Component changes can rewrite <Compose /> files and Drupal configuration sync files. Make sure you have a recent backup before enabling or disabling components on a production site.
+</Warning>
+
+## Applying changes with converge
+
+```bash
+# Preview what would change
+sitectl converge --report
+
+# Apply changes interactively
+sitectl converge
+
+# Apply changes for a single component
+sitectl converge --component fcrepo
+```
+
+`converge` compares each component's expected configuration against the project files on disk and repairs any differences. Use `--report` to review changes before applying them.
+
+## The create flow
+
+When you run `sitectl create isle`, sitectl asks you about each component that has a meaningful architectural choice, such as whether to include Fedora or Blazegraph. You can answer interactively or pass flags to skip the prompts. Your choices are applied to the project before the first launch.
+
+## Current ISLE components
+
+<AccordionGroup>
+  <Accordion title="fcrepo">
+    Fedora Commons repository. Controls whether Fedora services, volumes, Alpaca indexing, Drupal Fedora config, and filesystem URI rewrites are included in the stack. Use `enabled` for the standard Fedora-backed Islandora repository or `superceded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
+  </Accordion>
+  <Accordion title="blazegraph">
+    Blazegraph triple store. Controls the Blazegraph service, volume, Alpaca triplestore indexing, Drupal triplestore namespace, and managed triplestore actions. Use `enabled` for standard RDF/SPARQL indexing or `disabled` for stacks that do not use linked data queries. See [Blazegraph](/plugins/isle/blazegraph).
+  </Accordion>
+  <Accordion title="iiif">
+    Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
+  </Accordion>
+  <Accordion title="iiif-topology">
+    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. See [IIIF components](/plugins/isle/iiif).
+  </Accordion>
+  <Accordion title="Derivative microservices">
+    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
+  </Accordion>
+  <Accordion title="ingress">
+    Controls public URL behavior for Traefik-backed applications. The default is `enabled --mode http --domain localhost`, so new stacks start at `http://localhost`. Use `enabled` with `--mode http|https-default|https-letsencrypt`, `--domain`, `--acme-email`, `--trusted-ip`, `--max-upload-size`, and `--upload-timeout` to update Traefik commands, dynamic router config, app URL environment values, trusted proxy settings, and upload/read timeout settings together.
+  </Accordion>
+  <Accordion title="bot-mitigation">
+    Controls Cloudflare Turnstile-backed Traefik challenge middleware where the application plugin supports it. Use `on` to install captcha-protect wiring and `off` to remove the middleware.
+  </Accordion>
+  <Accordion title="dev-mode">
+    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and host bind mounts for editable code. Use `disabled` to remove the override.
+  </Accordion>
+</AccordionGroup>
+
+Shared ingress behavior is owned by the `ingress` component. Application plugins supply the app-specific services, routers, and environment values that must change when the ingress mode or domain changes. Healthchecks use the resulting Traefik router config to decide which scheme, host, path, and local published port to check.
+
+See the [developer component guide](/contributing/components) for how components are defined and what each field in the definition struct means.

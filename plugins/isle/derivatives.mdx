@@ -1,0 +1,68 @@
+---
+title: Derivative microservices
+description: Run Islandora derivative services locally or point Alpaca at the managed LibOps microservices.
+---
+
+The ISLE plugin can switch individual derivative services between local Compose and the managed LibOps microservice deployment.
+
+`enabled` keeps the service in `docker-compose.yml`. `distributed` removes the service from the base stack, points the caller at `https://microservices.libops.site`, and keeps a local service override in `docker-compose.dev.yml` for development.
+
+## Services
+
+| Component | Distributed base setting | Local development override |
+|---|---|---|
+| `fits` | Removes `fits`. If `crayfits` stays local, sets `crayfits` `CRAYFITS_WEBSERVICE_URI` to `https://microservices.libops.site/fits/examine`. | Adds `fits` to `docker-compose.dev.yml` and points local `crayfits` back at `http://fits:8080/fits/examine`. |
+| `crayfits` | Removes `crayfits` and sets Alpaca `ALPACA_DERIVATIVE_FITS_URL` to `https://microservices.libops.site/crayfits`. | Adds `crayfits` to `docker-compose.dev.yml` and sets Alpaca back to `http://crayfits:8080/`. |
+| `homarus` | Removes `homarus` and sets Alpaca `ALPACA_DERIVATIVE_HOMARUS_URL` to `https://microservices.libops.site/homarus`. | Adds `homarus` to `docker-compose.dev.yml` and sets Alpaca back to `http://homarus:8080/`. |
+| `houdini` | Removes `houdini` and sets Alpaca `ALPACA_DERIVATIVE_HOUDINI_URL` to `https://microservices.libops.site/houdini`. | Adds `houdini` to `docker-compose.dev.yml` and sets Alpaca back to `http://houdini:8080/`. |
+| `hypercube` | Removes `hypercube` and sets Alpaca `ALPACA_DERIVATIVE_OCR_URL` to `https://microservices.libops.site/hypercube`. | Adds `hypercube` to `docker-compose.dev.yml` and sets Alpaca back to `http://hypercube:8080/`. |
+| `mergepdf` | Removes `mergepdf` and sets Alpaca `ALPACA_DERIVATIVE_MERGEPDF_URL` to `https://microservices.libops.site/mergepdf`. | Adds `mergepdf` to `docker-compose.dev.yml` and sets Alpaca back to `http://mergepdf:8080/`. |
+
+## Switch Services
+
+```bash
+sitectl set fits distributed
+sitectl set crayfits distributed
+sitectl set homarus distributed
+sitectl set houdini distributed
+sitectl set hypercube distributed
+sitectl set mergepdf distributed
+```
+
+Return a service to the base Compose stack with `enabled`:
+
+```bash
+sitectl set fits enabled
+sitectl set crayfits enabled
+sitectl set homarus enabled
+sitectl set houdini enabled
+sitectl set hypercube enabled
+sitectl set mergepdf enabled
+```
+
+## FITS And Crayfits
+
+Most sites should switch `fits` and `crayfits` together:
+
+```bash
+sitectl set fits distributed
+sitectl set crayfits distributed
+```
+
+If only `fits` is distributed, `crayfits` remains local and sitectl sets `CRAYFITS_WEBSERVICE_URI` to the managed FITS webservice URL in `docker-compose.yml`. The `docker-compose.dev.yml` override still restores local `fits` and points `crayfits` back at `http://fits:8080/fits/examine`.
+
+## Create Flags
+
+You can choose distributed services during create:
+
+```bash
+sitectl create isle \
+  --fits=distributed \
+  --crayfits=distributed \
+  --homarus=distributed \
+  --houdini=distributed \
+  --hypercube=distributed \
+  --mergepdf=distributed
+```
+
+Omit a flag to keep that service at the template default, or pass `enabled` to keep it local explicitly.

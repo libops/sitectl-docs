@@ -1,0 +1,36 @@
+---
+title: resources
+description: Read common Omeka S resources through shortcut commands.
+---
+
+import ItemsCmd from "/snippets/commands/sitectl-omeka-s-items.mdx";
+
+Use resource commands for common read operations:
+
+```bash
+sitectl omeka-s items
+sitectl omeka-s item-sets
+sitectl omeka-s media
+sitectl omeka-s vocabularies
+sitectl omeka-s resource-classes
+sitectl omeka-s properties
+sitectl omeka-s resource-templates
+sitectl omeka-s sites
+sitectl omeka-s site-pages
+sitectl omeka-s modules
+```
+
+Pass an ID to read a single record:
+
+```bash
+sitectl omeka-s media 12
+```
+
+These shortcuts accept the same read flags as `api get`, including `--url`, `--identity`, `--credential`, and repeated `--query name=value` filters.
+
+## Reference
+
+Every resource shortcut shares the same read flags. `items` is shown as a
+representative example:
+
+<ItemsCmd />

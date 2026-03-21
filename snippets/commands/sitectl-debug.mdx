@@ -1,0 +1,18 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Collect a diagnostic bundle for the active context and print it to stdout.
+
+The bundle includes: host resource summary, Compose service status, container log driver
+configuration, Docker image inventory, and plugin-specific diagnostics contributed by the
+context's plugin.
+
+Use `--output` to write the bundle to a file instead of printing to stdout.
+
+```bash
+sitectl debug
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-o, --output` |   | Write the bundle to a file instead of stdout. |
+| `-v, --verbose` | `false` | Include additional diagnostic details. |

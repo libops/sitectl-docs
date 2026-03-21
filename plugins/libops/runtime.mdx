@@ -1,0 +1,50 @@
+---
+title: Runtime workflows
+description: Wake, SSH into, check out, and create sitectl contexts for LibOps Sites.
+---
+
+Runtime commands operate on a LibOps dashboard Site. In core `sitectl` language, that Site is also the remote environment target.
+
+For the broader platform and repository workflows, see [API and sitectl](https://docs.libops.io/platform/api-cli) and [GitHub Integration](https://docs.libops.io/platform/github).
+
+## Ping
+
+Ping a site URL or Site ID to wake/check the web endpoint:
+
+```bash
+sitectl libops ping "$SITE_ID"
+sitectl libops ping https://collections.example.edu
+```
+
+## SSH
+
+Connect to the Site environment:
+
+```bash
+sitectl libops ssh "$SITE_ID"
+sitectl libops ssh "$SITE_ID" --ssh-user deploy --ssh-key ~/.ssh/id_ed25519
+```
+
+The command derives `ssh.<managed-domain>` from the Site domains when possible. Use `--ssh-host` when you need an explicit host.
+
+## Checkout
+
+Clone the configured GitHub repository and check out the configured ref:
+
+```bash
+sitectl libops checkout "$SITE_ID" ./collections
+sitectl libops checkout "$SITE_ID" ./collections --update-context
+```
+
+Your GitHub username must be set in LibOps, and your SSH public key must be added to both GitHub and LibOps.
+
+## Context update
+
+Create or update a core `sitectl` remote context from the LibOps Site:
+
+```bash
+sitectl libops context update "$SITE_ID"
+sitectl libops context update "$SITE_ID" --context-name production --default
+```
+
+Use `--plugin`, `--project-dir`, `--ssh-host`, `--ssh-user`, `--ssh-port`, and `--ssh-key` to override inferred values.

@@ -1,0 +1,14 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Export a MariaDB SQL backup from the active compose stack
+
+```bash
+sitectl mariadb backup [DATABASE]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--all-databases` | `false` | Export all databases explicitly |
+| `--gzip` | `false` | Compress the backup with gzip |
+| `-o, --output` |   | Write SQL backup to a host path instead of stdout |
+| `--service` | `mariadb` | MariaDB compose service name |

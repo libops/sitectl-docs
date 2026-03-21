@@ -1,0 +1,16 @@
+---
+title: drush
+description: Run Drush commands inside the Drupal container for any sitectl context.
+---
+
+import DrushCmd from "/snippets/commands/sitectl-drupal-drush.mdx";
+
+## Reference
+
+<DrushCmd />
+
+## How it works
+
+sitectl finds the Drupal service container using the Compose labels on the running containers, then runs `drush` inside it using the Docker exec API. The command inherits your terminal, so interactive commands and output work as expected.
+
+`DRUPAL_DRUSH_URI` is injected automatically so Drush knows the correct base URL for the site without you needing to pass `--uri` on every invocation.

@@ -1,0 +1,43 @@
+---
+title: Traefik service commands
+description: Core sitectl commands for the Traefik service container.
+---
+
+import StatusCmd from "/snippets/commands/sitectl-traefik-status.mdx";
+
+All LibOps application stacks use Traefik for ingress. The `sitectl traefik` namespace is now intentionally small: it exposes service-level inspection, while ingress configuration is owned by the app plugin's `ingress` component.
+
+## Status
+
+Check the Traefik container:
+
+```bash
+sitectl traefik status
+```
+
+## Ingress Settings
+
+Use `sitectl set ingress ...` followed by `sitectl converge` for the settings that alter Traefik and downstream application config:
+
+```bash
+sitectl set ingress enabled --mode http --domain localhost
+sitectl set ingress enabled --mode https-default --domain app.localhost
+sitectl set ingress enabled --mode https-letsencrypt --domain app.example.org --acme-email ops@example.org
+sitectl set ingress enabled --trusted-ip 203.0.113.10/32 --max-upload-size 2G --upload-timeout 10m
+sitectl converge
+```
+
+The ingress component updates the Compose Traefik service, dynamic router files, app URL/HTTPS environment values, trusted proxy settings, and upload/read timeout settings together. Application plugins provide the app-specific service names and route files that need to move with those choices.
+
+## Bot Mitigation
+
+Bot mitigation remains a component where supported by the active app plugin:
+
+```bash
+sitectl set bot-mitigation on
+sitectl converge
+```
+
+## Reference
+
+<StatusCmd />

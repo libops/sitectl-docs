@@ -1,0 +1,334 @@
+---
+title: Plugin hierarchy
+description: How sitectl discovers plugins, routes commands, chains plugin execution, and implements the single RPC entrypoint used for fan-out dispatch.
+---
+
+## Discovery
+
+sitectl discovers plugins by searching `$PATH` for binaries named `sitectl-<plugin>`. No configuration file is needed. If `sitectl-drupal` is on your path, `sitectl drupal` works.
+
+When a full plugin inspection is needed (e.g. for `sitectl converge`, `sitectl validate`, or `sitectl verify`), sitectl runs `sitectl-<plugin> __sitectl-rpc` with a JSON request envelope for the `plugin.metadata` method. The plugin returns a JSON response envelope with its capabilities: name, version, description, included plugins, and boolean flags for which SDK runner interfaces it has registered (`CanDebug`, `CanConverge`, `CanSet`, `CanValidate`, `CanHealthcheck`, `CanVerify`, `CanDeploy`, `CanCreate`).
+
+For performance-sensitive paths like `sitectl --help`, sitectl uses lightweight discovery (binary name only, no subprocess invocation) and falls back to full inspection only when needed.
+
+## Command routing
+
+When you run `sitectl drupal drush cr`, sitectl:
+
+1. Looks up `sitectl-drupal` on `$PATH`
+2. Invokes it with `drush cr` as arguments, plus any sitectl flags (`--context`, `--log-level`) prepended
+3. The plugin binary handles the rest and writes output to stdout/stderr
+
+The active context's `plugin` field validates that the command makes sense for the context. Running `sitectl drupal drush` against a context with `plugin: core` returns an error.
+
+## Plugin inclusion
+
+Plugins declare which other plugins they include via the `Includes` field in their SDK metadata. ISLE declares:
+
+```go
+plugin.Metadata{
+    Name:     "isle",
+    Includes: []string{"drupal"},
+}
+```
+
+This tells sitectl that the `isle` plugin implicitly covers all `drupal` commands. A context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands.
+
+Application plugins use the same mechanism only for real application hierarchies. Shared service commands such as `sitectl mariadb`, `sitectl solr`, and `sitectl traefik` are core command namespaces, so application plugins do not include service plugins just to expose common service operations. The standalone app compose project carries app-specific service wiring.
+
+sitectl resolves inclusion transitively: if `isle` includes `drupal` and `drupal` includes `core`, then `isle` covers all three.
+
+## Create Definitions
+
+Plugins expose create definitions through `plugin.metadata`. A create definition describes a first-class Compose template: repository, branch, lifecycle commands, init artifacts, image specs, and the default definition for the plugin.
+
+Core sitectl consumes create definitions in several places:
+
+- `sitectl create list` and `sitectl create <plugin>/<definition>` for guided stack creation
+- `sitectl image set` and create-time image flags for local Compose image and build-arg overrides
+- `sitectl compose up` for local first-run reconcile on plugin-owned contexts
+
+The same metadata should therefore be deterministic and safe to reuse. Lifecycle command output can be human-facing when run directly, but plugin RPC stdout rules still apply: logs, prompts, and progress from RPC handlers belong on stderr, while stdout is reserved for the response envelope.
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the local `compose up` contract and [Application plugin template](/contributing/app-template) for the thin app-plugin scaffold.
+
+## RPC protocol
+
+Core sitectl commands that fan out to plugins do so through one private entrypoint: `__sitectl-rpc`. The host sends a JSON request envelope and the plugin writes one JSON response envelope to stdout. Human-facing plugin output is captured and returned in the response `output` field; structured data is returned in `result`. Plugin logs, progress, and interactive prompts use stderr so stdout remains reserved for the envelope.
+
+The SDK registers `__sitectl-rpc` automatically in `plugin.NewSDK`. Plugin authors normally register typed SDK handlers; they do not write transport code.
+
+For non-interactive RPC calls, core sitectl writes the JSON request to the plugin's stdin. When a plugin handler needs stdin for prompts or an interactive command, core sitectl passes the request as a base64-encoded JSON value in `--request` and leaves stdin attached to the handler. Because argv is visible in process listings, method params used with `--request` must not carry secrets.
+
+Both transports reject request envelopes larger than 4 MiB. Interactive calls also reject requests built from params marked with `RPCSensitiveParams` or the `rpc_sensitive:"true"` struct tag, because those calls would expose the encoded request through process argv.
+
+Plugin stdout is fully buffered by the RPC layer and appears in `response.output` after the plugin exits. Long-running progress should be written to stderr; stdout should be reserved for final human-facing output or command results.
+
+`protocol_version` is currently `1`. A missing or zero value is treated as the current version for backward compatibility; any explicit non-current version is rejected.
+
+Use the typed request builders in `pkg/plugin` (`NewJobRunRequest`, `NewComponentDescribeRequest`, `NewValidateRunRequest`, `NewHealthcheckRunRequest`, `NewVerifyRunRequest`, etc.) when invoking RPC from core or another plugin. These builders encode the method-specific `params` contract once, preserve sensitive-param metadata, and avoid hand-written JSON maps. `args` is only for true passthrough arguments that are owned by the plugin command itself.
+
+The JSON field names are part of the host/plugin wire contract. Envelope fields use lower snake_case tags exactly as shown below: `protocol_version`, `method`, `context`, `log_level`, `args`, `params`, `ok`, `result`, `output`, `error`, `code`, and `message`. Method params and result payloads follow the same lower snake_case rule.
+
+**Request envelope:**
+```json
+{
+  "protocol_version": 1,
+  "method": "component.set",
+  "context": "museum",
+  "log_level": "info",
+  "args": ["--mode", "http"],
+  "params": {
+    "name": "ingress",
+    "disposition": "enabled",
+    "path": "/srv/museum",
+    "yolo": true
+  }
+}
+```
+
+**Response envelope:**
+```json
+{
+  "protocol_version": 1,
+  "ok": true,
+  "result": {},
+  "output": "traefik: enabled\n"
+}
+```
+
+Errors use the same envelope and set `ok` to `false`:
+
+```json
+{
+  "protocol_version": 1,
+  "ok": false,
+  "error": {
+    "code": "plugin_error",
+    "message": "unsupported rpc method \"example.missing\""
+  }
+}
+```
+
+The request fields have stable roles:
+
+| Field | Purpose |
+|---|---|
+| `protocol_version` | Host/plugin protocol version. Current value is `1`. |
+| `method` | RPC method name, such as `plugin.metadata` or `component.set`. |
+| `context` | Optional sitectl context name passed to the plugin SDK. |
+| `log_level` | Optional plugin log level. |
+| `args` | Plugin-owned passthrough argv forwarded to the registered SDK command or runner. |
+| `params` | Structured method-specific JSON payload. |
+
+The response fields are intentionally split:
+
+| Field | Purpose |
+|---|---|
+| `result` | Structured JSON data consumed by core sitectl. |
+| `output` | Captured human-facing output from command-like plugin handlers. |
+| `error` | Structured failure object with `code` and `message`. |
+
+Because stdout is the response channel, plugin code must not write ad hoc text directly to stdout during RPC handling. Use Cobra command output or SDK helpers for returned `output`, and use stderr for logs, prompts, and streaming progress.
+
+Host-owned flags are encoded in `params`, not `args`. Examples include `name`, `path`, `report`, `verbose`, `format`, `yolo`, and the generic `codebase_rootfs` field. The RPC contract uses `codebase_rootfs` so Drupal, ISLE, and non-Drupal plugins can share the same concept.
+
+When a runner binds its own rootfs flag name, call `plugin.MarkCodebaseRootfsFlag(cmd, flagName)` so typed `codebase_rootfs` params are reconstructed into the correct Cobra flag before the command runs. Document `--codebase-rootfs` as the canonical flag in operator-facing docs.
+
+## Plugin Authoring Notes
+
+- Plugin command handlers must write user-visible output through `cmd.OutOrStdout()` and errors through `cmd.ErrOrStderr()`. Direct writes to `os.Stdout` are reserved for the RPC response envelope.
+- Plugin commands must declare every host-bridged RPC flag they accept; registration validates this and panics on missing flags.
+- Do not put secrets in RPC args or params because interactive requests may be transported through process argv.
+
+## Method catalog
+
+| Method | Purpose | Registered by |
+|---|---|---|
+| `plugin.metadata` | Returns plugin name, version, description, includes, create definitions, deploy definitions, image specs, and capability flags. | `plugin.NewSDK(metadata)` |
+| `project.detect` | Lets a plugin claim the current Compose project for transient `--context .` discovery. | `sdk.SetProjectDiscovery(...)` |
+| `create.component_definitions` | Returns component-backed create definitions for including plugins. | create definition registration |
+| `create.run` | Runs a create definition. | create definition registration |
+| `deploy.run` | Runs deploy hooks such as `pre-down` and `post-up`. | `sdk.RegisterDeployRunner(...)` |
+| `job.list` | Lists registered jobs. | `sdk.RegisterJob(...)` or `sdk.RegisterContextJob(...)` |
+| `job.run` | Runs one registered job. | `sdk.RegisterJob(...)` or `sdk.RegisterContextJob(...)` |
+| `component.list` | Lists component state. | `sdk.RegisterServiceComponents(...)` or `sdk.RegisterComponentCommand(...)` |
+| `component.describe` | Returns component details. | `sdk.RegisterServiceComponents(...)` or `sdk.RegisterComponentCommand(...)` |
+| `component.reconcile` | Applies component reconciliation. | `sdk.RegisterServiceComponents(...)` or `sdk.RegisterComponentCommand(...)` |
+| `component.set` | Applies one component state change. | `sdk.RegisterServiceComponents(...)` or `sdk.RegisterComponentCommand(...)` |
+| `validate.run` | Returns plugin validation results for core to merge and render. | `sdk.RegisterValidateRunner(...)` |
+| `healthcheck.run` | Returns plugin runtime health results for core to merge and render. | `sdk.RegisterHealthcheckRunner(...)` |
+| `verify.run` | Returns plugin behavioral verification results for core to render. | `sdk.RegisterVerifyRunner(...)` |
+| `debug.run` | Returns plugin debug sections for core to merge and render. | `sdk.RegisterDebugRunner(...)` |
+| `set.run` | Runs the top-level component-oriented `sitectl set` handler. | `sdk.RegisterSetRunner(...)` |
+| `converge.run` | Runs the top-level `sitectl converge` handler. | `sdk.RegisterConvergeRunner(...)` |
+
+### `debug.run`
+
+Registered by `sdk.RegisterDebugRunner(runner)`. Core `sitectl debug` invokes this after collecting its own diagnostics when the plugin advertises `CanDebug: true`. The plugin appends its own sections to the report.
+
+**Interface:**
+```go
+type DebugRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Render(cmd *cobra.Command, ctx *config.Context) (string, error)
+}
+```
+
+### `deploy.run`
+
+Registered by `sdk.RegisterDeployRunner(runner)`. Core `sitectl deploy` calls `deploy.run` with `pre-down` before `docker compose down` and `post-up` after `docker compose up`.
+
+**Interface:**
+```go
+type DeployRunner interface {
+    PreDown(cmd *cobra.Command, ctx *config.Context) error
+    PostUp(cmd *cobra.Command, ctx *config.Context) error
+}
+```
+
+### `job.list` / `job.run`
+
+Registered via `sdk.RegisterJob(spec)` or `sdk.RegisterContextJob(spec, runner)`. Core uses `job.list` to discover jobs and `job.run` to invoke the owning plugin.
+
+### `component.list` / `component.describe` / `component.reconcile` / `component.set`
+
+Registered by `sdk.RegisterServiceComponents(...)` or `sdk.RegisterComponentCommand(cmd)` for custom component implementations. These power the lower-level `sitectl component list`, `sitectl component describe`, `sitectl component reconcile`, and `sitectl component set` commands.
+
+### `converge.run`
+
+Registered by `sdk.RegisterConvergeRunner(runner)`. Core `sitectl converge` invokes this after confirming the context's plugin supports it (`CanConverge: true` in metadata). Core-owned flags such as `--path`, `--report`, `--verbose`, `--format`, and rootfs overrides are passed as typed params; plugin-specific flags remain in passthrough `args`.
+
+**Interface:**
+```go
+type ConvergeRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) error
+}
+```
+
+ISLE's implementation (`isleConvergeRunner`) delegates to the existing component reconcile machinery.
+
+### `set.run`
+
+Registered by `sdk.RegisterSetRunner(runner)`. Core `sitectl set` invokes this after resolving the owning plugin from either the context or the `plugin/component` namespace prefix in the component argument.
+
+**Interface:**
+```go
+type SetRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, args []string, ctx *config.Context) error
+}
+```
+
+### `validate.run`
+
+Registered by `sdk.RegisterValidateRunner(runner)`. Core `sitectl validate` runs its own core validators first, then invokes `validate.run` if the context plugin supports validation (`CanValidate: true`). The plugin returns `[]validate.Result` in the JSON response `result`. Core merges those results with its own before rendering the final report.
+
+This is different from the other fan-out commands: the merge happens in core, not the plugin. The plugin does not know about or render the core results.
+
+The SDK calls `ValidateRunner.Run` and marshals the returned results into the RPC result. A validate runner should not render its own validation report or write result JSON to stdout. Diagnostics that should stream during validation should go to `cmd.ErrOrStderr()`.
+
+**Interface:**
+```go
+type ValidateRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) ([]validate.Result, error)
+}
+```
+
+### `healthcheck.run`
+
+Registered by `sdk.RegisterHealthcheckRunner(runner)`. Core `sitectl healthcheck` checks Compose service containers first, then - if the context plugin supports healthcheck (`CanHealthcheck: true`) - invokes `healthcheck.run`. The plugin returns `[]validate.Result` in the JSON response `result`. Core merges those runtime results with the Compose service results before rendering the final report.
+
+The SDK calls `HealthcheckRunner.Run` and marshals the returned results into the RPC result. A healthcheck runner should not render its own report or write result JSON to stdout. Diagnostics that should stream during health checks should go to `cmd.ErrOrStderr()`.
+
+**Interface:**
+```go
+type HealthcheckRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) ([]validate.Result, error)
+}
+```
+
+### `verify.run`
+
+Registered by `sdk.RegisterVerifyRunner(runner)`. Core `sitectl verify` invokes `verify.run` when the active context plugin supports verification (`CanVerify: true`). Use this runner for CI and update validation checks that go beyond basic running-app health, such as important application workflows or feature-specific assertions that should survive a site update. The plugin returns `[]validate.Result` in the JSON response `result`, and core sorts and renders those results with the normal validation report renderer.
+
+Unlike `validate` and `healthcheck`, core `verify` has no built-in checks today. A context with no plugin-specific verify runner renders a warning result rather than failing. `--format` is host-owned because core renders the final report; all other unclaimed flags are passed through in `args` for the plugin's verify runner.
+
+The SDK calls `VerifyRunner.Run` and marshals the returned results into the RPC result. A verify runner should not render its own report or write result JSON to stdout. Diagnostics that should stream during verification should go to `cmd.ErrOrStderr()`.
+
+**Interface:**
+```go
+type VerifyRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) ([]validate.Result, error)
+}
+```
+
+### `create.run` / `create.component_definitions`
+
+Registered implicitly when create definitions are registered. `create.run` powers `sitectl create <plugin>/<definition>` flows. `create.component_definitions` lets including plugins reuse component create options from included plugins.
+
+Create definitions are also used outside `create.run`: core reads them from metadata for `sitectl create list`, local image override handling, and command-scoped `sitectl compose up` reconcile.
+
+## Core fan-out summary
+
+| User command | RPC method | Merge model |
+|---|---|---|
+| `sitectl debug` | `debug.run` | Plugin appends sections; core renders combined report |
+| `sitectl deploy` | `deploy.run` | Core orchestrates; plugin runs hooks at fixed points |
+| `sitectl job list` / `run` | `job.list`, `job.run` | Full dispatch; core is only the entry point |
+| `sitectl component list` / `describe` | `component.list`, `component.describe` | Full dispatch |
+| `sitectl component reconcile` | `component.reconcile` | Full dispatch (legacy; prefer `sitectl converge`) |
+| `sitectl component set` | `component.set` | Full dispatch (lower-level; prefer `sitectl set`) |
+| `sitectl converge` | `converge.run` | Full dispatch; all flags forwarded |
+| `sitectl set` | `set.run` | Full dispatch; all flags forwarded |
+| `sitectl stats` | `ingress.routes` | Core reports context, ingress, ports, and Docker stats; plugin supplies app-owned route descriptors |
+| `sitectl validate` | `validate.run` | Core runs first; plugin results merged in core |
+| `sitectl healthcheck` | `healthcheck.run` | Core checks Compose services first; plugin results merged in core |
+| `sitectl verify` | `verify.run` | Plugin behavioral results rendered by core |
+
+## Shared renderer
+
+Whether it's debug output or component status, each plugin's contribution is rendered using `debugui.RenderPanel` from `pkg/plugin/debugui`. This keeps output consistently formatted regardless of which plugins contributed. Plugin authors must use the shared renderer rather than rolling their own panel format.
+
+## Invoking included plugins from plugin code
+
+A plugin that includes other plugins can invoke registered RPC methods programmatically via the SDK:
+
+```go
+resp, err := sdk.InvokeIncludedPluginRPC("drupal", plugin.NewRPCRequest(plugin.MethodDebugRun), plugin.CommandExecOptions{
+    Context: ctx,
+})
+```
+
+Prefer the typed constructors when the method has params:
+
+```go
+req, err := plugin.NewComponentDescribeRequest(plugin.ComponentTargetParams{
+    Name: "fcrepo",
+    CodebaseRootfs: ".",
+})
+if err != nil {
+    return err
+}
+resp, err := sdk.InvokeIncludedPluginRPC("drupal", req, plugin.CommandExecOptions{Context: ctx})
+```
+
+`InvokeIncludedPluginRPC` enforces that you can only call plugins explicitly listed in your `Includes`. It returns an error if you try to call a plugin your metadata does not declare.
+
+For command-like methods that may prompt, pass `Stdin`, `Stderr`, and `LiveStderr: true`; the SDK will use `--request` for the envelope and keep stdin available to the plugin handler. Stdout remains reserved for the JSON response envelope.
+
+## Adding a new plugin
+
+A new sitectl plugin is a standalone Go binary that:
+
+1. Creates an SDK instance via `plugin.NewSDK(metadata)`
+2. Registers its commands and runners with the SDK (`sdk.AddCommand`, `sdk.RegisterDebugRunner`, `sdk.RegisterConvergeRunner`, etc.)
+3. Calls `sdk.Execute()` to enter the Cobra command tree
+
+The binary name must follow the `sitectl-<name>` convention, and `metadata.Name` must match the suffix. The binary must be on `$PATH` for core sitectl to discover it.
+
+See the [development guide](/contributing/development) for how to set up a local workspace with `make work` for developing against a local sitectl checkout.

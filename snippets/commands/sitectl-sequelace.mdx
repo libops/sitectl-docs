@@ -1,0 +1,14 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Open a direct connection to the site's MySQL/MariaDB container in Sequel Ace.
+
+For remote contexts, sitectl establishes an SSH tunnel before launching Sequel Ace so the
+database port is never exposed on the host. This command is macOS only.
+
+```bash
+sitectl sequelace
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--sequel-ace-path` | `/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace` | Path to the Sequel Ace binary. |

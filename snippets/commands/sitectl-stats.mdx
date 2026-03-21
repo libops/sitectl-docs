@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Show ingress and container runtime stats for the active context.
+
+The report is always pretty JSON. It includes the selected context, the primary
+public URL, any plugin-declared ingress routes, Traefik host port status, and
+Docker container stats for the Compose project.
+
+```bash
+sitectl stats
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--format` | `json` | Output format. Only json is supported. |
+| `--path` |   | Project path override. |

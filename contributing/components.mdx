@@ -1,0 +1,190 @@
+---
+title: Component development
+description: How to define a sitectl component, what each field in the Definition struct means, and the workflow for adding a new one.
+---
+
+Components are defined in Go using the `component.Definition` struct from `pkg/component`. Plugins register their component definitions with a `Registry`, which the `component status` and `component set` commands use to look up what to display and what to change.
+
+## The Definition struct
+
+```go
+type Definition struct {
+    Name                string
+    DefaultState        State
+    DefaultDisposition  Disposition
+    AllowedDispositions []Disposition
+    Guidance            StateGuidance
+    PromptOnCreate      bool
+    FollowUps           []FollowUpSpec
+    Gates               GateSpec
+    Dependencies        Dependencies
+    Behavior            Behavior
+    On                  DomainSpec
+    Off                 DomainSpec
+}
+```
+
+### Core identity
+
+`Name` is the machine-readable identifier used in commands like `sitectl component set fcrepo off`. It must be unique within the plugin.
+
+`DefaultState` is `on` or `off`, which controls what the component does if the operator never sets it explicitly. Most components default to `on` to match the upstream template.
+
+### Create flow
+
+`PromptOnCreate` controls whether `sitectl create isle` asks the operator about this component. Set it to `true` for components that represent a meaningful architectural choice that should be made at install time, such as whether to include fcrepo or Blazegraph.
+
+`FollowUps` is a list of additional questions that appear when a specific state or disposition is chosen. For example, fcrepo asks which file system URI to use when it is enabled. Follow-up specs include:
+
+| Field | Meaning |
+|---|---|
+| `Name` | Machine-readable identifier |
+| `FlagName` | CLI flag that pre-answers this question (e.g. `--fcrepo-fs-type`) |
+| `Question` | Text shown to the operator in interactive mode |
+| `Choices` | Valid answers, if the question is a select |
+| `DefaultValue` | Pre-selected answer |
+| `PromptOnCreate` | Whether to ask this follow-up during create |
+| `AppliesTo` | Which state this follow-up applies to (`on` or `off`) |
+
+### Domains: On and Off
+
+`On` and `Off` are both `DomainSpec` values that describe what changes when the component is in each state:
+
+```go
+type DomainSpec struct {
+    Compose YAMLStateSpec
+    Drupal  YAMLStateSpec
+}
+```
+
+`Compose` rules describe changes to `docker-compose.yml`. `Drupal` rules describe changes to the Drupal config sync directory. Each `YAMLStateSpec` holds a list of `YAMLRule` entries:
+
+```go
+type YAMLRule struct {
+    Files       []string   // files to target
+    Path        string     // YAML path within the file (dot-separated)
+    Op          RuleOp     // set, delete, restore, or replace
+    Value       any        // value to set (for OpSet)
+    Old         any        // value to replace (for OpReplace)
+}
+```
+
+For more complex changes that YAML rules can't express, `ComponentSpec` supports lifecycle hooks (`BeforeEnable`, `AfterEnable`, `BeforeDisable`, `AfterDisable`) that run Go functions with access to the Docker client and context config.
+
+### Gates
+
+`Gates` controls safety checks before a state change is applied:
+
+```go
+type GateSpec struct {
+    LocalOnly           bool
+    DisableConfirmation string
+    EnableConfirmation  string
+}
+```
+
+Set `LocalOnly: true` for components that should only be changed on local contexts. Set `DisableConfirmation` or `EnableConfirmation` to a custom prompt string. If empty, sitectl uses a default that mentions the possibility of rewriting Compose files and Drupal config.
+
+### Behavior
+
+`Behavior` records operational metadata that helps sitectl (and operators) understand what a state change entails:
+
+```go
+type Behavior struct {
+    Idempotent bool
+    Enable     TransitionBehavior
+    Disable    TransitionBehavior
+}
+
+type TransitionBehavior struct {
+    DataMigration DataMigrationRequirement  // none, backfill, or hard
+    Summary       string
+}
+```
+
+`DataMigration` tells operators whether enabling or disabling this component requires a data migration:
+
+| Value | Meaning |
+|---|---|
+| `none` | No data migration needed |
+| `backfill` | Existing data needs to be backfilled after the change, but the change itself is safe to apply |
+| `hard` | A data migration must happen before applying the change; applying without migrating may corrupt data |
+
+### Dependencies
+
+`Dependencies.DrupalModules` lists which Drupal modules must be present when the component is enabled, and how sitectl should treat them if the component is later disabled:
+
+```go
+type DrupalModuleDependency struct {
+    Module          string
+    ComposerPackage string
+    Mode            DrupalModuleDependencyMode  // strict or enable_only
+}
+```
+
+`strict` means the module is part of the component's contract: enable it when the component is enabled, and consider it out of place when the component is disabled.
+
+`enable_only` means the module must exist when the component is enabled, but disabling the component does not imply removing or uninstalling it.
+
+## Registering a component
+
+Plugins register components with a `Registry` at startup:
+
+```go
+registry := component.NewRegistry(
+    fcrepo.NewComponent(),
+    blazegraph.NewComponent(),
+)
+```
+
+`MustRegister` panics on duplicate names, which catches naming conflicts at startup rather than at runtime.
+
+The `component status` command iterates the registry and checks each definition against the live project state. The `component set` command looks up the definition by name, resolves the target `ComponentSpec`, and applies it via the `Manager`.
+
+## When to define a new component
+
+A feature is a good candidate for a component if:
+
+- Operators frequently ask how to enable or disable it (it comes up in support channels)
+- Enabling or disabling it requires coordinated changes across Compose files and Drupal config
+- It represents a meaningful architectural choice that should be made at install time
+
+If a feature is always on and has no meaningful off state, it does not need to be a component.
+
+If the component represents a reusable, self-contained service such as Traefik, Solr, MariaDB, Valkey, or Memcached, follow the [Service components](/contributing/service-components) architecture. The shared operation belongs in core `sitectl`; the application plugin should only add app-specific wiring.
+
+## Component workflow
+
+<Steps>
+  <Step title="Define the component">
+    Write a new Go file in the plugin's `pkg/components` directory. Implement the `Definition` struct with `On` and `Off` domain specs. Add YAML rules for the observable state that `status`, `set`, and `converge` should detect.
+  </Step>
+  <Step title="Register it">
+    Add the new component to the plugin's `Registry` initialization.
+  </Step>
+  <Step title="Add it to the create flow">
+    If the component requires a decision at install time, set `PromptOnCreate: true`, add any `FollowUps` needed, and thread the decision through the plugin's create request/options object. The create path should apply the same behavior as `component set` so a new checkout and an existing checkout stay consistent.
+  </Step>
+  <Step title="Add the apply path">
+    Use the repo's existing component apply pattern. For simple components, structured YAML mutation helpers are usually enough. For larger generated config blocks, put the static config in `pkg/create/assets/...` and load it with Go `embed` instead of keeping inline YAML strings in Go code.
+  </Step>
+  <Step title="Write tests">
+    Add focused tests for the component definition, create option resolution, the set/apply path, and any generated files. If the component is intentionally disabled during integration tests, make that explicit with a create flag instead of relying on an implicit default.
+  </Step>
+  <Step title="Document it">
+    Add a page in `plugins/isle/` (or the relevant plugin section), add it to `docs.json`, and link to it from the plugin overview. Document when to enable or disable the component, create-time flags, follow-up environment variables, generated files, and any production caveats.
+  </Step>
+</Steps>
+
+## Component Checklist
+
+Before opening a component PR, check that it covers the full operator workflow:
+
+- `Definition` includes clear guidance, allowed dispositions, behavior summaries, data migration impact, and `LocalOnly` when changes should only happen on local checkouts.
+- `PromptOnCreate` is true for features operators should decide on during initial site creation.
+- Create flags and recreate-command output include the component so automated installs and setup commits are reproducible.
+- `component set`, create, and converge/status detection agree on what `on`, `off`, and `drifted` mean.
+- Static generated YAML or templates live under `pkg/create/assets/...` and are loaded with Go `embed`; avoid large inline YAML blocks in Go.
+- Runtime warnings are printed for insecure defaults, required credentials, destructive changes, or behavior that can surprise production operators.
+- Integration tests explicitly set the component state, even when the intended state is the default.
+- Plugin documentation explains the operational reason for any unusual design choice, such as vendoring or mounting local plugin source to avoid production startup dependencies on third-party services.
