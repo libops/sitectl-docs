@@ -1,0 +1,20 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Set the state or disposition of a named component for the active context.
+
+The component name may be prefixed with the plugin namespace:
+
+  sitectl set isle/fcrepo off
+  sitectl set blazegraph disabled
+
+This command dispatches to the plugin associated with the active context.
+All flags and arguments are forwarded to the plugin's set handler.
+
+Examples:
+  sitectl set fcrepo off
+  sitectl set isle/fcrepo disabled
+  sitectl set isle-tls on `--tls-mode` letsencrypt
+
+```bash
+sitectl set <component> [disposition] [flags]
+```

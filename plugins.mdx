@@ -1,13 +1,35 @@
 ---
 title: Plugins
-description: How sitectl plugins extend the core CLI with stack-specific workflows.
+description: How sitectl plugins extend the core CLI with stack-specific workflows and create flows.
 ---
 
-Plugins extend `sitectl` with stack-specific commands and create flows.
+Plugins extend `sitectl` with commands and workflows specific to the technology stack your site runs on.
 
-Examples:
+## How discovery works
 
-- `drupal` adds Drupal-oriented utilities
-- `isle` adds Islandora and ISLE workflows
+sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-<plugin>`. When you run `sitectl drupal drush`, sitectl finds `sitectl-drupal` on your path and delegates the `drush` subcommand to it — passing through flags and context automatically.
 
-The core binary discovers installed plugins and exposes them as `sitectl <plugin> ...`.
+This means installing a plugin is as simple as putting its binary on your path. No configuration needed.
+
+## Plugin hierarchy
+
+Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` because every ISLE site is also a Drupal site. When a command is dispatched to the ISLE plugin, it can invoke the Drupal plugin for Drupal-specific work. This hierarchy is reflected in install dependencies: installing `sitectl-isle` via Homebrew or Linux packages will also install `sitectl-drupal`.
+
+The active context's `plugin` field determines which plugin is responsible for a given site. Commands like `sitectl debug` use this to route diagnostic collection to the right plugin automatically.
+
+## Available plugins
+
+<CardGroup cols={2}>
+  <Card title="sitectl-drupal" icon="square-d" href="/plugins/drupal">
+    Drupal-oriented workflows: drush execution, user login links, database and config sync between environments.
+  </Card>
+  <Card title="sitectl-isle" icon="layer-group" href="/plugins/isle">
+    Islandora ISLE workflows: guided site creation, component management, Fedora and Blazegraph sync, and migration utilities. Includes the Drupal plugin.
+  </Card>
+</CardGroup>
+
+## Assigning a plugin to a context
+
+When you create or configure a context, you specify which plugin owns it. This is stored in the context's `plugin` field. Only commands from that plugin (and any plugins it includes) are valid against that context.
+
+For example, a context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands, because ISLE includes Drupal.

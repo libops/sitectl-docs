@@ -1,14 +1,93 @@
 ---
 title: ISLE plugin
-description: Islandora and ISLE-oriented sitectl workflows and component guides.
+description: Islandora ISLE sitectl workflows including guided site creation, component management, Fedora and Blazegraph sync, and migration utilities.
 ---
 
-# ISLE plugin
+import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The ISLE plugin extends `sitectl` with Islandora and ISLE-specific workflows.
+The ISLE plugin adds Islandora-specific behavior on top of the core sitectl workflow. Because every ISLE site is also a Drupal site, the ISLE plugin includes the Drupal plugin — all `sitectl drupal` commands work against ISLE contexts automatically.
 
-See also:
+## Create
 
-- [ISLE overview](/plugins/isle/index)
-- [Fcrepo component](/plugins/isle/fcrepo)
-- [Blazegraph component](/plugins/isle/blazegraph)
+Start a new ISLE site from the [`isle-site-template`](https://github.com/islandora-devops/isle-site-template):
+
+```bash
+sitectl create isle
+```
+
+The create flow:
+
+<Steps>
+  <Step title="Clone the template">
+    sitectl clones `isle-site-template` from `main` into your chosen directory. Pass `--template-repo` and `--template-branch` to use a different source.
+  </Step>
+  <Step title="Configure a context">
+    sitectl creates a local sitectl context for the new project directory.
+  </Step>
+  <Step title="Answer component questions">
+    sitectl asks about each component that requires a decision at create time — such as whether to include fcrepo or Blazegraph. You can answer interactively or pre-supply answers with flags.
+  </Step>
+  <Step title="Apply component state">
+    sitectl writes the <Compose /> file and Drupal config changes that reflect your component choices, so the first `docker compose up` starts the stack you asked for.
+  </Step>
+</Steps>
+
+Pass `--git-remote-url` to keep the template as `upstream` and add your own repository as `origin`.
+
+## Component status
+
+See which components are registered and how the project is currently configured:
+
+```bash
+sitectl component status
+sitectl component status --path /path/to/project
+```
+
+`sitectl component status` is a core command that dispatches to the ISLE plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
+
+## Component set
+
+Turn a component on or off:
+
+```bash
+sitectl component set fcrepo off
+sitectl component set blazegraph on --yolo
+```
+
+sitectl updates the relevant <Compose /> files and Drupal config sync files, then prompts for confirmation. Pass `--yolo` to skip confirmation in automation.
+
+## Sync
+
+Copy the fcrepo database from one context to another:
+
+```bash
+sitectl isle sync fcrepo --source museum-prod --target museum-local
+```
+
+This backs up fcrepo on the source, stages the artifact, and imports it into the target.
+
+## Validate
+
+Check that the active context's project configuration is valid:
+
+```bash
+sitectl isle validate
+```
+
+## Migrate
+
+Migrate a legacy ISLE configuration to the current format:
+
+```bash
+sitectl isle migrate --input legacy-config.yaml --output updated-config.yaml
+```
+
+## Drupal commands
+
+Because the ISLE plugin includes the Drupal plugin, all `sitectl drupal` commands work against ISLE contexts:
+
+```bash
+sitectl drupal drush cr
+sitectl drupal sync database --source museum-prod --target museum-local
+sitectl drupal login
+```

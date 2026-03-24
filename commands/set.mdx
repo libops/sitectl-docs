@@ -1,0 +1,33 @@
+---
+title: set
+description: Enable, disable, or reconfigure a component.
+---
+
+import SetCmd from "/snippets/commands/sitectl-set.mdx";
+
+Use `set` to change a component's state or disposition. After running `set`, run `sitectl converge` to apply the change to the project files.
+
+## Reference
+
+<SetCmd />
+
+## Examples
+
+```bash
+# Disable the fcrepo component
+sitectl set fcrepo off
+
+# Enable blazegraph using its full namespace
+sitectl set isle/blazegraph on
+
+# Configure TLS mode for the isle-tls component
+sitectl set isle-tls on --tls-mode letsencrypt
+```
+
+## Namespacing
+
+The component argument may include a plugin prefix (`plugin/component`). This is useful when multiple plugins define components with the same name, or when targeting a component owned by a specific plugin regardless of the active context.
+
+## After setting
+
+Running `set` records the desired state but does not immediately modify project files. Follow up with `sitectl converge` to apply the change, or `sitectl validate` to confirm the current state.

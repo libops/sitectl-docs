@@ -1,0 +1,17 @@
+---
+title: job
+description: Run plugin-defined maintenance jobs like backups and imports.
+---
+
+import JobCmd from "/snippets/commands/sitectl-job.mdx";
+import JobList from "/snippets/commands/sitectl-job-list.mdx";
+
+Jobs are plugin-defined operations — backups, database imports, content syncs — that run against a specific context. The available jobs depend on which plugin is installed for the active context.
+
+## job
+
+<JobCmd />
+
+## list
+
+<JobList />

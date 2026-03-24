@@ -1,0 +1,21 @@
+---
+title: cache
+description: Warm caches to speed up ISLE site page load times.
+---
+
+import CacheMirador from "/snippets/commands/sitectl-isle-cache-mirador.mdx";
+
+Run cache warmers after a fresh deployment or restart to ensure the first real visitors don't experience slow load times while the IIIF server processes images on demand.
+
+## cache mirador
+
+<CacheMirador />
+
+## When to run it
+
+Run `cache mirador` after:
+- Deploying a new version of your ISLE site.
+- Restarting the IIIF server.
+- Ingesting a large batch of new paged content.
+
+The command fetches paged content URLs from the `--endpoint` JSON feed and renders each one in a headless browser, causing the IIIF server to cache the child images before visitors arrive.

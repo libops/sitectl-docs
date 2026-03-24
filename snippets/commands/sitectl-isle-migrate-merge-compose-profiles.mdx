@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Merge Compose profile variants into single service definitions and extract Traefik labels
+into separate configuration files.
+
+Supports migration from the legacy isle-site-template format that used -dev/-prod service pairs.
+The format is detected automatically.
+
+```bash
+sitectl isle migrate merge-compose-profiles
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-f, --force` | `false` | Overwrite the output file if it already exists. |
+| `-i, --input` | `docker-compose.yml` | Input Compose file. |
+| `-o, --output` | `docker-compose.yml` | Output Compose file. |

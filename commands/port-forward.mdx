@@ -1,0 +1,19 @@
+---
+title: port-forward
+description: Access Docker service ports on remote contexts that aren't exposed on the host.
+---
+
+import PortForwardCmd from "/snippets/commands/sitectl-port-forward.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Remote services often don't expose ports directly on the VM — Solr, Traefik's dashboard, ActiveMQ, and similar admin interfaces are typically internal only. `port-forward` opens an SSH tunnel and maps those ports to localhost so you can reach them from your browser or local tools.
+
+## Reference
+
+<PortForwardCmd />
+
+## How it works
+
+sitectl opens an SSH connection to the remote context's host and forwards each `LOCAL-PORT:SERVICE:REMOTE-PORT` mapping through that tunnel. The tunnel stays open until you press `Ctrl+C`.
+
+Services are identified by their <Compose /> service name — sitectl resolves the container and port automatically.

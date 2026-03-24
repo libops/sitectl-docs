@@ -1,0 +1,94 @@
+---
+title: Development
+description: Local development workflow for sitectl and its plugins, including Go workspaces, linting, testing, and integration tests.
+---
+
+## Local install
+
+For local development, install all binaries into a directory on your `$PATH` so core sitectl can discover and invoke the plugin binaries. From the core repo:
+
+```bash
+make install
+```
+
+This builds and installs `sitectl`, then changes into `../sitectl-isle` and `../sitectl-drupal` and runs `make install` in each. The plugin `install` targets run `make work` before building so they use the local sitectl checkout.
+
+If you're only working on a single plugin:
+
+```bash
+cd ../sitectl-isle && make install
+cd ../sitectl-drupal && make install
+```
+
+## Developing against a local sitectl checkout
+
+Plugins import sitectl as a Go module dependency. When you need to test plugin changes against an unreleased version of sitectl, use Go workspaces instead of `replace` directives:
+
+```bash
+make work
+```
+
+This runs `scripts/use-go-work.sh`, which creates a `go.work` file that points the plugin at `../sitectl`. The `go.work` file is gitignored — it's local only and does not affect CI or releases.
+
+<Warning>
+  Never add a `replace` directive to `go.mod` for local development. Use `make work` instead. Replace directives affect everyone who builds the module; `go.work` files are local.
+</Warning>
+
+## Linting and testing
+
+```bash
+make lint test
+```
+
+This runs the same lint and test invocation used in GitHub Actions. Run it before pushing. Lint includes `gofmt` and `golangci-lint`. Tests run with `-race`.
+
+To run a single test:
+
+```bash
+go test -v -race ./cmd -run TestFcrepoComponent
+```
+
+## Integration tests (ISLE plugin)
+
+The ISLE plugin has an end-to-end `create` test that exercises the full site creation flow:
+
+```bash
+make integration-test FCREPO_STATE=off ISLE_FILE_SYSTEM_URI=public SITECTL_CONTEXT=isle-test
+```
+
+This is the same script the GitHub Actions integration workflow runs. It requires Docker and a functioning sitectl installation.
+
+## Key command flags
+
+### `sitectl create isle`
+
+| Flag | Default | Description |
+|---|---|---|
+| `--template-repo` | `https://github.com/islandora-devops/isle-site-template` | Template repository to clone |
+| `--template-branch` | `main` | Branch to clone from |
+| `--git-remote-url` | — | If set, keeps template as `upstream` and adds this as `origin` |
+
+### `sitectl component describe`
+
+Both `sitectl create isle` and `sitectl component describe` accept `--drupal-rootfs`. The shared sitectl component SDK defaults this to `./`. The ISLE plugin overrides the default to `./drupal/rootfs/var/www/drupal` so Drupal-specific paths like `composer.json` and `config/sync` resolve correctly for the site template layout.
+
+```bash
+sitectl component describe --path /path/to/project
+```
+
+### `sitectl converge` / `sitectl validate`
+
+Both commands use `DisableFlagParsing: true` and forward all flags to the plugin's registered runner. The ISLE plugin's `ConvergeRunner` and `ValidateRunner` both accept `--drupal-rootfs` to resolve the Drupal web root correctly.
+
+```bash
+sitectl converge --report
+sitectl validate --drupal-rootfs drupal/rootfs/var/www/drupal
+```
+
+## Why `make install` matters for plugin chaining
+
+Rebuilding `sitectl` locally without reinstalling the plugin binaries means core command dispatch will not see your current plugin builds. The full install chain keeps all three binaries aligned while you work across:
+
+- core command routing in `sitectl`
+- stack logic in `sitectl-isle`
+- Drupal-specific extensions in `sitectl-drupal`

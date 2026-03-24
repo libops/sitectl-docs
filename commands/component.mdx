@@ -1,0 +1,31 @@
+---
+title: component
+description: Toggle and inspect optional stack features like fcrepo and Blazegraph.
+---
+
+import ComponentCmd from "/snippets/commands/sitectl-component.mdx";
+import ComponentDescribe from "/snippets/commands/sitectl-component-describe.mdx";
+import ComponentReconcile from "/snippets/commands/sitectl-component-reconcile.mdx";
+import ComponentSet from "/snippets/commands/sitectl-component-set.mdx";
+
+Components are optional services in your stack — things like fcrepo or Blazegraph — that can be switched on or off without rebuilding the whole project. sitectl delegates component management to the plugin for the active context, so the same commands work across different stack types.
+
+See the [components concept page](/components) for an explanation of what components are and how they work.
+
+## component
+
+<ComponentCmd />
+
+## describe
+
+<ComponentDescribe />
+
+## reconcile
+
+<ComponentReconcile />
+
+A component shows as `drifted` when its project files no longer match its last recorded state — for example, if someone manually edited a Compose file. Run `reconcile` to bring the project back into alignment.
+
+## set
+
+<ComponentSet />

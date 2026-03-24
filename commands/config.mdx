@@ -1,0 +1,60 @@
+---
+title: config
+description: Manage sitectl contexts — local and remote Docker Compose sites.
+---
+
+import ConfigCmd from "/snippets/commands/sitectl-config.mdx";
+import ConfigCurrentContext from "/snippets/commands/sitectl-config-current-context.mdx";
+import ConfigGetContexts from "/snippets/commands/sitectl-config-get-contexts.mdx";
+import ConfigGetEnvironments from "/snippets/commands/sitectl-config-get-environments.mdx";
+import ConfigGetSites from "/snippets/commands/sitectl-config-get-sites.mdx";
+import ConfigSetContext from "/snippets/commands/sitectl-config-set-context.mdx";
+import ConfigUseContext from "/snippets/commands/sitectl-config-use-context.mdx";
+import ConfigDeleteContext from "/snippets/commands/sitectl-config-delete-context.mdx";
+import ConfigValidate from "/snippets/commands/sitectl-config-validate.mdx";
+import ConfigView from "/snippets/commands/sitectl-config-view.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+A sitectl context points to a <Compose /> site running either on your local machine or on a remote server over SSH. You can have many contexts and switch between them with `use-context`.
+
+See the [context concept page](/context) for a full explanation.
+
+## config
+
+<ConfigCmd />
+
+## current-context
+
+<ConfigCurrentContext />
+
+## get-contexts
+
+<ConfigGetContexts />
+
+## get-environments
+
+<ConfigGetEnvironments />
+
+## get-sites
+
+<ConfigGetSites />
+
+## set-context
+
+<ConfigSetContext />
+
+## use-context
+
+<ConfigUseContext />
+
+## delete-context
+
+<ConfigDeleteContext />
+
+## validate
+
+<ConfigValidate />
+
+## view
+
+<ConfigView />

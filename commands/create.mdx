@@ -1,0 +1,28 @@
+---
+title: create
+description: Create a new stack from an installed plugin definition.
+---
+
+import CreateCmd from "/snippets/commands/sitectl-create.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The `create` command provisions a new <Compose /> stack using a create definition registered by an installed plugin. Run `sitectl create list` to see all available definitions, or omit arguments to be guided interactively.
+
+## Reference
+
+<CreateCmd />
+
+## Selecting a definition
+
+You can qualify the target as `plugin/definition` to skip prompts entirely:
+
+```bash
+sitectl create isle/default
+sitectl create drupal/default
+```
+
+Or just pass a definition name when it is unambiguous across installed plugins:
+
+```bash
+sitectl create default
+```

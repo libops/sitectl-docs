@@ -1,0 +1,10 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Print the systemd .service and .timer unit files for the named cron spec, along with
+step-by-step instructions for installing them on the target host.
+
+For remote contexts, copy the units to the host manually and install them there.
+
+```bash
+sitectl cron render-systemd NAME
+```

@@ -1,0 +1,30 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Deploy the active context by orchestrating a full update cycle.
+
+The deploy sequence runs:
+  1. Plugin pre-down hooks (if the context plugin registers a deploy runner)
+  2. docker compose down
+  3. git fetch and git checkout `<branch>` (unless `--skip-git` is set)
+  4. docker compose pull (unless `--no-pull` is set)
+  5. docker compose up -d `--remove-orphans`
+  6. Plugin post-up hooks (if the context plugin registers a deploy runner)
+
+The `--branch` flag overrides which branch is checked out during the git step.
+If omitted, the repository's current branch is updated via fetch without switching.
+
+Examples:
+  sitectl deploy                         # Deploy current branch on active context
+  sitectl deploy `--branch` main           # Switch to main and deploy
+  sitectl deploy `--skip-git`              # Restart services without pulling git changes
+  sitectl deploy `--context` prod          # Deploy on a specific context
+
+```bash
+sitectl deploy
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--branch` |   | Git branch to check out during the deploy (default: update current branch) |
+| `--no-pull` | `false` | Skip docker compose pull before bringing services up |
+| `--skip-git` | `false` | Skip the git fetch/checkout step |

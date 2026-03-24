@@ -1,0 +1,66 @@
+---
+title: cron
+description: Manage scheduled jobs for sitectl contexts.
+---
+
+import CronCmd from "/snippets/commands/sitectl-cron.mdx";
+import CronAdd from "/snippets/commands/sitectl-cron-add.mdx";
+import CronList from "/snippets/commands/sitectl-cron-list.mdx";
+import CronDelete from "/snippets/commands/sitectl-cron-delete.mdx";
+import CronRun from "/snippets/commands/sitectl-cron-run.mdx";
+import CronInstalled from "/snippets/commands/sitectl-cron-installed.mdx";
+import CronComponents from "/snippets/commands/sitectl-cron-components.mdx";
+import CronRenderSystemd from "/snippets/commands/sitectl-cron-render-systemd.mdx";
+
+Cron specs define scheduled jobs — backups, syncs, and other maintenance tasks — for a specific context. Once a spec is configured, use `render-systemd` to generate the systemd units and install them on the host.
+
+## cron
+
+<CronCmd />
+
+## add
+
+<CronAdd />
+
+## list
+
+<CronList />
+
+## delete
+
+<CronDelete />
+
+## run
+
+<CronRun />
+
+## installed
+
+<CronInstalled />
+
+## components
+
+<CronComponents />
+
+## render-systemd
+
+<CronRenderSystemd />
+
+## Typical workflow
+
+1. Check what job components are available for the context:
+   ```bash
+   sitectl cron components --context prod
+   ```
+2. Create a spec:
+   ```bash
+   sitectl cron add nightly-backup \
+     --cron-context prod \
+     --schedule "daily" \
+     --component db-backup \
+     --output-dir /var/backups/sitectl
+   ```
+3. Preview the systemd units and install them:
+   ```bash
+   sitectl cron render-systemd nightly-backup
+   ```

@@ -1,0 +1,78 @@
+---
+title: Documentation
+description: How to edit, preview, and organize the Mintlify documentation in the sitectl-docs repository.
+---
+
+import { TUI } from "/snippets/tui-tooltip.mdx";
+
+The docs site is driven by [Mintlify](https://www.mintlify.com/docs) from the [sitectl-docs](https://github.com/libops/sitectl-docs) repository.
+
+Mintlify reads:
+
+- [docs.json](https://github.com/libops/sitectl-docs/blob/main/docs.json) for navigation and site settings
+- [index.mdx](https://github.com/libops/sitectl-docs/blob/main/index.mdx) for the homepage
+- `.mdx` files under the repository root for all other pages
+
+## Local development
+
+Mintlify's local dev startup command is `mint dev`, but Mintlify does not support Node 25+. This repo avoids that issue by running Mintlify in a Node 22 Docker container:
+
+```bash
+make docs
+```
+
+The docs server binds to port `3000` by default. Override with:
+
+```bash
+make docs DOCS_PORT=3333
+```
+
+If you already have a supported LTS Node version installed locally:
+
+```bash
+make docs-host
+```
+
+## Command reference snippets
+
+Command reference blocks (the auto-generated usage + flags tables) live in `snippets/commands/` and are generated from the Go source. Do not edit them by hand — they will be overwritten on the next run.
+
+To regenerate after changing a command's flags or description:
+
+```bash
+make docs-snippets
+```
+
+This runs `scripts/gen-docs-snippets/main.go`, which imports the sitectl, sitectl-isle, and sitectl-drupal command trees and renders each command to an `.mdx` snippet file.
+
+The generator skips hidden commands (those starting with `__`) and thin plugin-passthrough wrappers.
+
+## Tooltip snippets
+
+Reusable tooltip definitions for technical terms live in `snippets/`. Import and use them in any page:
+
+```mdx
+import { SSH } from "/snippets/ssh-tooltip.mdx";
+import { TUI } from "/snippets/tui-tooltip.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import { YAML } from "/snippets/yaml-tooltip.mdx";
+import { CLI } from "/snippets/cli-tooltip.mdx";
+```
+
+Use these consistently across home-tab pages so readers who hover over a term see a definition. The contributing tab can use raw technical language without tooltips.
+
+When adding a new term that appears in multiple pages and may be unfamiliar to a non-sysadmin audience, create a tooltip snippet file rather than duplicating inline tooltip markup.
+
+## Making docs changes
+
+When you update the docs:
+
+- preserve the existing nav structure in `docs.json` and only add to it when needed
+- use MDX for new pages
+- keep contributor and operator guidance in the docs site instead of a `CONTRIBUTING.md` file
+- home-tab pages (the operator-facing docs) should avoid jargon and use tooltip snippets for acronyms
+- contributing-tab pages can be fully technical
+
+## Deployment
+
+Docs deploy through the Mintlify GitHub App connected to this repository. There is no GitHub Pages workflow to maintain.

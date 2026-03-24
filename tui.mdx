@@ -1,15 +1,53 @@
 ---
 title: Terminal UI
-description: The interactive terminal interface for moving between sites, environments, and operator actions.
+description: The interactive terminal interface for monitoring sites, running operator workflows, and setting up new environments.
 ---
 
 import { TUI } from "/snippets/tui-tooltip.mdx";
+import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The `sitectl` <TUI /> is the main interface for managing a site and its environments.
+The `sitectl` <TUI /> is the main interface for day-to-day site operations. Launch it by running `sitectl` with no arguments:
 
-It gives you one place to:
+```bash
+sitectl
+```
 
-- inspect environments
-- run commands against a specific environment
-- install new sites
-- move between local and remote environments for the same site
+## What it shows
+
+The <TUI /> gives you a live view of your configured contexts and the <Compose /> projects behind them. From a single screen you can see:
+
+- **Container health** — which services are running, restarting, or unhealthy
+- **Host resource usage** — CPU, memory, and disk on the host machine
+- **Logs** — recent log output from your containers
+- **Context overview** — which site and environment you're looking at, and how to reach it
+
+When you have multiple contexts configured, the <TUI /> lets you move between them without leaving the interface.
+
+## What you can do
+
+<Columns cols={2}>
+  <Card title="Set up an existing site" icon="server">
+    Walk through the prompts to connect sitectl to a <Compose /> project you already run locally or remotely.
+  </Card>
+  <Card title="Create a new site" icon="square-plus">
+    Use the guided create flow, powered by your installed plugin, to scaffold and configure a new site.
+  </Card>
+  <Card title="Monitor health" icon="heart-pulse">
+    Watch container status, host resources, and log output in one place without running individual commands.
+  </Card>
+  <Card title="Switch environments" icon="arrows-rotate">
+    Move between local and remote contexts for the same site to compare or operate across environments.
+  </Card>
+</Columns>
+
+## When to use the CLI instead
+
+The <TUI /> is designed for interactive use. For automation, scripting, or one-off operations, the individual sitectl commands are more direct:
+
+```bash
+sitectl compose ps
+sitectl drupal drush cr
+sitectl debug
+```
+
+Both modes share the same underlying logic. You can use them interchangeably based on what the task calls for.

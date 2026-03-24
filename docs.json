@@ -31,23 +31,51 @@
             ]
           },
           {
-            "group": "Usage",
+            "group": "Commands",
             "pages": [
-              "commands/compose"
-            ]
-          },
-          {
-            "group": "Plugins",
-            "pages": [
-              "plugins/drupal",
-              "plugins/isle"
-            ]
-          },
-          {
-            "group": "Contributors",
-            "pages": [
-              "contributors",
-              "contributors/docs"
+              {
+                "group": "Setup",
+                "expanded": true,
+                "pages": [
+                  "commands/create",
+                  "commands/config"
+                ]
+              },
+              {
+                "group": "Workflow",
+                "expanded": true,
+                "pages": [
+                  "commands/validate",
+                  "commands/converge",
+                  "commands/set",
+                  "commands/deploy"
+                ]
+              },
+              {
+                "group": "Operations",
+                "expanded": true,
+                "pages": [
+                  "commands/job",
+                  "commands/compose",
+                  "commands/cron"
+                ]
+              },
+              {
+                "group": "Troubleshooting",
+                "expanded": true,
+                "pages": [
+                  "commands/debug",
+                  "commands/port-forward",
+                  "commands/sequelace"
+                ]
+              },
+              {
+                "group": "Advanced",
+                "expanded": true,
+                "pages": [
+                  "commands/component"
+                ]
+              }
             ]
           }
         ]
@@ -56,9 +84,17 @@
         "tab": "Drupal plugin",
         "groups": [
           {
+            "group": "Overview",
+            "pages": [
+              "plugins/drupal"
+            ]
+          },
+          {
             "group": "Commands",
             "pages": [
-              "plugins/drupal/drush"
+              "plugins/drupal/drush",
+              "plugins/drupal/sync",
+              "plugins/drupal/uli"
             ]
           }
         ]
@@ -67,9 +103,9 @@
         "tab": "ISLE plugin",
         "groups": [
           {
-            "group": "Commands",
+            "group": "Overview",
             "pages": [
-              "plugins/isle/index"
+              "plugins/isle"
             ]
           },
           {
@@ -78,14 +114,45 @@
               "plugins/isle/fcrepo",
               "plugins/isle/blazegraph"
             ]
+          },
+          {
+            "group": "Workflow",
+            "pages": [
+              "plugins/isle/validate",
+              "plugins/isle/converge"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              "plugins/isle/sync",
+              "plugins/isle/migrate",
+              "plugins/isle/cache"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contributing",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/index",
+              "contributing/docs",
+              "contributing/architecture",
+              "contributing/plugin-hierarchy",
+              "contributing/components",
+              "contributing/development"
+            ]
           }
         ]
       }
     ]
   },
   "logo": {
-    "light": "/docs/logo/libops-light.png",
-    "dark": "/docs/logo/libops-dark.png"
+    "light": "/logo/libops-light.png",
+    "dark": "/logo/libops-dark.png"
   },
   "contextual": {
     "options": [

@@ -1,0 +1,21 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Set the state or disposition of a named component in the active context's plugin.
+
+Prefix the component name with the plugin namespace to target it directly:
+
+  sitectl component set isle/fcrepo off
+  sitectl component set isle/blazegraph off
+
+```bash
+sitectl component set <component> [disposition]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--disposition` |   | Disposition to apply (enabled, disabled, superceded, distributed). |
+| `--drupal-rootfs` |   | Path to the Drupal web root, relative to `--path`. |
+| `--path` |   | Path to the project directory. Defaults to the active context project directory. |
+| `--state` |   | State to apply (on, off). |
+| `--tls-mode` |   | TLS mode (http, self-managed, mkcert, letsencrypt). |
+| `--yolo` | `false` | Skip the confirmation prompt. |

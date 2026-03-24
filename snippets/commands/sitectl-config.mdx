@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+A sitectl config can have multiple contexts.
+
+A sitectl context is a docker compose site running somewhere. "Somewhere" meaning:
+
+- on your laptop (`--type` local)
+- on a remote server (`--type` remote).
+
+Remote contexts require SSH access to the remote server from where sitectl is being ran from.
+When creating a context the remote server DNS name, SSH port, SSH username, and the path to your SSH private key will need to be set in the context configuration.
+
+You can have a default context which will be used when running sitectl commands, unless the context is overridden with the `--context` flag.
+
+```bash
+sitectl config <command>
+```

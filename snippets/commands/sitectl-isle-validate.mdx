@@ -1,0 +1,18 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Validate the active context's configuration and project layout.
+
+Checks include: context wiring, required Traefik configuration, Drupal rootfs path, and
+component state consistency.
+
+Exits non-zero if any check fails.
+
+```bash
+sitectl isle validate
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--drupal-rootfs` | `drupal/rootfs/var/www/drupal` | Drupal rootfs relative to `--path`. Used to resolve composer.json and config/sync |
+| `--format` | `section` | Report output format: section, table, json, or yaml |
+| `--path` |   | Path to the project directory. Defaults to the active context project directory. |

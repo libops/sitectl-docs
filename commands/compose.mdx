@@ -1,9 +1,10 @@
 ---
-title: Compose command
+title: compose
 description: Run Docker Compose commands through the active sitectl context.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
+import ComposeCmd from "/snippets/commands/sitectl-compose.mdx";
 
 # <Compose /> command
 
@@ -11,10 +12,6 @@ The `compose` command runs <Compose /> commands against the active `sitectl` con
 
 Use it when you want the same <Compose /> operation to respect the site and environment wiring already stored in the context.
 
-Examples:
+## Reference
 
-```bash
-sitectl compose ps
-sitectl compose logs
-sitectl compose exec app bash
-```
+<ComposeCmd />

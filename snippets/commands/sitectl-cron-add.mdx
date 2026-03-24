@@ -1,0 +1,21 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Create or update a cron spec with the given name.
+
+A cron spec stores the schedule, target context, job components, output directory, and
+retention policy for a scheduled job. Once saved, use render-systemd to generate the
+systemd units and install them on the host.
+
+```bash
+sitectl cron add NAME
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--component` | `[]` | Job component to include. Repeat to select multiple. |
+| `--cron-context` |   | sitectl context this cron spec will execute against. |
+| `--docker-prune` | `false` | Run docker system prune -af after a successful run. |
+| `--output-dir` |   | Host directory where dated output artifacts are stored. |
+| `--preserve-first-of-month` | `true` | Keep artifacts created on day 01 of the month when pruning. |
+| `--retention-days` | `14` | Delete non-monthly artifacts older than this many days. |
+| `--schedule` |   | systemd OnCalendar expression, e.g. daily or *-*-* 03:00:00. |

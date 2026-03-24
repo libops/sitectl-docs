@@ -1,0 +1,25 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Run docker compose commands on sitectl contexts.
+
+This command wraps docker compose and automatically applies compose files, env files, and project directory
+based on the current context. All docker compose commands and flags are supported.
+
+Automatic behaviors:
+  - `compose up` automatically adds `-d `--remove-orphans`` if not already specified
+  - `compose build` automatically adds `--pull` if not already specified
+  - Compose file paths (-f flags) are injected from context.ComposeFile setting
+  - Env file paths (`--env-file` flags) are injected from context.EnvFile setting
+  - Working directory is set to context.ProjectDir
+
+Examples:
+  sitectl compose up                    # Start containers in detached mode
+  sitectl compose down                  # Stop and remove containers
+  sitectl compose logs -f drupal        # Follow drupal container logs
+  sitectl compose ps                    # List running containers
+  sitectl compose exec -it drupal bash      # Open shell in drupal container
+  sitectl compose `--context` prod up     # Start containers on prod context
+
+```bash
+sitectl compose COMMAND
+```

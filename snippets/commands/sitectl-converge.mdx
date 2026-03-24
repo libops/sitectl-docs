@@ -1,0 +1,19 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Inspect each component registered by the active context's plugin and apply
+any changes needed to bring the project back into alignment.
+
+By default the command is interactive and asks before applying changes. Pass
+`--report` to preview what would change without applying it.
+
+This command dispatches to the plugin associated with the active context.
+All flags and arguments are forwarded to the plugin's converge handler.
+
+Examples:
+  sitectl converge
+  sitectl converge `--report`
+  sitectl converge `--component` fcrepo
+
+```bash
+sitectl converge [flags]
+```

@@ -1,0 +1,20 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Show the current state of each component registered by the active context's plugin.
+
+Each component is reported as on, off, or drifted. A drifted component means the project files no
+longer match the last recorded state — run reconcile to bring them back into alignment.
+
+```bash
+sitectl component describe
+```
+
+**Aliases:** `status`
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-c, --component` |   | Component to describe, e.g. isle/fcrepo. Defaults to all components. |
+| `--drupal-rootfs` |   | Path to the Drupal web root, relative to `--path`. |
+| `--format` |   | Output format (default: table). |
+| `--path` |   | Path to the project directory. Defaults to the active context project directory. |
+| `--verbose` | `false` | Show additional details for each component. |

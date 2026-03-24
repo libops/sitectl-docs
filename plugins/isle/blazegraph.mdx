@@ -1,10 +1,45 @@
 ---
-title: Blazegraph
-description: Reference anchor for the Blazegraph component in ISLE-oriented sitectl stacks.
+title: Blazegraph component
+description: How to enable and disable the Blazegraph triple store in your ISLE stack.
 ---
 
-# Blazegraph
+Blazegraph is the RDF triple store that Islandora uses to power SPARQL queries and linked data indexing. In an ISLE stack, Blazegraph runs as a Docker service alongside Drupal and Fedora.
 
-Blazegraph is another core ISLE service concept.
+The `blazegraph` component controls whether Blazegraph is included in your stack.
 
-This page exists as the anchor for ISLE component documentation and can be expanded with deployment and operator guidance.
+## Check current state
+
+```bash
+sitectl component status
+```
+
+The output shows whether `blazegraph` is on, off, or drifted.
+
+## Enable Blazegraph
+
+```bash
+sitectl component set blazegraph on
+```
+
+This adds the Blazegraph service back to `docker-compose.yml` and restores any Drupal configuration that connects Islandora to Blazegraph.
+
+## Disable Blazegraph
+
+```bash
+sitectl component set blazegraph off
+```
+
+This removes the Blazegraph service from `docker-compose.yml`. A future `docker compose up` will not start Blazegraph.
+
+<Warning>
+  Disabling Blazegraph removes the service from the Compose project definition. Any RDF data stored in Blazegraph is not deleted from disk immediately, but it will not be preserved through volume lifecycle commands. Back up your Blazegraph data before disabling on a site with content.
+</Warning>
+
+## When to disable Blazegraph
+
+Blazegraph is resource-intensive. Consider disabling it for:
+
+- **Minimal development stacks** — if you're working on Drupal code that doesn't involve SPARQL or linked data
+- **Stacks that have replaced Blazegraph** — some Islandora installations have moved to alternative triple stores; if yours has, you can disable Blazegraph here to remove it from the Compose project
+
+If you're running a standard Islandora installation and using features that rely on RDF queries, Blazegraph should be on.

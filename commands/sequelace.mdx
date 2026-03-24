@@ -1,0 +1,20 @@
+---
+title: sequelace
+description: Open the site database directly in Sequel Ace.
+---
+
+import SequelaceCmd from "/snippets/commands/sitectl-sequelace.mdx";
+
+`sequelace` opens the site's MySQL/MariaDB container directly in Sequel Ace. For remote contexts, sitectl establishes an SSH tunnel first so the database port is never exposed on the host.
+
+This command is macOS only.
+
+## Reference
+
+<SequelaceCmd />
+
+## How it works
+
+For **local contexts**, sitectl connects Sequel Ace directly to the container port.
+
+For **remote contexts**, sitectl opens an SSH tunnel to the host, forwards the database port to a random local port, then launches Sequel Ace pointed at that local port. The tunnel is managed by sitectl — you don't need to set up the tunnel manually.

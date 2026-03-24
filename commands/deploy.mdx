@@ -1,0 +1,37 @@
+---
+title: deploy
+description: Pull updates and restart services for the active context.
+---
+
+import DeployCmd from "/snippets/commands/sitectl-deploy.mdx";
+
+Use `deploy` to apply a full update cycle to a running site — pull the latest code, update images, and restart services. It handles the down/pull/up sequence in the correct order, including any plugin-registered hooks.
+
+## Reference
+
+<DeployCmd />
+
+## Deploy sequence
+
+1. Plugin pre-down hooks (if the context plugin registers a deploy runner)
+2. `docker compose down`
+3. `git fetch` and `git checkout <branch>` (skipped with `--skip-git`)
+4. `docker compose pull` (skipped with `--no-pull`)
+5. `docker compose up -d --remove-orphans`
+6. Plugin post-up hooks
+
+## Common workflows
+
+```bash
+# Standard deploy on the active context
+sitectl deploy
+
+# Deploy a specific branch
+sitectl deploy --branch main
+
+# Restart services without pulling git changes (e.g. after a config change)
+sitectl deploy --skip-git
+
+# Deploy on a non-active context
+sitectl deploy --context prod
+```

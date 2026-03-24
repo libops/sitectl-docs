@@ -1,0 +1,22 @@
+---
+title: sync
+description: Copy ISLE artifacts between sitectl contexts.
+---
+
+import IsleSyncfcrepo from "/snippets/commands/sitectl-isle-sync-fcrepo.mdx";
+
+Use `sync` to replicate Fedora Commons content between environments — for example pulling production fcrepo data to a local context for development or testing.
+
+## sync fcrepo
+
+<IsleSyncfcrepo />
+
+## Typical workflow
+
+Pull fcrepo from production to a local context:
+
+```bash
+sitectl isle sync fcrepo --source prod --target local
+```
+
+The command backs up fcrepo on the source, transfers the artifact, asks for confirmation, then imports it on the target. Use `--yolo` to skip the confirmation in CI or automation.

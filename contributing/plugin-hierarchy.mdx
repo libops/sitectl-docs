@@ -1,0 +1,165 @@
+---
+title: Plugin hierarchy
+description: How sitectl discovers plugins, routes commands, chains plugin execution, and implements the hidden protocol commands used for fan-out dispatch.
+---
+
+## Discovery
+
+sitectl discovers plugins by searching `$PATH` for binaries named `sitectl-<plugin>`. No configuration file is needed — if `sitectl-drupal` is on your path, `sitectl drupal` works.
+
+When a full plugin inspection is needed (e.g. for `sitectl converge` or `sitectl validate`), sitectl runs `sitectl-<plugin> __plugin-metadata` against each discovered binary. The plugin returns a YAML document with its capabilities: name, version, description, included plugins, and boolean flags for which SDK runner interfaces it has registered (`CanConverge`, `CanSet`, `CanValidate`, `CanDeploy`, `CanCreate`).
+
+For performance-sensitive paths like `sitectl --help`, sitectl uses lightweight discovery (binary name only, no subprocess invocation) and falls back to full inspection only when needed.
+
+## Command routing
+
+When you run `sitectl drupal drush cr`, sitectl:
+
+1. Looks up `sitectl-drupal` on `$PATH`
+2. Invokes it with `drush cr` as arguments, plus any sitectl flags (`--context`, `--log-level`) prepended
+3. The plugin binary handles the rest and writes output to stdout/stderr
+
+The active context's `plugin` field validates that the command makes sense for the context. Running `sitectl drupal drush` against a context with `plugin: core` returns an error.
+
+## Plugin inclusion
+
+Plugins declare which other plugins they include via the `Includes` field in their SDK metadata. ISLE declares:
+
+```go
+plugin.Metadata{
+    Name:     "isle",
+    Includes: []string{"drupal"},
+}
+```
+
+This tells sitectl that the `isle` plugin implicitly covers all `drupal` commands. A context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands.
+
+sitectl resolves inclusion transitively: if `isle` includes `drupal` and `drupal` includes `core`, then `isle` covers all three.
+
+## Hidden protocol commands
+
+Core sitectl commands that fan out to plugins do so through a set of hidden subcommands that plugins register via the SDK. These commands start with `__` and are never shown in help text. They form the internal protocol between the core binary and plugin binaries.
+
+### `__plugin-metadata`
+
+Registered automatically by `plugin.NewSDK`. Returns a YAML document with plugin capabilities. Called by core during full plugin discovery.
+
+### `__debug`
+
+Registered by `sdk.RegisterDebugHandler(runner)`. Core `sitectl debug` invokes this after collecting its own diagnostics. The plugin appends its own sections to the report.
+
+**Interface:**
+```go
+type DebugHandler interface {
+    Render(cmd *cobra.Command, ctx *config.Context) ([]debugui.Section, error)
+}
+```
+
+### `__deploy pre-down` / `__deploy post-up`
+
+Registered by `sdk.RegisterDeployRunner(runner)`. Core `sitectl deploy` calls `__deploy pre-down` before `docker compose down` and `__deploy post-up` after `docker compose up`.
+
+**Interface:**
+```go
+type DeployRunner interface {
+    PreDown(cmd *cobra.Command, ctx *config.Context) error
+    PostUp(cmd *cobra.Command, ctx *config.Context) error
+}
+```
+
+### `__job <name>`
+
+Registered via `sdk.RegisterJob(spec)` (multiple jobs per plugin). Core `sitectl job run <name>` invokes `__job <name>` on the owning plugin.
+
+### `__component describe` / `__component reconcile` / `__component set`
+
+Registered by `sdk.RegisterComponentDefinitions(...)`. These power the lower-level `sitectl component describe`, `sitectl component reconcile`, and `sitectl component set` commands. Component definitions are the data; the SDK generates the hidden command implementations automatically from the registry.
+
+### `__converge`
+
+Registered by `sdk.RegisterConvergeRunner(runner)`. Core `sitectl converge` invokes this after confirming the context's plugin supports it (`CanConverge: true` in metadata). All flags and arguments from the user are forwarded verbatim.
+
+**Interface:**
+```go
+type ConvergeRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) error
+}
+```
+
+ISLE's implementation (`isleConvergeRunner`) delegates to the existing component reconcile machinery.
+
+### `__set`
+
+Registered by `sdk.RegisterSetRunner(runner)`. Core `sitectl set` invokes this after resolving the owning plugin from either the context or the `plugin/component` namespace prefix in the component argument.
+
+**Interface:**
+```go
+type SetRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, args []string, ctx *config.Context) error
+}
+```
+
+### `__validate`
+
+Registered by `sdk.RegisterValidateRunner(runner)`. Core `sitectl validate` runs its own core validators first, then — if the context plugin supports validation (`CanValidate: true`) — invokes `__validate` and captures the output. The plugin writes a YAML-encoded `[]validate.Result` to stdout. Core unmarshals and merges those results with its own before rendering the final report.
+
+This is different from the other fan-out commands: the merge happens in core, not the plugin. The plugin does not know about or render the core results.
+
+**Interface:**
+```go
+type ValidateRunner interface {
+    BindFlags(cmd *cobra.Command)
+    Run(cmd *cobra.Command, ctx *config.Context) ([]validate.Result, error)
+}
+```
+
+### `__create`
+
+Registered implicitly when create definitions are registered. Powers `sitectl create <plugin>/<definition>` flows.
+
+## Core fan-out summary
+
+| User command | Hidden protocol | Merge model |
+|---|---|---|
+| `sitectl debug` | `__debug` | Plugin appends sections; core renders combined report |
+| `sitectl deploy` | `__deploy pre-down`, `__deploy post-up` | Core orchestrates; plugin runs hooks at fixed points |
+| `sitectl job run` | `__job <name>` | Full dispatch; core is only the entry point |
+| `sitectl component describe` | `__component describe` | Full dispatch |
+| `sitectl component reconcile` | `__component reconcile` | Full dispatch (legacy; prefer `sitectl converge`) |
+| `sitectl component set` | `__component set` | Full dispatch (lower-level; prefer `sitectl set`) |
+| `sitectl converge` | `__converge` | Full dispatch; all flags forwarded |
+| `sitectl set` | `__set` | Full dispatch; all flags forwarded |
+| `sitectl validate` | `__validate` (output captured) | Core runs first; plugin results merged in core |
+
+## Shared renderer
+
+Whether it's debug output or component status, each plugin's contribution is rendered using `debugui.RenderPanel` from `pkg/plugin/debugui`. This keeps output consistently formatted regardless of which plugins contributed. Plugin authors must use the shared renderer rather than rolling their own panel format.
+
+## Invoking included plugins from plugin code
+
+A plugin that includes other plugins can invoke them programmatically via the SDK:
+
+```go
+output, err := sdk.InvokeIncludedPluginCommand("drupal", []string{"drush", "cr"}, plugin.CommandExecOptions{
+    Context: ctx,
+    Capture: true,
+})
+```
+
+`InvokeIncludedPluginCommand` enforces that you can only call plugins explicitly listed in your `Includes` — it returns an error if you try to call a plugin your metadata does not declare.
+
+For streaming output to the user's terminal instead of capturing, set `Capture: false` and provide `Stdout`/`Stderr` writers.
+
+## Adding a new plugin
+
+A new sitectl plugin is a standalone Go binary that:
+
+1. Creates an SDK instance via `plugin.NewSDK(metadata)`
+2. Registers its commands and runners with the SDK (`sdk.AddCommand`, `sdk.RegisterDebugHandler`, `sdk.RegisterConvergeRunner`, etc.)
+3. Calls `sdk.Execute()` to enter the Cobra command tree
+
+The binary name must follow the `sitectl-<name>` convention, and `metadata.Name` must match the suffix. The binary must be on `$PATH` for core sitectl to discover it.
+
+See the [development guide](/contributing/development) for how to set up a local workspace with `make work` for developing against a local sitectl checkout.

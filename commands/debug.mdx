@@ -1,0 +1,24 @@
+---
+title: debug
+description: Collect a diagnostic bundle for the active context.
+---
+
+import DebugCmd from "/snippets/commands/sitectl-debug.mdx";
+
+Use `debug` to capture a snapshot of the active context's state when reporting an issue or diagnosing unexpected behaviour. The bundle prints to stdout by default — pipe it to a file or use `--output` to save it directly.
+
+## Reference
+
+<DebugCmd />
+
+## Sharing a bundle
+
+```bash
+# Save to a file
+sitectl debug --output debug-bundle.txt
+
+# Capture stdout directly
+sitectl debug > debug-bundle.txt
+```
+
+Plugin diagnostics are included automatically, so the bundle captures stack-specific state without any extra flags.

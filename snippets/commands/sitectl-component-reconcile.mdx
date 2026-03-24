@@ -1,0 +1,21 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Inspect each component and apply any changes needed to bring the project back into alignment.
+
+By default the command is interactive and asks before applying changes. Pass `--report` to preview
+what would change without applying it.
+
+```bash
+sitectl component reconcile
+```
+
+**Aliases:** `review`, `align`
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-c, --component` |   | Component to reconcile, e.g. isle/fcrepo. Defaults to all components. |
+| `--drupal-rootfs` |   | Path to the Drupal web root, relative to `--path`. |
+| `--format` |   | Output format (default: table). |
+| `--path` |   | Path to the project directory. Defaults to the active context project directory. |
+| `--report` | `false` | Preview changes without applying them. |
+| `--verbose` | `false` | Show additional details for each component. |

@@ -1,0 +1,38 @@
+---
+title: converge
+description: Detect and repair ISLE component configuration drift.
+---
+
+import IsleComponentReconcile from "/snippets/commands/sitectl-component-reconcile.mdx";
+
+`sitectl converge` detects and repairs configuration drift across all ISLE components. It compares the current state of each component's managed files against what sitectl expects and applies any missing changes.
+
+## Reference
+
+The ISLE converge handler accepts the same flags as the legacy `sitectl component reconcile` command:
+
+<IsleComponentReconcile />
+
+## Workflow
+
+```bash
+# Preview what would change
+sitectl converge --report
+
+# Apply all changes
+sitectl converge
+
+# Converge a single component
+sitectl converge --component fcrepo
+```
+
+## What gets checked
+
+Each ISLE component manages a set of files (compose overrides, Traefik configs, environment entries). Converge compares the expected content against what is present on disk and reports or repairs any differences.
+
+Components that are `disabled` or `superceded` are skipped unless explicitly targeted with `--component`.
+
+## See also
+
+- [`sitectl validate`](/commands/validate) — check for drift without repairing
+- [`sitectl set`](/commands/set) — change a component's enabled/disabled state

@@ -1,0 +1,23 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Copy the Drupal database from a source context to a target context.
+
+This backs up the database on the source, transfers the artifact, and imports it into the
+target. The command asks for confirmation before importing. Pass `--yolo` to skip the prompt
+in automation.
+
+Use `--fresh` to always take a new backup rather than reusing one from today.
+
+```bash
+sitectl drupal sync database
+```
+
+**Aliases:** `db`
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--backup-dir` | `/tmp/sitectl-drupal-jobs/db-backup` | Directory on the source host used to cache backup artifacts. |
+| `--fresh` | `false` | Always take a fresh backup instead of reusing one from today. |
+| `--source` |   | Source sitectl context. |
+| `--target` |   | Target sitectl context. |
+| `--yolo` | `false` | Skip the confirmation prompt before importing. |

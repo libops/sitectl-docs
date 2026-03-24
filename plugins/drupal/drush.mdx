@@ -1,10 +1,16 @@
 ---
-title: Drush
-description: Drupal plugin command reference entry point for Drush-oriented workflows.
+title: drush
+description: Run Drush commands inside the Drupal container for any sitectl context.
 ---
 
-# Drush
+import DrushCmd from "/snippets/commands/sitectl-drupal-drush.mdx";
 
-The Drupal plugin exposes Drush-oriented workflows through `sitectl`.
+## Reference
 
-This page is the landing page for Drupal command documentation and can be expanded as the plugin surface grows.
+<DrushCmd />
+
+## How it works
+
+sitectl finds the Drupal service container using the Compose labels on the running containers, then runs `drush` inside it using the Docker exec API. The command inherits your terminal — interactive commands and output work as you'd expect.
+
+`DRUPAL_DRUSH_URI` is injected automatically so Drush knows the correct base URL for the site without you needing to pass `--uri` on every invocation.

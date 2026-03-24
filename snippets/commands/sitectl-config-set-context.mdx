@@ -1,0 +1,31 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Set or update properties of a context. Creates a new context if it does not exist.
+
+```bash
+sitectl config set-context [context-name]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-f, --compose-file` | `[]` | docker compose file paths to use (equivalent to docker compose -f flag). Multiple files can be specified. |
+| `--compose-network` |   | Primary Docker Compose network name for this environment |
+| `--compose-project-name` |   | Docker Compose project name, matching COMPOSE_PROJECT_NAME or compose name: |
+| `--database-name` | `drupal_default` | Name of the database to connect to (e.g. drupal_default) |
+| `--database-password-secret` | `DB_ROOT_PASSWORD` | Name of the docker compose secret containing the database password |
+| `--database-service` | `mariadb` | Name of the database service in Docker Compose |
+| `--database-user` | `root` | Database user to connect as (e.g. root, admin) |
+| `--default` | `false` | set to default context |
+| `--docker-socket` | `/var/run/docker.sock` | Path to Docker socket |
+| `--env-file` | `[]` | when running remote docker commands, the `--env-file` paths to pass to docker compose |
+| `--environment` |   | Environment name for this context, such as local, dev, staging, or prod |
+| `--plugin` | `core` | Owning plugin identifier for this context, such as core, isle, or drupal |
+| `--project-dir` |   | Path to docker compose project directory |
+| `--project-name` | `docker-compose` | Logical project name for this context |
+| `--site` |   | Logical site name this context belongs to |
+| `--ssh-hostname` |   | Remote contexts DNS name for the host. |
+| `--ssh-key` |   | Path to SSH private key for remote context. e.g. /home/node/.ssh/id_rsa |
+| `--ssh-port` | `2222` | Port number |
+| `--ssh-user` |   | SSH user for remote context |
+| `--sudo` | `false` | for remote contexts, run docker commands as sudo |
+| `--type` | `local` | Type of context: local or remote |

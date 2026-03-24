@@ -1,0 +1,16 @@
+---
+title: migrate
+description: Helpers for upgrading sites from legacy isle-site-template formats.
+---
+
+import MigrateMergeComposeProfiles from "/snippets/commands/sitectl-isle-migrate-merge-compose-profiles.mdx";
+
+The `migrate` command helps upgrade projects from older isle-site-template layouts. These helpers are one-time operations — run them on a branch, review the output, then commit.
+
+## merge-compose-profiles
+
+<MigrateMergeComposeProfiles />
+
+## When to use this
+
+The legacy format used `-dev`/`-prod` service pairs in `docker-compose.yml`. The current format uses a single service definition with Traefik labels in a separate file. Run `merge-compose-profiles` to convert the old layout automatically, then review the diff before committing.

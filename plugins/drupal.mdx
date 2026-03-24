@@ -1,14 +1,69 @@
 ---
 title: Drupal plugin
-description: Drupal-oriented sitectl workflows and command surface.
+description: Drupal-oriented sitectl workflows including drush execution, user login links, and database and config sync between environments.
 ---
 
-# Drupal plugin
+import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The Drupal plugin extends `sitectl` with Drupal-oriented workflows and commands.
+The Drupal plugin adds Drupal-specific commands on top of the core sitectl context and <Compose /> model. Install it when your site runs Drupal, whether standalone or as part of a larger stack like ISLE.
 
-Use it when you want Drupal-specific operations layered on top of the core context and compose model.
+## Commands
 
-See also:
+### drush
 
-- [Drush command](/plugins/drupal/drush)
+Run any Drush command inside the Drupal container for the active context:
+
+```bash
+sitectl drupal drush cr
+sitectl drupal drush cron --context museum-prod
+sitectl drupal drush updb -y
+```
+
+sitectl resolves the correct container from the context and executes the command inside it. You don't need to know the container name or remember which context you're connected to.
+
+### login
+
+Generate a one-time Drupal login link via `drush user:login`:
+
+```bash
+sitectl drupal login
+sitectl drupal login --uid 5
+```
+
+The default user ID is 1. Pass `--uid` to generate a link for a different user.
+
+### sync database
+
+Copy the Drupal database from one context to another:
+
+```bash
+sitectl drupal sync database --source museum-prod --target museum-local
+```
+
+sitectl backs up the source database, stages it between contexts, imports it into the target, and runs post-import steps. Before importing it confirms the operation with you. Pass `--yolo` to skip the confirmation in automation.
+
+Use `--fresh` to always take a new backup from the source instead of reusing a backup from earlier today.
+
+<Warning>
+  Syncing a database replaces the target database. Make sure you have a backup of the target before running this on staging or production.
+</Warning>
+
+### sync config
+
+Copy the Drupal config/sync directory from one context to another:
+
+```bash
+sitectl drupal sync config --source museum-prod --target museum-local
+```
+
+This exports the config export from the source, stages it, and imports it into the target via `drush config:import`.
+
+## Assigning the Drupal plugin to a context
+
+When you create or configure a context, set its `plugin` field to `drupal`:
+
+```yaml
+plugin: drupal
+```
+
+sitectl uses this to validate that Drupal commands are only run against Drupal contexts, and to route the `sitectl debug` command to the Drupal plugin for Drupal-specific diagnostics.

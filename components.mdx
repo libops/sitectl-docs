@@ -1,19 +1,113 @@
 ---
 title: Components
-description: Understand how sitectl uses components to express reviewed stack defaults and operator tradeoffs.
+description: How sitectl uses components to model optional stack capabilities and help operators turn features on and off safely.
 ---
 
-# Components
+import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Components describe optional parts of a stack in a structured way.
+Components are how sitectl models optional capabilities within a stack. Instead of treating a <Compose /> project as one large, all-or-nothing setup, components let each optional feature carry its own defaults, configuration rules, and operator guidance.
 
-They are how `sitectl` marries infrastructure settings and app-specific settings into one reviewed configuration.
+## What a component does
 
-Instead of treating a stack as one large blob, `sitectl` lets each component carry its own defaults, follow-up questions, and operator guidance.
+When a plugin defines a component, sitectl can:
 
-Common component states:
+- **Ask about it during site creation** — prompting you to enable or disable it before the first launch
+- **Report its current state** — `sitectl component describe` lists all components registered by the active context's plugin, showing whether each one is on, off, or out of alignment with the project files
+- **Apply state changes safely** — `sitectl set <name> <on|off>` records the desired state, and `sitectl converge` applies the resulting file changes with a confirmation step before anything destructive happens
 
-- `enabled`
-- `disabled`
-- `superseded`
-- `distributed`
+## Component states
+
+A component can be in one of two states:
+
+| State | Meaning |
+|---|---|
+| `on` | The component is active and its services, configuration, and Drupal modules are in place |
+| `off` | The component is inactive; its services and configuration are removed or suppressed |
+
+Within a state, a component also carries a **disposition** that records more detail about *how* it ended up there:
+
+| Disposition | Meaning |
+|---|---|
+| `enabled` | Explicitly turned on by an operator |
+| `disabled` | Explicitly turned off by an operator |
+| `superseded` | Replaced by a different component or approach |
+| `distributed` | Shipped as part of the upstream template; not yet explicitly set by an operator |
+
+## Checking component state
+
+```bash
+# Show all components for the active context's plugin
+sitectl component describe
+
+# Target a specific project directory
+sitectl component describe --path /path/to/project
+```
+
+This reports every registered component: its name, current state, and whether the live project files match what sitectl expects. A `drifted` status means the project files no longer match the last applied component state — usually something was changed outside of sitectl.
+
+## Turning components on and off
+
+```bash
+# Using the top-level set command
+sitectl set fcrepo off
+sitectl set blazegraph on
+
+# Using a plugin namespace when multiple plugins are involved
+sitectl set isle/fcrepo off
+```
+
+After running `sitectl set`, the desired state is recorded but project files are not yet changed. Follow up with `sitectl converge` to apply the change.
+
+<Warning>
+  Component changes can rewrite <Compose /> files and Drupal configuration sync files. Make sure you have a recent backup before enabling or disabling components on a production site.
+</Warning>
+
+## Applying changes with converge
+
+```bash
+# Preview what would change
+sitectl converge --report
+
+# Apply changes interactively
+sitectl converge
+
+# Apply changes for a single component
+sitectl converge --component fcrepo
+```
+
+`converge` compares each component's expected configuration against the project files on disk and repairs any differences. Use `--report` to review changes before applying them.
+
+## The create flow
+
+When you run `sitectl create isle`, sitectl asks you about each component that has a meaningful architectural choice — like whether to include Fedora or Blazegraph. You can answer interactively or pass flags to skip the prompts. Your choices are applied to the project before the first launch.
+
+## Current ISLE components
+
+<AccordionGroup>
+  <Accordion title="fcrepo">
+    Fedora Commons repository. Controls whether Fedora services and volumes are included in the stack. Disabling fcrepo removes the Fedora container and its related storage volumes from the project. Appropriate for sites that do not store preservation-grade binary objects in Fedora.
+  </Accordion>
+  <Accordion title="blazegraph">
+    Blazegraph triple store. Controls whether Blazegraph is part of the stack. Islandora uses Blazegraph for RDF (linked data) storage. Disabling it is appropriate for minimal or development stacks that do not require linked data queries.
+  </Accordion>
+  <Accordion title="isle-tls">
+    Controls whether the stack serves traffic over HTTPS in staging and production. Manages Traefik TLS configuration — the component handles which certificate mode to use (self-managed, Let's Encrypt, or mkcert for local development).
+  </Accordion>
+  <Accordion title="isle-tls-override">
+    Controls whether the local development override file turns off TLS for local use even when production uses HTTPS. Typically enabled for development so you can run the site over plain HTTP locally.
+  </Accordion>
+  <Accordion title="external-cantaloupe">
+    Controls whether the Cantaloupe image server runs as part of the local stack or is provided by an external service. When enabled, sitectl adds the Traefik routing rules needed to reach an external Cantaloupe instance.
+  </Accordion>
+</AccordionGroup>
+
+## What's planned
+
+The component model is designed to grow. Planned additions include:
+
+- **PostgreSQL** — switch the Drupal database backend from MariaDB to PostgreSQL
+- **Memcached / Redis** — add caching layers to the Drupal stack
+- **Load balancer support** — configure ISLE to run behind an upstream reverse proxy
+- **mergepdf** — enable PDF aggregation for paged content in Islandora
+
+See the [developer component guide](/contributing/components) for how components are defined and what each field in the definition struct means.

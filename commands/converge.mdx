@@ -1,0 +1,41 @@
+---
+title: converge
+description: Detect and repair component configuration drift.
+---
+
+import ConvergeCmd from "/snippets/commands/sitectl-converge.mdx";
+
+Use `converge` when component files have drifted from what sitectl expects — for example after pulling new upstream changes or toggling a component with `sitectl set`. It reads each component's desired state and applies any missing changes.
+
+## Reference
+
+<ConvergeCmd />
+
+## Workflow
+
+```bash
+# Preview what would change without applying it
+sitectl converge --report
+
+# Apply all changes interactively
+sitectl converge
+
+# Converge a single component
+sitectl converge --component fcrepo
+```
+
+## Relationship to validate
+
+`sitectl validate` tells you *whether* something has drifted. `sitectl converge` fixes it. Run validate first to understand what needs to change, then converge to apply it.
+
+## Plugin flags
+
+All flags are forwarded to the plugin's converge handler. For the ISLE plugin the following flags are available:
+
+| Flag | Description |
+|------|-------------|
+| `--report` | Preview changes without applying them |
+| `--component` | Converge a single component (e.g. `fcrepo`) |
+| `--verbose` | Show additional detail for each component |
+| `--format` | Output format for `--report` (table, json, yaml) |
+| `--drupal-rootfs` | Drupal rootfs path relative to the project directory |

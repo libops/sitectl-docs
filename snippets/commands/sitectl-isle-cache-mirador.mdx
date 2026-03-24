@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Pre-warm the Mirador IIIF viewer cache for paged content items.
+
+When the IIIF server has not yet cached a paged item's child images, the first visitor to that
+page experiences slow load times while the server processes the images. This command fetches a
+list of paged content URLs from a JSON endpoint and renders each one in a headless browser so
+the IIIF server caches the images before real visitors arrive.
+
+```bash
+sitectl isle cache mirador
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--endpoint` |   | JSON endpoint returning an array of objects with a url field. Required. |
+| `--workers` | `2` | Number of concurrent browser workers. |

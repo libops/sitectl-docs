@@ -1,0 +1,24 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Validate the active context's configuration and project layout.
+
+Core checks include: required context fields, compose project presence,
+context file accessibility, override symlink, and Docker socket access.
+
+If the active context's plugin registers a validate handler, plugin-specific
+checks (e.g. Drupal rootfs path, component state consistency) are also run
+and merged into the report.
+
+All flags not consumed by sitectl itself are forwarded to the plugin's
+validate handler, allowing plugin-specific flags such as `--drupal-rootfs`.
+
+Exits non-zero if any check fails.
+
+Examples:
+  sitectl validate
+  sitectl validate `--format` table
+  sitectl validate `--drupal-rootfs` drupal/rootfs
+
+```bash
+sitectl validate [flags]
+```
