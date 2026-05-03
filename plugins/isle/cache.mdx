@@ -18,4 +18,26 @@ Run `cache mirador` after:
 - Restarting the IIIF server.
 - Ingesting a large batch of new paged content.
 
-The command fetches paged content URLs from the `--endpoint` JSON feed and renders each one in a headless browser, causing the IIIF server to cache the child images before visitors arrive.
+The command no longer uses a browser. It fetches each page directly, extracts the embedded `drupal-settings-json`, reads the Mirador manifest ID, then warms selected IIIF URLs from the manifest.
+
+Pass exactly one input source:
+- `--endpoint` for a paginated JSON feed of URL objects.
+- `--url-file` for a plain text file with one URL per line.
+
+## Warm modes
+
+Use `--mode` to choose what gets warmed from each manifest:
+- `ttfb` default: the first full image URL and the first 10 thumbnails.
+- `browse`: every full image URL after the first, plus thumbnails starting at 11 if present.
+- `full`: the first full image URL, all thumbnails, and every remaining full image URL.
+
+## Resume behavior
+
+Progress is saved under `~/.sitectl` as URLs complete, so canceling a long run does not force a full restart next time.
+
+- Normal reruns resume automatically.
+- `--restart` discards saved progress and starts over.
+
+## Request pacing
+
+Use `--delay` to control how long the command sleeps between HTTP warm requests. The default is `1s`.
