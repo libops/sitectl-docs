@@ -81,53 +81,117 @@
         ]
       },
       {
-        "tab": "Drupal plugin",
+        "tab": "Application plugins",
         "groups": [
           {
-            "group": "Overview",
+            "group": "ArchivesSpace",
             "pages": [
-              "plugins/drupal"
+              "plugins/archivesspace",
+              "plugins/archivesspace/lifecycle",
+              "plugins/archivesspace/api",
+              "plugins/archivesspace/resources",
+              "plugins/archivesspace/scripts"
             ]
           },
           {
-            "group": "Commands",
+            "group": "Drupal",
             "pages": [
+              "plugins/drupal",
               "plugins/drupal/drush",
               "plugins/drupal/sync",
               "plugins/drupal/uli"
+            ]
+          },
+          {
+            "group": "Islandora",
+            "pages": [
+              "plugins/isle",
+              "plugins/isle/fcrepo",
+              "plugins/isle/blazegraph",
+              "plugins/isle/validate",
+              "plugins/isle/converge",
+              "plugins/isle/sync",
+              "plugins/isle/migrate",
+              "plugins/isle/cache"
+            ]
+          },
+          {
+            "group": "Omeka Classic",
+            "pages": [
+              "plugins/omeka-classic",
+              "plugins/omeka-classic/lifecycle",
+              "plugins/omeka-classic/api",
+              "plugins/omeka-classic/resources"
+            ]
+          },
+          {
+            "group": "Omeka S",
+            "pages": [
+              "plugins/omeka-s",
+              "plugins/omeka-s/lifecycle",
+              "plugins/omeka-s/api",
+              "plugins/omeka-s/resources"
+            ]
+          },
+          {
+            "group": "OJS",
+            "pages": [
+              "plugins/ojs",
+              "plugins/ojs/lifecycle",
+              "plugins/ojs/tools",
+              "plugins/ojs/pkp-tools"
+            ]
+          },
+          {
+            "group": "WordPress",
+            "pages": [
+              "plugins/wordpress",
+              "plugins/wordpress/lifecycle",
+              "plugins/wordpress/wp-cli",
+              "plugins/wordpress/composer",
+              "plugins/wordpress/plugins-themes",
+              "plugins/wordpress/core-cache-db"
             ]
           }
         ]
       },
       {
-        "tab": "ISLE plugin",
+        "tab": "LibOps plugin",
         "groups": [
           {
-            "group": "Overview",
+            "group": "LibOps plugin",
             "pages": [
-              "plugins/isle"
+              "plugins/libops"
             ]
           },
           {
-            "group": "Components",
+            "group": "Authentication",
             "pages": [
-              "plugins/isle/fcrepo",
-              "plugins/isle/blazegraph"
+              "plugins/libops/authentication"
             ]
           },
           {
-            "group": "Workflow",
+            "group": "Resources",
             "pages": [
-              "plugins/isle/validate",
-              "plugins/isle/converge"
+              "plugins/libops/resources"
             ]
           },
           {
-            "group": "Commands",
+            "group": "Task Agent",
             "pages": [
-              "plugins/isle/sync",
-              "plugins/isle/migrate",
-              "plugins/isle/cache"
+              "plugins/libops/task"
+            ]
+          },
+          {
+            "group": "Access controls",
+            "pages": [
+              "plugins/libops/access-controls"
+            ]
+          },
+          {
+            "group": "Domains",
+            "pages": [
+              "plugins/libops/domains"
             ]
           }
         ]

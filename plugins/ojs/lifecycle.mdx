@@ -1,0 +1,22 @@
+---
+title: lifecycle
+description: Build, initialize, start, stop, inspect, and roll out an OJS stack.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+All LibOps application plugins expose the same <Compose /> lifecycle commands:
+
+```bash
+sitectl ojs build
+sitectl ojs init
+sitectl ojs up
+sitectl ojs down
+sitectl ojs status
+sitectl ojs logs
+sitectl ojs rollout
+```
+
+These delegate to the template Makefile where appropriate, so local development, production rollout, and VM automation all use the same operational contract.
+
+Use `init` when you intentionally want to create or reset the environment's required secrets and volumes. Use `up` for the normal start path.

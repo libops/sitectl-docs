@@ -1,0 +1,29 @@
+---
+title: LibOps plugin
+description: LibOps platform workflows for authentication, organizations, projects, sites, access controls, domains, templates, and Task Agent tasks.
+---
+
+The LibOps plugin adds platform management commands to `sitectl`. The plugin binary is `sitectl-libops`; when installed through sitectl, commands are run under the `libops` namespace.
+
+```bash
+sitectl libops login
+sitectl libops whoami
+```
+
+Use `--api-url` when you need to point at a non-default LibOps API endpoint.
+
+General Docker operations are handled by core `sitectl`, not the LibOps plugin. Use [`sitectl compose`](/commands/compose) and [`sitectl port-forward`](/commands/port-forward) for context-aware Docker operations.
+
+## Templates
+
+LibOps can add new open source projects as hosted templates. Contact us if you want to see a project hosted on LibOps.
+
+## Commands
+
+The LibOps plugin exposes focused command pages for platform operations:
+
+- [Authentication](/plugins/libops/authentication) for browser login, session inspection, logout, and API keys
+- [Resources](/plugins/libops/resources) for organizations, projects, and sites
+- [Access controls](/plugins/libops/access-controls) for members, firewall rules, and secrets
+- [Domains](/plugins/libops/domains) for custom site domains
+- [Task Agent](/plugins/libops/task) for creating, inspecting, replying to, and canceling coding-agent tasks

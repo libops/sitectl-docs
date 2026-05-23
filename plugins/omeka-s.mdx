@@ -1,0 +1,26 @@
+---
+title: Omeka S plugin
+description: Omeka S sitectl workflows including template creation, Compose lifecycle commands, and REST API helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The Omeka S plugin adds REST API helpers on top of the standard LibOps <Compose /> template workflow.
+
+## Create
+
+Start a new Omeka S site from the LibOps template:
+
+```bash
+sitectl create omeka-s
+```
+
+The created context uses `plugin: omeka-s`, so `sitectl omeka-s ...` commands run against that site's project directory and environment.
+
+## Commands
+
+The Omeka S plugin exposes focused helper pages for common operations:
+
+- [Lifecycle](/plugins/omeka-s/lifecycle) for `build`, `init`, `up`, `down`, `status`, `logs`, and `rollout`
+- [API](/plugins/omeka-s/api) for direct Omeka S REST API calls
+- [Resources](/plugins/omeka-s/resources) for common resource, media, site, vocabulary, and module reads

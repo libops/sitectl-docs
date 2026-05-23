@@ -1,0 +1,13 @@
+---
+title: composer
+description: Run Composer commands inside the active WordPress stack.
+---
+
+Run Composer in the WordPress container:
+
+```bash
+sitectl wp composer
+sitectl wp composer update vendor/package
+```
+
+With no arguments, this runs `composer install --no-interaction`.

@@ -5,6 +5,8 @@ description: How sitectl plugins extend the core CLI with stack-specific workflo
 
 Plugins extend `sitectl` with commands and workflows specific to the technology stack your site runs on.
 
+General Docker operations stay in the core CLI. Use [`sitectl compose`](/commands/compose) for context-aware Docker Compose commands and [`sitectl port-forward`](/commands/port-forward) for remote service tunnels. Plugins add stack-specific value on top of that foundation: create flows, application CLIs, API helpers, sync workflows, lifecycle shortcuts, migrations, and other project-specific operations.
+
 ## How discovery works
 
 sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-<plugin>`. When you run `sitectl drupal drush`, sitectl finds `sitectl-drupal` on your path and delegates the `drush` subcommand to it — passing through flags and context automatically.
@@ -13,7 +15,7 @@ This means installing a plugin is as simple as putting its binary on your path. 
 
 ## Plugin hierarchy
 
-Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` because every ISLE site is also a Drupal site. When a command is dispatched to the ISLE plugin, it can invoke the Drupal plugin for Drupal-specific work. This hierarchy is reflected in install dependencies: installing `sitectl-isle` via Homebrew or Linux packages will also install `sitectl-drupal`.
+Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` because every Islandora site is also a Drupal site. When a command is dispatched to the Islandora plugin, it can invoke the Drupal plugin for Drupal-specific work. This hierarchy is reflected in install dependencies: installing `sitectl-isle` via Homebrew or Linux packages will also install `sitectl-drupal`.
 
 The active context's `plugin` field determines which plugin is responsible for a given site. Commands like `sitectl debug` use this to route diagnostic collection to the right plugin automatically.
 
@@ -23,8 +25,26 @@ The active context's `plugin` field determines which plugin is responsible for a
   <Card title="sitectl-drupal" icon="square-d" href="/plugins/drupal">
     Drupal-oriented workflows: drush execution, user login links, database and config sync between environments.
   </Card>
-  <Card title="sitectl-isle" icon="layer-group" href="/plugins/isle">
-    Islandora ISLE workflows: guided site creation, component management, Fedora and Blazegraph sync, and migration utilities. Includes the Drupal plugin.
+  <Card title="Islandora" icon="layer-group" href="/plugins/isle">
+    Islandora workflows from the `sitectl-isle` plugin: guided site creation, component management, Fedora and Blazegraph sync, and migration utilities. Includes the Drupal plugin.
+  </Card>
+  <Card title="LibOps plugin" icon="cloud" href="/plugins/libops">
+    LibOps platform workflows from the `sitectl-libops` plugin: authentication, organizations, projects, sites, access controls, domains, hosted templates, and Task Agent tasks.
+  </Card>
+  <Card title="sitectl-wp" icon="globe" href="/plugins/wordpress">
+    WordPress workflows: template creation, Compose lifecycle commands, WP-CLI, Composer, plugin/theme maintenance, cache, and database helpers.
+  </Card>
+  <Card title="sitectl-ojs" icon="book-open" href="/plugins/ojs">
+    Open Journal Systems workflows: template creation, Compose lifecycle commands, OJS PHP tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
+  </Card>
+  <Card title="sitectl-omeka-classic" icon="landmark" href="/plugins/omeka-classic">
+    Omeka Classic workflows: template creation, Compose lifecycle commands, and REST API helpers for collection, item, file, tag, user, and metadata operations.
+  </Card>
+  <Card title="sitectl-omeka-s" icon="boxes-stacked" href="/plugins/omeka-s">
+    Omeka S workflows: template creation, Compose lifecycle commands, and REST API helpers for resources, media, sites, modules, and vocabularies.
+  </Card>
+  <Card title="sitectl-archivesspace" icon="archive" href="/plugins/archivesspace">
+    ArchivesSpace workflows: template creation, Compose lifecycle commands, API helpers, search, job inspection, diagnostics, and container script wrappers.
   </Card>
 </CardGroup>
 
@@ -32,4 +52,4 @@ The active context's `plugin` field determines which plugin is responsible for a
 
 When you create or configure a context, you specify which plugin owns it. This is stored in the context's `plugin` field. Only commands from that plugin (and any plugins it includes) are valid against that context.
 
-For example, a context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands, because ISLE includes Drupal.
+For example, a context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands, because the Islandora plugin includes Drupal.

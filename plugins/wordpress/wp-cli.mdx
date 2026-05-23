@@ -1,0 +1,14 @@
+---
+title: WP-CLI
+description: Run WP-CLI commands inside the active WordPress stack.
+---
+
+Run any WP-CLI command in the WordPress container:
+
+```bash
+sitectl wp cli option get siteurl
+sitectl wp cli user list
+sitectl wp cli post list --post_type=page
+```
+
+sitectl runs WP-CLI with the template's WordPress path and root container user settings.

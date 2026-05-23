@@ -1,0 +1,32 @@
+---
+title: Authentication
+description: Log in to LibOps, inspect the active identity, remove credentials, and create API keys for automation.
+---
+
+Use the authentication commands before running LibOps API workflows:
+
+```bash
+sitectl libops login
+sitectl libops whoami
+sitectl libops logout
+```
+
+`login` opens a browser authentication flow and stores the resulting credentials in the local sitectl credential directory. `whoami` prints the current authentication state, and `logout` removes the local OAuth token.
+
+Pass `--api-url` when authenticating against a non-default LibOps API endpoint:
+
+```bash
+sitectl libops login --api-url https://api.libops.io
+```
+
+## API keys
+
+Use API keys for non-interactive automation:
+
+```bash
+sitectl libops create apikey --name ci-deploy
+sitectl libops list apikeys
+sitectl libops delete apikey "$API_KEY_ID"
+```
+
+The LibOps plugin checks for an API key before falling back to OAuth credentials.

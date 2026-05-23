@@ -1,0 +1,28 @@
+---
+title: WordPress plugin
+description: WordPress sitectl workflows including template creation, Compose lifecycle commands, WP-CLI, Composer, and database helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+The WordPress plugin adds WordPress-specific helpers on top of the standard LibOps <Compose /> template workflow.
+
+## Create
+
+Start a new WordPress site from the LibOps template:
+
+```bash
+sitectl create wp
+```
+
+The created context uses `plugin: wp`, so `sitectl wp ...` commands run against that site's project directory and environment.
+
+## Commands
+
+The WordPress plugin exposes focused helper pages for common operations:
+
+- [Lifecycle](/plugins/wordpress/lifecycle) for `build`, `init`, `up`, `down`, `status`, `logs`, and `rollout`
+- [WP-CLI](/plugins/wordpress/wp-cli) for arbitrary WP-CLI execution
+- [Composer](/plugins/wordpress/composer) for dependency maintenance
+- [Plugins and themes](/plugins/wordpress/plugins-themes) for WordPress extension updates
+- [Core, cache, and database](/plugins/wordpress/core-cache-db) for recurring site maintenance

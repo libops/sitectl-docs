@@ -1,15 +1,15 @@
 ---
-title: ISLE plugin
-description: Islandora ISLE sitectl workflows including guided site creation, component management, Fedora and Blazegraph sync, and migration utilities.
+title: Islandora plugin
+description: Islandora sitectl workflows including guided site creation, component management, Fedora and Blazegraph sync, and migration utilities.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The ISLE plugin adds Islandora-specific behavior on top of the core sitectl workflow. Because every ISLE site is also a Drupal site, the ISLE plugin includes the Drupal plugin — all `sitectl drupal` commands work against ISLE contexts automatically.
+The Islandora plugin adds Islandora-specific behavior on top of the core sitectl workflow. The plugin binary is `sitectl-isle` and the command namespace is `sitectl isle`. Because every Islandora site is also a Drupal site, the Islandora plugin includes the Drupal plugin — all `sitectl drupal` commands work against Islandora contexts automatically.
 
 ## Create
 
-Start a new ISLE site from the [`isle-site-template`](https://github.com/islandora-devops/isle-site-template):
+Start a new Islandora site from the [`isle-site-template`](https://github.com/islandora-devops/isle-site-template):
 
 ```bash
 sitectl create isle
@@ -43,7 +43,7 @@ sitectl component status
 sitectl component status --path /path/to/project
 ```
 
-`sitectl component status` is a core command that dispatches to the ISLE plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
+`sitectl component status` is a core command that dispatches to the Islandora plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
 
 ## Component set
 
@@ -84,7 +84,7 @@ sitectl isle migrate --input legacy-config.yaml --output updated-config.yaml
 
 ## Drupal commands
 
-Because the ISLE plugin includes the Drupal plugin, all `sitectl drupal` commands work against ISLE contexts:
+Because the Islandora plugin includes the Drupal plugin, all `sitectl drupal` commands work against Islandora contexts:
 
 ```bash
 sitectl drupal drush cr

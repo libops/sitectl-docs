@@ -8,6 +8,8 @@ import { Compose } from "/snippets/compose-tooltip.mdx";
 
 Remote services often don't expose ports directly on the VM — Solr, Traefik's dashboard, ActiveMQ, and similar admin interfaces are typically internal only. `port-forward` opens an SSH tunnel and maps those ports to localhost so you can reach them from your browser or local tools.
 
+`port-forward` is a core `sitectl` command. It works from the active context and is not provided by an application plugin.
+
 ## Reference
 
 <PortForwardCmd />

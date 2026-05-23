@@ -1,0 +1,65 @@
+---
+title: Resources
+description: Create, inspect, update, list, and delete LibOps organizations, projects, and sites.
+---
+
+LibOps resources are organized as organizations, projects, and sites. Sites belong to projects, and projects belong to organizations.
+
+## Create
+
+Create an organization, project, and site:
+
+```bash
+sitectl libops create organization \
+  --name "Library"
+
+sitectl libops create project \
+  --organization-id "$ORGANIZATION_ID" \
+  --name "Digital Collections"
+
+sitectl libops create site \
+  --project-id "$PROJECT_ID" \
+  --name "journals" \
+  --github-repository git@github.com:example/journals.git \
+  --github-ref heads/main \
+  --compose-path . \
+  --application-type ojs \
+  --up-cmd "make up" \
+  --init-cmd "make init-if-needed" \
+  --rollout-cmd "make rollout"
+```
+
+Site records define how LibOps finds and operates the repository, Compose files, and application lifecycle commands for the site.
+
+## List and get
+
+List resources across the account, or filter projects and sites by parent resource:
+
+```bash
+sitectl libops list organizations
+sitectl libops list projects --organization-id "$ORGANIZATION_ID"
+sitectl libops list sites --project-id "$PROJECT_ID"
+
+sitectl libops get organization "$ORGANIZATION_ID"
+sitectl libops get project "$PROJECT_ID"
+sitectl libops get site "$SITE_ID"
+```
+
+List commands use the local resource cache by default. Pass `--no-cache` when you need fresh API results.
+
+## Edit and delete
+
+Update resource fields in place:
+
+```bash
+sitectl libops edit organization "$ORGANIZATION_ID" --name "Library Services"
+sitectl libops edit project "$PROJECT_ID" --machine-type e2-standard-4
+sitectl libops edit site "$SITE_ID" --github-ref heads/main
+```
+
+Delete commands prompt before removing resources. Pass `--yes` for automation:
+
+```bash
+sitectl libops delete site "$SITE_ID"
+sitectl libops delete project "$PROJECT_ID" --yes
+```

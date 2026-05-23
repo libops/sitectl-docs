@@ -1,0 +1,22 @@
+---
+title: PKP tools
+description: Run PKP scheduled task, job, and plugin maintenance helpers.
+---
+
+Run PKP tools from `/var/www/ojs/lib/pkp/tools`:
+
+```bash
+sitectl ojs pkp-tool scheduler run
+sitectl ojs pkp-tool jobs run
+sitectl ojs pkp-tool plugins list
+```
+
+Named helpers are available for common maintenance work:
+
+```bash
+sitectl ojs scheduled-tasks
+sitectl ojs jobs
+sitectl ojs plugins list
+```
+
+With no arguments, `scheduled-tasks` and `jobs` run their standard `run` action.

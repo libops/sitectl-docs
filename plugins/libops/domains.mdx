@@ -1,0 +1,50 @@
+---
+title: Domains
+description: Create, list, and delete custom domains for LibOps sites.
+---
+
+Custom domain commands attach hostnames to a LibOps site and show the Cloud Run target that should receive traffic.
+
+## create domain
+
+Create a domain for a site:
+
+```bash
+sitectl libops create domain \
+  --site-id "$SITE_ID" \
+  --domain journals.example.edu
+```
+
+Optional flags control provisioning metadata and edge behavior:
+
+```bash
+sitectl libops create domain \
+  --site-id "$SITE_ID" \
+  --domain journals.example.edu \
+  --tier standard \
+  --status pending \
+  --edge-action allow \
+  --success-log-sample-rate 0.1
+```
+
+`--status` accepts `pending`, `active`, `suspended`, or `blocked`. `--edge-action` accepts `allow`, `challenge`, or `block`.
+
+## list domains
+
+List all custom domains attached to a site:
+
+```bash
+sitectl libops list domains --site-id "$SITE_ID"
+```
+
+The output includes the domain, status, edge action, tier, and Cloud Run hostname target.
+
+## delete domain
+
+Delete a custom domain from a site:
+
+```bash
+sitectl libops delete domain journals.example.edu --site-id "$SITE_ID"
+```
+
+The command prompts before deleting the domain. Pass `--yes` to skip the prompt in automation.

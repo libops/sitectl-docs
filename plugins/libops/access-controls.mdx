@@ -1,0 +1,48 @@
+---
+title: Access controls
+description: Manage members, firewall rules, and secrets for LibOps organizations, projects, and sites.
+---
+
+Members, firewall rules, and secrets can be attached to an organization, project, or site. Pass exactly one scope flag: `--organization-id`, `--project-id`, or `--site-id`.
+
+## Members
+
+Add and list members for a scope:
+
+```bash
+sitectl libops create members \
+  --site-id "$SITE_ID" \
+  --account-id "$ACCOUNT_ID" \
+  --role developer
+
+sitectl libops list members --site-id "$SITE_ID"
+```
+
+## Firewall
+
+Create and list firewall rules:
+
+```bash
+sitectl libops create firewall \
+  --site-id "$SITE_ID" \
+  --name office \
+  --cidr 203.0.113.10/32 \
+  --type FIREWALL_RULE_TYPE_HTTPS_ALLOWED
+
+sitectl libops list firewall --site-id "$SITE_ID"
+```
+
+## Secrets
+
+Create and list secrets:
+
+```bash
+sitectl libops create secrets \
+  --site-id "$SITE_ID" \
+  --name SMTP_PASSWORD \
+  --value "$SMTP_PASSWORD"
+
+sitectl libops list secrets --site-id "$SITE_ID"
+```
+
+Use project or organization scope for values that should apply more broadly than a single site.

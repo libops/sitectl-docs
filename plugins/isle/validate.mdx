@@ -1,13 +1,13 @@
 ---
 title: validate
-description: ISLE-specific validation checks run as part of sitectl validate.
+description: Islandora-specific validation checks run as part of sitectl validate.
 ---
 
 import ValidateCmd from "/snippets/commands/sitectl-validate.mdx";
 import IsleValidate from "/snippets/commands/sitectl-isle-validate.mdx";
 
 <Note>
-  The recommended command is `sitectl validate`, which runs core checks and ISLE-specific checks together in a single report. The `sitectl isle validate` command is still available for running ISLE checks in isolation.
+  The recommended command is `sitectl validate`, which runs core checks and Islandora-specific checks together in a single report. The `sitectl isle validate` command is still available for running Islandora checks in isolation.
 </Note>
 
 Run `validate` before starting a stack for the first time, after changing context wiring, or when diagnosing unexpected behaviour. It catches common misconfigurations before they become runtime failures.
@@ -18,13 +18,13 @@ Run `validate` before starting a stack for the first time, after changing contex
 
 <ValidateCmd />
 
-**ISLE plugin command (standalone):**
+**Islandora plugin command (standalone):**
 
 <IsleValidate />
 
-## ISLE checks
+## Islandora checks
 
-When the active context uses the ISLE plugin, `sitectl validate` automatically includes:
+When the active context uses the Islandora plugin, `sitectl validate` automatically includes:
 
 - **drupal-rootfs** — confirms the Drupal web root exists at the expected path
 - **traefik-cantaloupe-config** — confirms the required Traefik config file is present

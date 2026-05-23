@@ -1,0 +1,67 @@
+---
+title: Task Agent
+description: Create, list, inspect, respond to, and cancel LibOps Task Agent tasks from sitectl.
+---
+
+Task Agent commands create and manage coding-agent work through the LibOps API. Every task command requires `--organization-id`; create and list can also be narrowed to a project or site.
+
+## task create
+
+Create a task from a prompt:
+
+```bash
+sitectl libops task create \
+  --organization-id "$ORGANIZATION_ID" \
+  --site-id "$SITE_ID" \
+  "Update the OJS template and open a pull request."
+```
+
+By default, `task create` stays attached and polls for updates. Pass `--no-wait` to return immediately after the task is queued.
+
+```bash
+sitectl libops task create \
+  --organization-id "$ORGANIZATION_ID" \
+  --project-id "$PROJECT_ID" \
+  --no-wait \
+  "Audit the deployment workflow."
+```
+
+Use `--agent-model` to select a coding-agent model and `--poll-interval` to adjust the attached polling interval.
+
+## task list
+
+List recent tasks and current monthly usage:
+
+```bash
+sitectl libops task list --organization-id "$ORGANIZATION_ID"
+sitectl libops task list --organization-id "$ORGANIZATION_ID" --site-id "$SITE_ID" --limit 25
+```
+
+## task get
+
+Inspect a task as JSON:
+
+```bash
+sitectl libops task get "$TASK_ID" --organization-id "$ORGANIZATION_ID"
+```
+
+## task respond
+
+Reply when a task needs more input:
+
+```bash
+sitectl libops task respond \
+  "$TASK_ID" \
+  "Use the current main branch." \
+  --organization-id "$ORGANIZATION_ID"
+```
+
+Pass `--prompt` when the task prompt should be updated along with the response.
+
+## task cancel
+
+Cancel a queued or running task:
+
+```bash
+sitectl libops task cancel "$TASK_ID" --organization-id "$ORGANIZATION_ID"
+```

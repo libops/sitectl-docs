@@ -1,9 +1,9 @@
 ---
 title: fcrepo component
-description: How to enable, disable, and sync the Fedora Commons repository in your ISLE stack.
+description: How to enable, disable, and sync the Fedora Commons repository in your Islandora stack.
 ---
 
-fcrepo (Fedora Commons) is the linked data repository that Islandora uses to store digital objects and their metadata alongside Drupal. In an ISLE stack, fcrepo runs as a Docker service alongside the rest of the application.
+fcrepo (Fedora Commons) is the linked data repository that Islandora uses to store digital objects and their metadata alongside Drupal. In an Islandora stack, fcrepo runs as a Docker service alongside the rest of the application.
 
 The `fcrepo` component controls whether the Fedora service, its volumes, and related Islandora configuration are part of your stack.
 
@@ -52,6 +52,6 @@ Use `--fresh` to always take a new backup rather than reusing one from today.
 fcrepo adds significant resource requirements to a stack. You might disable it for:
 
 - **Minimal local development** — if you're working on Drupal theme or module code that doesn't interact with digital objects
-- **Stacks that don't use Islandora's linked data features** — some projects use ISLE as a Drupal hosting pattern but don't use Fedora-backed objects
+- **Stacks that don't use Islandora's linked data features** — some projects use Islandora as a Drupal hosting pattern but don't use Fedora-backed objects
 
 If you're running a full Islandora installation with digital objects, fcrepo should be on.

@@ -1,0 +1,20 @@
+---
+title: API
+description: Call the Omeka S REST API through sitectl.
+---
+
+Omeka S exposes a REST API rather than a standalone administration CLI. sitectl provides direct API helpers and resource shortcuts:
+
+```bash
+sitectl omeka-s api get items
+sitectl omeka-s api get items 12
+sitectl omeka-s api request POST items --identity "$OMEKA_S_KEY_IDENTITY" --credential "$OMEKA_S_KEY_CREDENTIAL" --file item.json
+```
+
+API helpers accept:
+
+- `--url` for the base API URL, defaulting to `http://localhost/api`
+- `--identity` for the Omeka S API key identity
+- `--credential` for the Omeka S API key credential
+- `--query name=value` for repeated query parameters
+- `--data` or `--file` for JSON request bodies on arbitrary requests
