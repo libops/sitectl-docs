@@ -40,8 +40,20 @@ sitectl can infer the active context from your current working directory. If you
 The resolution order is:
 
 1. An explicit `--context` flag on the command
-2. A context whose project directory matches the current working directory
+2. A plugin claim for the current <Compose /> project directory
 3. The `current-context` set in `~/.sitectl/config.yaml`
+
+When your shell is inside a supported project checkout, the owning plugin can claim that directory by inspecting the Compose services and any stack-specific files. For example, an ISLE checkout has a `drupal` service and Islandora packages in `composer.json`, so the ISLE plugin can claim it.
+
+After a plugin claims the checkout, sitectl first looks for a saved local context with the same canonical project directory and plugin. If no saved local context exists, sitectl creates a transient in-memory context named `.` for the command. This does not write to `~/.sitectl/config.yaml`. You can use it explicitly:
+
+```bash
+cd /path/to/isle
+sitectl component set iiif triplet
+sitectl component describe --context .
+```
+
+sitectl prints the detected project and plugin claim to stderr so you can see when the current working directory chose the context. If no plugin claims the directory, sitectl falls back to the configured default context. If a plugin-specific command is being run and the default context belongs to a different plugin, sitectl stops instead of running against the wrong stack.
 
 ## Managing contexts
 

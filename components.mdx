@@ -45,6 +45,15 @@ sitectl component describe --path /path/to/project
 
 This reports every registered component: its name, current state, and whether the live project files match what sitectl expects. A `drifted` status means the project files no longer match the last applied component state — usually something was changed outside of sitectl.
 
+Use `--verbose` to show the failed checks behind a drifted component:
+
+```bash
+sitectl component describe --verbose
+sitectl component describe --component blazegraph --verbose
+```
+
+When a drifted component blocks another change, sitectl prints the files and checks that failed, such as a missing Drupal config sync file or an unexpected value in `docker-compose.yml`.
+
 ## Turning components on and off
 
 ```bash

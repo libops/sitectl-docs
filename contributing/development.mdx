@@ -34,6 +34,26 @@ This runs `scripts/use-go-work.sh`, which creates a `go.work` file that points t
   Never add a `replace` directive to `go.mod` for local development. Use `make work` instead. Replace directives affect everyone who builds the module; `go.work` files are local.
 </Warning>
 
+## Current working directory context detection
+
+sitectl can use the current working directory as the active context when it is inside a supported Compose project. Core sitectl finds the Compose project root, then asks installed plugins whether they claim that project. The plugin owns the discovery rules.
+
+Plugins should register discovery during startup:
+
+```go
+sdk.SetComposeProjectDiscovery(plugin.ComposeProjectDiscovery{
+    RequiredServices:         []string{"drupal"},
+    RequiredComposerPackages: []string{"drupal/islandora"},
+    Reason:                   "drupal service with drupal/islandora in composer.json",
+})
+```
+
+The SDK exposes this through the hidden `__detect-project` command. Core sitectl uses that command during lightweight plugin discovery and creates a transient local context named `.` when the project has no matching saved context. This context is in memory only; discovery must not write to `~/.sitectl/config.yaml`.
+
+Discovery is cached for the lifetime of the `sitectl` process by canonical project path and requested plugin. Repeated subcommands in one invocation should not repeatedly shell out to every plugin.
+
+Plugin-specific commands must use the shared SDK context resolver (`sdk.GetContext`) so `--context .` works consistently. Commands that bypass the SDK need an explicit reason and tests for cwd detection.
+
 ## Linting and testing
 
 ```bash
