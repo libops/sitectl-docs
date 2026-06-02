@@ -96,8 +96,11 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
   <Accordion title="isle-tls-override">
     Controls whether the local development override file turns off TLS for local use even when production uses HTTPS. Typically enabled for development so you can run the site over plain HTTP locally.
   </Accordion>
-  <Accordion title="external-cantaloupe">
-    Controls whether the Cantaloupe image server runs as part of the local stack or is provided by an external service. When enabled, sitectl adds the Traefik routing rules needed to reach an external Cantaloupe instance.
+  <Accordion title="iiif">
+    Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the legacy Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`.
+  </Accordion>
+  <Accordion title="iiif-topology">
+    Controls whether the selected IIIF implementation runs in the local Compose stack or is treated as a distributed external service. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when the public site should route IIIF traffic to an external Cantaloupe or Triplet service.
   </Accordion>
 </AccordionGroup>
 

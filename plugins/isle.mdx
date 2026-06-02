@@ -52,6 +52,8 @@ Turn a component on or off:
 ```bash
 sitectl component set fcrepo off
 sitectl component set blazegraph on --yolo
+sitectl component set iiif triplet
+sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
 ```
 
 sitectl updates the relevant <Compose /> files and Drupal config sync files, then prompts for confirmation. Pass `--yolo` to skip confirmation in automation.

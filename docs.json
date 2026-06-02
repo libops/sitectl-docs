@@ -108,6 +108,7 @@
               "plugins/isle",
               "plugins/isle/fcrepo",
               "plugins/isle/blazegraph",
+              "plugins/isle/iiif",
               "plugins/isle/validate",
               "plugins/isle/converge",
               "plugins/isle/sync",

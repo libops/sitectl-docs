@@ -1,0 +1,57 @@
+---
+title: IIIF components
+description: Choose Cantaloupe or Triplet and decide whether IIIF runs locally or externally.
+---
+
+The ISLE plugin manages IIIF with two related components:
+
+- `iiif` chooses the implementation: `cantaloupe` or `triplet`.
+- `iiif-topology` chooses where that implementation runs. `disabled` means local Compose. `distributed` means Traefik routes to an external upstream.
+
+## Use Triplet Locally
+
+```bash
+sitectl component set iiif triplet
+```
+
+This removes the local Cantaloupe service and Traefik file, adds the Triplet service, writes `conf/triplet/config.yaml`, routes `/iiif`, and updates Drupal's Cantaloupe URL setting to `/iiif/3`.
+
+Triplet uses the existing Drupal public/private volumes and the fcrepo volume when fcrepo is present. It also adds a `triplet-cache` volume for derivatives.
+
+## Use Cantaloupe Locally
+
+```bash
+sitectl component set iiif cantaloupe
+```
+
+This restores the Cantaloupe service and `/cantaloupe` Traefik routing, removes Triplet files, and points Drupal back at `/cantaloupe/iiif/2`.
+
+## Use External IIIF
+
+```bash
+sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+```
+
+Use `distributed` when Cantaloupe or Triplet runs outside the public site stack. sitectl removes the base IIIF service from `docker-compose.yml`, sets `IIIF_UPSTREAM_URL` on Traefik, and keeps a local override service for development.
+
+The selected implementation still matters:
+
+- `iiif triplet` routes `/iiif` and uses a local Triplet override on port `8080`.
+- `iiif cantaloupe` routes `/cantaloupe` and uses a local Cantaloupe override on port `8182`.
+
+Return to local IIIF with:
+
+```bash
+sitectl component set iiif-topology disabled
+```
+
+## Create Flags
+
+You can choose the same shape during `sitectl create isle`:
+
+```bash
+sitectl create isle --iiif triplet
+sitectl create isle --iiif triplet --iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+```
+
+If you do not pass topology flags, sitectl assumes local IIIF.
