@@ -8,6 +8,13 @@ The ISLE plugin manages IIIF with two related components:
 - `iiif` chooses the implementation: `cantaloupe` or `triplet`.
 - `iiif-topology` chooses where that implementation runs. `disabled` means local Compose. `distributed` means Traefik routes to an external upstream.
 
+## Component reference
+
+| Component | Dispositions | Default | Managed changes |
+|---|---|---|---|
+| `iiif` | `cantaloupe`, `triplet` | `cantaloupe` | Compose services and volumes, `conf/traefik/cantaloupe.yml`, `conf/traefik/triplet.yml`, `conf/triplet/config.yaml`, Drupal's Cantaloupe URL, and `robots.txt` IIIF route hints. |
+| `iiif-topology` | `disabled`, `distributed` | `disabled` | Base Compose service placement, Traefik `IIIF_UPSTREAM_URL`, and local override upstream settings. |
+
 ## Use Triplet Locally
 
 ```bash
@@ -50,6 +57,7 @@ sitectl component set iiif-topology disabled
 You can choose the same shape during `sitectl create isle`:
 
 ```bash
+sitectl create isle --iiif cantaloupe
 sitectl create isle --iiif triplet
 sitectl create isle --iiif triplet --iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
 ```

@@ -25,7 +25,7 @@ The create flow:
     sitectl creates a local sitectl context for the new project directory.
   </Step>
   <Step title="Answer component questions">
-    sitectl asks about each component that requires a decision at create time — such as whether to include fcrepo, Blazegraph, or bot mitigation. You can answer interactively or pre-supply answers with flags.
+    sitectl asks about each component that requires a decision at create time, including fcrepo, Blazegraph, IIIF, and bot mitigation. You can answer interactively or pre-supply answers with flags.
   </Step>
   <Step title="Apply component state">
     sitectl writes the <Compose /> file and Drupal config changes that reflect your component choices, so the first `docker compose up` starts the stack you asked for.
@@ -45,6 +45,22 @@ sitectl component status --path /path/to/project
 
 `sitectl component status` is a core command that dispatches to the Islandora plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
 
+## Managed components
+
+The Islandora plugin currently manages these components:
+
+| Component | What it controls | Common commands |
+|---|---|---|
+| [`fcrepo`](/plugins/isle/fcrepo) | Fedora Commons service, volume, Drupal Fedora config, and filesystem migration guidance. | `sitectl component set fcrepo enabled` or `sitectl component set fcrepo superceded --isle-file-system-uri public` |
+| [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl component set blazegraph enabled` or `sitectl component set blazegraph disabled` |
+| [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl component set iiif cantaloupe` or `sitectl component set iiif triplet` |
+| [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |
+| [`isle-tls`](/plugins/isle/tls) | Base Traefik HTTP/HTTPS mode for the main stack. | `sitectl component set isle-tls enabled --tls-mode letsencrypt` |
+| [`isle-tls-override`](/plugins/isle/tls) | Environment-specific Traefik override, usually local development. | `sitectl component set isle-tls-override enabled --tls-mode http` |
+| [`bot-mitigation`](/plugins/isle/bot-mitigation) | Traefik captcha-protect middleware and Turnstile environment defaults for Drupal routes. | `sitectl component set bot-mitigation enabled` |
+
+All ISLE component changes are local-only. Run them against the checkout you intend to modify, review the diff, then commit the generated changes.
+
 ## Component set
 
 Turn a component on or off:
@@ -54,12 +70,14 @@ sitectl component set fcrepo off
 sitectl component set blazegraph on --yolo
 sitectl component set iiif triplet
 sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+sitectl component set isle-tls enabled --tls-mode letsencrypt
+sitectl component set isle-tls-override enabled --tls-mode http
 sitectl component set bot-mitigation on
 ```
 
 sitectl updates the relevant <Compose /> files and Drupal config sync files, then prompts for confirmation. Pass `--yolo` to skip confirmation in automation.
 
-See [bot-mitigation](/plugins/isle/bot-mitigation) for Turnstile key requirements and the local Traefik plugin source behavior.
+See [TLS components](/plugins/isle/tls) for Let's Encrypt and local override details. See [bot-mitigation](/plugins/isle/bot-mitigation) for Turnstile key requirements and the local Traefik plugin source behavior.
 
 ## Sync
 

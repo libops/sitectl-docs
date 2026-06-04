@@ -30,8 +30,8 @@ Within a state, a component also carries a **disposition** that records more det
 |---|---|
 | `enabled` | Explicitly turned on by an operator |
 | `disabled` | Explicitly turned off by an operator |
-| `superseded` | Replaced by a different component or approach |
-| `distributed` | Shipped as part of the upstream template; not yet explicitly set by an operator |
+| `superceded` | Replaced by a different component or approach. This is the current CLI spelling. |
+| `distributed` | Plugin-specific distributed topology, such as routing ISLE IIIF traffic to an external upstream |
 
 ## Checking component state
 
@@ -94,22 +94,25 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
 
 <AccordionGroup>
   <Accordion title="fcrepo">
-    Fedora Commons repository. Controls whether Fedora services and volumes are included in the stack. Disabling fcrepo removes the Fedora container and its related storage volumes from the project. Appropriate for sites that do not store preservation-grade binary objects in Fedora.
+    Fedora Commons repository. Controls whether Fedora services, volumes, Alpaca indexing, Drupal Fedora config, and filesystem URI rewrites are included in the stack. Use `enabled` for the standard Fedora-backed Islandora repository or `superceded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
   </Accordion>
   <Accordion title="blazegraph">
-    Blazegraph triple store. Controls whether Blazegraph is part of the stack. Islandora uses Blazegraph for RDF (linked data) storage. Disabling it is appropriate for minimal or development stacks that do not require linked data queries.
-  </Accordion>
-  <Accordion title="isle-tls">
-    Controls whether the stack serves traffic over HTTPS in staging and production. Manages Traefik TLS configuration — the component handles which certificate mode to use (self-managed, Let's Encrypt, or mkcert for local development).
-  </Accordion>
-  <Accordion title="isle-tls-override">
-    Controls whether the local development override file turns off TLS for local use even when production uses HTTPS. Typically enabled for development so you can run the site over plain HTTP locally.
+    Blazegraph triple store. Controls the Blazegraph service, volume, Alpaca triplestore indexing, Drupal triplestore namespace, and managed triplestore actions. Use `enabled` for standard RDF/SPARQL indexing or `disabled` for stacks that do not use linked data queries. See [Blazegraph](/plugins/isle/blazegraph).
   </Accordion>
   <Accordion title="iiif">
-    Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the legacy Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`.
+    Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
   <Accordion title="iiif-topology">
-    Controls whether the selected IIIF implementation runs in the local Compose stack or is treated as a distributed external service. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when the public site should route IIIF traffic to an external Cantaloupe or Triplet service.
+    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when public IIIF traffic should route to an external Cantaloupe or Triplet service. See [IIIF components](/plugins/isle/iiif).
+  </Accordion>
+  <Accordion title="isle-tls">
+    Controls whether the base stack serves traffic over HTTP or HTTPS. It manages `.env`, Drupal HTTPS settings, and Traefik command lines for `self-managed`, `mkcert`, or `letsencrypt` modes. See [TLS components](/plugins/isle/tls).
+  </Accordion>
+  <Accordion title="isle-tls-override">
+    Controls whether the tracked environment-specific Compose override changes frontend TLS behavior from the base stack. Commonly used to keep production on HTTPS while local development runs over HTTP. See [TLS components](/plugins/isle/tls).
+  </Accordion>
+  <Accordion title="bot-mitigation">
+    Controls Traefik captcha-protect for Drupal routes. Enabling it adds Turnstile environment defaults, local Traefik plugin source, challenge template mounting, and a Drupal router middleware reference. See [bot-mitigation](/plugins/isle/bot-mitigation).
   </Accordion>
 </AccordionGroup>
 

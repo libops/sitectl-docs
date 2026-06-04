@@ -110,6 +110,7 @@
               "plugins/isle/fcrepo",
               "plugins/isle/blazegraph",
               "plugins/isle/iiif",
+              "plugins/isle/tls",
               "plugins/isle/bot-mitigation",
               "plugins/isle/validate",
               "plugins/isle/converge",

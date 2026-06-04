@@ -5,6 +5,15 @@ description: Protect Islandora routes with Traefik captcha-protect and Cloudflar
 
 The `bot-mitigation` component adds the [`captcha-protect`](https://github.com/libops/captcha-protect) Traefik middleware to the Drupal router. When enabled, requests to Drupal routes can be challenged with Cloudflare Turnstile before they reach Drupal.
 
+It defaults to `disabled`.
+
+Supported dispositions:
+
+| Disposition | Meaning |
+|---|---|
+| `enabled` | Load captcha-protect as a local Traefik plugin and apply it to Drupal routes. |
+| `disabled` | Leave Drupal routes without the captcha-protect challenge middleware. |
+
 ## Enable During Create
 
 Choose bot mitigation in the interactive `sitectl create isle` flow, or pass the flag directly:
@@ -18,16 +27,19 @@ The component defaults to `off` so existing automated create flows do not unexpe
 ## Enable On An Existing Site
 
 ```bash
-sitectl set bot-mitigation on
+sitectl component set bot-mitigation enabled
 ```
 
-or:
+This updates `docker-compose.yml`, adds the captcha-protect middleware reference to the Drupal router, appends the middleware definition at the bottom of `conf/traefik/drupal.yml`, installs the local Traefik plugin source under `conf/traefik/plugins/captcha-protect`, and mounts the challenge template used by the plugin.
 
-```bash
-sitectl component set bot-mitigation on
-```
+## Managed files
 
-This updates `docker-compose.yml`, adds the captcha-protect middleware to `conf/traefik/drupal.yml`, installs the local Traefik plugin source under `conf/traefik/plugins/captcha-protect`, and mounts the challenge template used by the plugin.
+When enabled, the component manages:
+
+- `docker-compose.yml` Traefik command, mounts, and Turnstile environment defaults
+- `conf/traefik/drupal.yml` Drupal router middleware reference and `captcha-protect` middleware definition
+- `conf/traefik/plugins/captcha-protect` local Traefik plugin source
+- `conf/traefik/challenge.tmpl.html` challenge page template
 
 ## Turnstile Keys
 
@@ -55,7 +67,7 @@ This keeps Traefik startup independent of Traefik's plugin discovery service. Th
 ## Disable
 
 ```bash
-sitectl set bot-mitigation off
+sitectl component set bot-mitigation disabled
 ```
 
 Disabling removes the Traefik command, mounts, Turnstile environment defaults, and Drupal router middleware entry. It does not delete the local plugin source directory or an existing `challenge.tmpl.html` file from your checkout.
