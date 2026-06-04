@@ -1,0 +1,61 @@
+---
+title: bot-mitigation component
+description: Protect Islandora routes with Traefik captcha-protect and Cloudflare Turnstile.
+---
+
+The `bot-mitigation` component adds the [`captcha-protect`](https://github.com/libops/captcha-protect) Traefik middleware to the Drupal router. When enabled, requests to Drupal routes can be challenged with Cloudflare Turnstile before they reach Drupal.
+
+## Enable During Create
+
+Choose bot mitigation in the interactive `sitectl create isle` flow, or pass the flag directly:
+
+```bash
+sitectl create isle --bot-mitigation on
+```
+
+The component defaults to `off` so existing automated create flows do not unexpectedly add a captcha challenge.
+
+## Enable On An Existing Site
+
+```bash
+sitectl set bot-mitigation on
+```
+
+or:
+
+```bash
+sitectl component set bot-mitigation on
+```
+
+This updates `docker-compose.yml`, adds the captcha-protect middleware to `conf/traefik/drupal.yml`, installs the local Traefik plugin source under `conf/traefik/plugins/captcha-protect`, and mounts the challenge template used by the plugin.
+
+## Turnstile Keys
+
+By default, sitectl writes Cloudflare Turnstile test keys:
+
+```yaml
+TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
+```
+
+These keys are only for testing. They always allow bots that can run JavaScript to pass the challenge. For a real site, create Turnstile keys in Cloudflare and set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in the site's environment before deploying bot mitigation.
+
+## Local Plugin Source
+
+Traefik's recommended plugin setup normally specifies a plugin version and lets Traefik download the plugin assets from Traefik's plugin discovery service when the Traefik container is created.
+
+ISLE avoids that production-time network dependency by mounting the captcha-protect plugin source locally:
+
+```yaml
+./conf/traefik/plugins/captcha-protect:/plugins-local/src/github.com/libops/captcha-protect:r
+```
+
+This keeps Traefik startup independent of Traefik's plugin discovery service. The site repository contains the plugin source that Traefik needs, so recreating the Traefik container does not require a remote plugin download.
+
+## Disable
+
+```bash
+sitectl set bot-mitigation off
+```
+
+Disabling removes the Traefik command, mounts, Turnstile environment defaults, and Drupal router middleware entry. It does not delete the local plugin source directory or an existing `challenge.tmpl.html` file from your checkout.

@@ -155,18 +155,34 @@ If a feature is always on and has no meaningful off state, it does not need to b
 
 <Steps>
   <Step title="Define the component">
-    Write a new Go file in the plugin's `pkg/components` directory. Implement the `Definition` struct with `On` and `Off` domain specs. Add YAML rules for what changes in `docker-compose.yml` and Drupal config sync.
+    Write a new Go file in the plugin's `pkg/components` directory. Implement the `Definition` struct with `On` and `Off` domain specs. Add YAML rules for the observable state that `status`, `set`, and `converge` should detect.
   </Step>
   <Step title="Register it">
     Add the new component to the plugin's `Registry` initialization.
   </Step>
   <Step title="Add it to the create flow">
-    If the component requires a decision at install time, set `PromptOnCreate: true` and add any `FollowUps` needed.
+    If the component requires a decision at install time, set `PromptOnCreate: true`, add any `FollowUps` needed, and thread the decision through the plugin's create request/options object. The create path should apply the same behavior as `component set` so a new checkout and an existing checkout stay consistent.
+  </Step>
+  <Step title="Add the apply path">
+    Use the repo's existing component apply pattern. For simple components, structured YAML mutation helpers are usually enough. For larger generated config blocks, put the static config in `pkg/create/assets/...` and load it with Go `embed` instead of keeping inline YAML strings in Go code.
   </Step>
   <Step title="Write tests">
-    The `pkg/component` package includes table-driven tests for YAML mutation, status detection, and create option generation. Add coverage for the new component's rules.
+    Add focused tests for the component definition, create option resolution, the set/apply path, and any generated files. If the component is intentionally disabled during integration tests, make that explicit with a create flag instead of relying on an implicit default.
   </Step>
   <Step title="Document it">
-    Add a page in `plugins/isle/` (or the relevant plugin section) describing what the component does, when to enable or disable it, and any data migration requirements.
+    Add a page in `plugins/isle/` (or the relevant plugin section), add it to `docs.json`, and link to it from the plugin overview. Document when to enable or disable the component, create-time flags, follow-up environment variables, generated files, and any production caveats.
   </Step>
 </Steps>
+
+## Component Checklist
+
+Before opening a component PR, check that it covers the full operator workflow:
+
+- `Definition` includes clear guidance, allowed dispositions, behavior summaries, data migration impact, and `LocalOnly` when changes should only happen on local checkouts.
+- `PromptOnCreate` is true for features operators should decide on during initial site creation.
+- Create flags and recreate-command output include the component so automated installs and setup commits are reproducible.
+- `component set`, create, and converge/status detection agree on what `on`, `off`, and `drifted` mean.
+- Static generated YAML or templates live under `pkg/create/assets/...` and are loaded with Go `embed`; avoid large inline YAML blocks in Go.
+- Runtime warnings are printed for insecure defaults, required credentials, destructive changes, or behavior that can surprise production operators.
+- Integration tests explicitly set the component state, even when the intended state is the default.
+- Plugin documentation explains the operational reason for any unusual design choice, such as vendoring or mounting local plugin source to avoid production startup dependencies on third-party services.
