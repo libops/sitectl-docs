@@ -1,0 +1,53 @@
+---
+title: dev
+description: Local Drupal development tools for contrib patches, extension checkouts, and upstream root refreshes.
+---
+
+The `dev` commands help OSS contributors test Drupal contrib changes against a local site. They require a local sitectl context because they edit the checked-out project tree.
+
+ISLE contexts can use these commands through the Drupal plugin because the ISLE plugin includes Drupal.
+
+## checkout-pr
+
+Checkout a module or theme branch and bind-mount it into the Drupal container:
+
+```bash
+sitectl drupal dev checkout-pr token --branch 1.x
+sitectl drupal dev checkout-pr controlled_access_terms --source islandora --branch issue-123
+sitectl drupal dev checkout-pr my_module --source custom --repo git@github.com:me/my_module.git --branch feature
+```
+
+By default, sitectl clones Drupal.org projects into `drupal-projects/`, detects the extension from its `.info.yml`, updates `docker-compose.override.yml`, and runs `docker compose up drupal -d`. Use `--skip-up` when you only want the file changes.
+
+## patch-pr
+
+Add a GitHub pull request patch to `composer.json`:
+
+```bash
+sitectl drupal dev patch-pr https://github.com/drupal/token/pull/42
+sitectl drupal dev patch-pr islandora/controlled_access_terms#123 --package drupal/controlled_access_terms
+```
+
+The command writes `extra.patches` and then runs `docker compose build drupal` followed by `docker compose up drupal -d`. Use `--skip-run` to edit `composer.json` without rebuilding.
+
+## overwrite-starter-site
+
+Overwrite the active context's Drupal root from an upstream GitHub archive:
+
+```bash
+sitectl drupal dev overwrite-starter-site --force
+sitectl drupal dev overwrite-upstream --repo https://github.com/example/site-template --ref main --force
+```
+
+The default upstream is `islandora-devops/islandora-starter-site@main`. The command removes upstream development metadata such as `.github`, `.git`, `ci`, and `renovate.json5`, preserves `assets/patches/default_settings.txt` when present, and ensures custom module and theme directories remain tracked.
+
+## create-starter-site-pr
+
+Prepare or create a pull request for upstream root updates:
+
+```bash
+sitectl drupal dev create-starter-site-pr
+sitectl drupal dev create-upstream-pr --force --title "Update Drupal root from upstream"
+```
+
+Without `--force`, the command stages changes and prints the status for review. With `--force`, or inside GitHub Actions, it creates the branch, commits, pushes, and runs `gh pr create`.

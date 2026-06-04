@@ -58,6 +58,18 @@ sitectl drupal sync config --source museum-prod --target museum-local
 
 This exports the config export from the source, stages it, and imports it into the target via `drush config:import`.
 
+### dev
+
+Use local development helpers for contrib work:
+
+```bash
+sitectl drupal dev checkout-pr token --branch 1.x
+sitectl drupal dev patch-pr https://github.com/drupal/token/pull/42
+sitectl drupal dev overwrite-starter-site --force
+```
+
+These commands help contributors test extension branches, apply GitHub PR patches through Composer, and refresh the Drupal root from an upstream project archive.
+
 ## Assigning the Drupal plugin to a context
 
 When you create or configure a context, set its `plugin` field to `drupal`:

@@ -98,6 +98,7 @@
             "pages": [
               "plugins/drupal",
               "plugins/drupal/drush",
+              "plugins/drupal/dev",
               "plugins/drupal/sync",
               "plugins/drupal/uli"
             ]
