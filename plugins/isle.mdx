@@ -25,7 +25,7 @@ The create flow:
     sitectl creates a local sitectl context for the new project directory.
   </Step>
   <Step title="Answer component questions">
-    sitectl asks about each component that requires a decision at create time — such as whether to include fcrepo or Blazegraph. You can answer interactively or pre-supply answers with flags.
+    sitectl asks about each component that requires a decision at create time — such as whether to include fcrepo, Blazegraph, or bot mitigation. You can answer interactively or pre-supply answers with flags.
   </Step>
   <Step title="Apply component state">
     sitectl writes the <Compose /> file and Drupal config changes that reflect your component choices, so the first `docker compose up` starts the stack you asked for.
@@ -54,9 +54,12 @@ sitectl component set fcrepo off
 sitectl component set blazegraph on --yolo
 sitectl component set iiif triplet
 sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+sitectl component set bot-mitigation on
 ```
 
 sitectl updates the relevant <Compose /> files and Drupal config sync files, then prompts for confirmation. Pass `--yolo` to skip confirmation in automation.
+
+See [bot-mitigation](/plugins/isle/bot-mitigation) for Turnstile key requirements and the local Traefik plugin source behavior.
 
 ## Sync
 
