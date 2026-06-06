@@ -3,7 +3,7 @@ module github.com/libops/sitectl-docs/gen-docs-snippets
 go 1.25.8
 
 require (
-	github.com/libops/sitectl v0.0.0
+	github.com/libops/sitectl v0.17.4
 	github.com/libops/sitectl-drupal v0.0.0
 	github.com/libops/sitectl-isle v0.0.0
 	github.com/spf13/cobra v1.10.2
