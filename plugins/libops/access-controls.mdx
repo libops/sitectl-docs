@@ -1,26 +1,26 @@
 ---
 title: Access controls
-description: Manage members, firewall rules, and secrets for LibOps organizations, projects, and sites.
+description: Manage members, firewall rules, secrets, and settings for LibOps organizations, projects, and Sites.
 ---
 
-Members, firewall rules, and secrets can be attached to an organization, project, or site. Pass exactly one scope flag: `--organization-id`, `--project-id`, or `--site-id`.
+Members, firewall rules, secrets, and settings can be attached to an organization, project, or Site. Pass exactly one scope flag: `--organization-id`, `--project-id`, or `--site-id`.
 
 ## Members
 
-Add and list members for a scope:
-
 ```bash
-sitectl libops create members \
+sitectl libops create member \
   --site-id "$SITE_ID" \
   --account-id "$ACCOUNT_ID" \
   --role developer
 
 sitectl libops list members --site-id "$SITE_ID"
+sitectl libops edit member "$ACCOUNT_ID" --site-id "$SITE_ID" --role owner
+sitectl libops delete member "$ACCOUNT_ID" --site-id "$SITE_ID" --yes
 ```
 
-## Firewall
+Roles are `owner`, `developer`, and `read`.
 
-Create and list firewall rules:
+## Firewall
 
 ```bash
 sitectl libops create firewall \
@@ -30,19 +30,40 @@ sitectl libops create firewall \
   --type FIREWALL_RULE_TYPE_HTTPS_ALLOWED
 
 sitectl libops list firewall --site-id "$SITE_ID"
+sitectl libops delete firewall "$RULE_ID" --site-id "$SITE_ID" --yes
 ```
+
+Firewall rules do not currently support in-place update.
 
 ## Secrets
 
-Create and list secrets:
-
 ```bash
-sitectl libops create secrets \
+sitectl libops create secret \
   --site-id "$SITE_ID" \
   --name SMTP_PASSWORD \
   --value "$SMTP_PASSWORD"
 
+sitectl libops create secret \
+  --site-id "$SITE_ID" \
+  --name TLS_PRIVATE_KEY \
+  --value-file ./tls.key
+
 sitectl libops list secrets --site-id "$SITE_ID"
+sitectl libops edit secret "$SECRET_ID" --site-id "$SITE_ID" --value "$NEW_VALUE"
+sitectl libops delete secret "$SECRET_ID" --site-id "$SITE_ID" --yes
 ```
 
-Use project or organization scope for values that should apply more broadly than a single site.
+Secret values are write-only from the CLI.
+
+## Settings
+
+```bash
+sitectl libops create setting \
+  --site-id "$SITE_ID" \
+  --key support_email \
+  --value help@example.edu
+
+sitectl libops list settings --site-id "$SITE_ID"
+sitectl libops edit setting "$SETTING_ID" --site-id "$SITE_ID" --value helpdesk@example.edu
+sitectl libops delete setting "$SETTING_ID" --site-id "$SITE_ID" --yes
+```

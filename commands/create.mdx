@@ -26,3 +26,27 @@ Or just pass a definition name when it is unambiguous across installed plugins:
 ```bash
 sitectl create default
 ```
+
+## Flag ordering
+
+`create` forwards everything after it to the selected plugin's create runner, so it
+does not parse flags itself. Global `sitectl` flags such as `--context` and
+`--log-level` must therefore come **before** the `create` subcommand:
+
+```bash
+# correct: global flags before `create`, create flags after
+sitectl --context staging create drupal/default \
+  --path ./drupal --type local --checkout-source template --setup-only
+```
+
+Putting a global flag after `create` forwards it to the plugin, which rejects it:
+
+```bash
+# wrong: --context is forwarded to the plugin
+sitectl create drupal/default --path ./drupal --context staging
+# Error: unknown flag: --context
+```
+
+Plugin-specific create flags (for example `--path`, `--type`, `--checkout-source`,
+`--setup-only`, or ISLE's `--fcrepo` and `--blazegraph`) still go after the target,
+because they belong to the plugin's create runner.

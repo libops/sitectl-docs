@@ -1,4 +1,4 @@
-.PHONY: docs docs-host work docs-snippets
+.PHONY: docs docs-host docs-snippets
 
 DOCS_PORT ?= 3000
 
@@ -12,9 +12,10 @@ docs:
 docs-host:
 	npx mint dev
 
-work:
-	./scripts/use-go-work.sh
-
-docs-snippets: work
-	go run ./scripts/gen-docs-snippets/
-
+# Regenerate command-reference snippets from the local sitectl + plugin
+# checkouts. The generator is a self-contained Go module that resolves the
+# sibling repos through the replace directives in
+# scripts/gen-docs-snippets/go.mod, so no go.work file is needed. It runs from
+# inside its module dir and is passed the docs root as the output base.
+docs-snippets:
+	cd scripts/gen-docs-snippets && go run . "$(CURDIR)"

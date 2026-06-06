@@ -45,6 +45,14 @@ Inspect a task as JSON:
 sitectl libops task get "$TASK_ID" --organization-id "$ORGANIZATION_ID"
 ```
 
+## task attach
+
+Attach to an existing task and poll for updates:
+
+```bash
+sitectl libops task attach "$TASK_ID" --organization-id "$ORGANIZATION_ID"
+```
+
 ## task respond
 
 Reply when a task needs more input:
@@ -56,7 +64,7 @@ sitectl libops task respond \
   --organization-id "$ORGANIZATION_ID"
 ```
 
-Pass `--prompt` when the task prompt should be updated along with the response.
+Pass `--no-wait` to return after queueing the reply instead of attaching.
 
 ## task cancel
 

@@ -17,18 +17,22 @@ The current local development plugin chain in this workspace is:
 - `sitectl-isle` — ISLE plugin; stack logic, component definitions, ISLE-specific jobs
 - `sitectl-drupal` — Drupal plugin; drush, sync, ULI; included by the ISLE plugin
 
-Core sitectl owns the operator-facing command shape. Plugins extend that behavior through hidden protocol commands dispatched based on the active context's plugin field.
+Core sitectl owns the operator-facing command shape. Plugins extend that behavior through the private `__sitectl-rpc` protocol dispatched based on the active context's plugin field.
+
+The SDK registers that private entrypoint automatically. Plugin code should register SDK handlers and runners, not define its own transport commands.
 
 Core commands that fan out to plugins:
 
-- `sitectl debug` → `__debug`
-- `sitectl validate` → core validators + `__validate` (results merged)
-- `sitectl converge` → `__converge`
-- `sitectl set` → `__set`
-- `sitectl deploy` → `__deploy pre-down` / `__deploy post-up`
-- `sitectl job run` → `__job`
-- `sitectl component describe` → `__component describe`
-- `sitectl component set` → `__component set`
+- `sitectl debug` → `debug.run`
+- `sitectl validate` → core validators + `validate.run` (results merged)
+- `sitectl healthcheck` → core Compose runtime checks + `healthcheck.run` (results merged)
+- `sitectl verify` → `verify.run` (results rendered by core)
+- `sitectl converge` → `converge.run`
+- `sitectl set` → `set.run`
+- `sitectl deploy` → `deploy.run`
+- `sitectl job run` → `job.run`
+- `sitectl component describe` → `component.describe`
+- `sitectl component set` → `component.set`
 
 When a context belongs to `isle`, core sitectl routes dispatch commands to `sitectl-isle`. The ISLE plugin can further invoke included plugins such as `sitectl-drupal`.
 

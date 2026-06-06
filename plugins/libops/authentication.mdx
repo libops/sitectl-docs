@@ -1,6 +1,6 @@
 ---
 title: Authentication
-description: Log in to LibOps, inspect the active identity, remove credentials, and create API keys for automation.
+description: Log in to LibOps, inspect the active identity, update your profile, and create API keys for automation.
 ---
 
 Use the authentication commands before running LibOps API workflows:
@@ -11,22 +11,46 @@ sitectl libops whoami
 sitectl libops logout
 ```
 
-`login` opens a browser authentication flow and stores the resulting credentials in the local sitectl credential directory. `whoami` prints the current authentication state, and `logout` removes the local OAuth token.
-
-Pass `--api-url` when authenticating against a non-default LibOps API endpoint:
+`login` opens the same browser login flow used by the dashboard, including **Login with Google**. The CLI listens on a temporary localhost callback URL, stores OAuth credentials in `~/.sitectl/oauth.json`, and can create a saved API key for sustained access.
 
 ```bash
 sitectl libops login --api-url https://api.libops.io
 ```
 
-## API keys
+## whoami and profile setup
 
-Use API keys for non-interactive automation:
+`whoami` reports the active account, token/API-key state, GitHub username, and LibOps SSH key status:
 
 ```bash
-sitectl libops create apikey --name ci-deploy
-sitectl libops list apikeys
-sitectl libops delete apikey "$API_KEY_ID"
+sitectl libops whoami
 ```
 
-The LibOps plugin checks for an API key before falling back to OAuth credentials.
+Set account profile fields from the CLI:
+
+```bash
+sitectl libops account update --github-username octocat
+sitectl libops account update --name "Ada Lovelace"
+```
+
+For checkout and SSH workflows, set your GitHub username and add the same public SSH key to both GitHub and LibOps.
+
+## API keys
+
+Use API keys for non-interactive or long-lived access:
+
+```bash
+sitectl libops create apikey --name workstation --save
+sitectl libops create apikey --name ci --scopes organization:read,project:write
+sitectl libops list apikeys
+sitectl libops delete apikey "$API_KEY_ID" --yes
+```
+
+The LibOps plugin checks for a saved API key before falling back to OAuth credentials.
+
+## SSH keys
+
+```bash
+sitectl libops create ssh-key --name laptop --public-key-file ~/.ssh/id_ed25519.pub
+sitectl libops list ssh-keys
+sitectl libops delete ssh-key "$KEY_ID" --yes
+```

@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Switch Traefik TLS mode: http, mkcert, letsencrypt, or self-managed
+
+```bash
+sitectl traefik tls MODE
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--acme-url` |   | ACME directory URL to set when using letsencrypt |
+| `--cert-file` |   | Public certificate file to install for self-managed TLS |
+| `--domain` |   | Domain to use for mkcert; defaults to DOMAIN from the env file or localhost |
+| `--email` |   | ACME email to set when using letsencrypt |
+| `--env-file` |   | Env file to update; defaults to the first context env-file or .env |
+| `--key-file` |   | Private key file to install for self-managed TLS |
+| `--tls-compose-file` | `docker-compose.tls.yml` | TLS compose override to add/remove from the context when it exists |

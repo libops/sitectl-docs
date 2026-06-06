@@ -46,6 +46,7 @@
                 "expanded": true,
                 "pages": [
                   "commands/validate",
+                  "commands/verify",
                   "commands/converge",
                   "commands/set",
                   "commands/deploy"
@@ -56,14 +57,14 @@
                 "expanded": true,
                 "pages": [
                   "commands/job",
-                  "commands/compose",
-                  "commands/cron"
+                  "commands/compose"
                 ]
               },
               {
                 "group": "Troubleshooting",
                 "expanded": true,
                 "pages": [
+                  "commands/healthcheck",
                   "commands/debug",
                   "commands/port-forward",
                   "commands/sequelace"
@@ -81,8 +82,61 @@
         ]
       },
       {
+        "tab": "Core service commands",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "plugins/core-services"
+            ]
+          },
+          {
+            "group": "MariaDB",
+            "pages": [
+              "plugins/mariadb"
+            ]
+          },
+          {
+            "group": "Memcached",
+            "pages": [
+              "plugins/memcached"
+            ]
+          },
+          {
+            "group": "Solr",
+            "pages": [
+              "plugins/solr"
+            ]
+          },
+          {
+            "group": "Traefik",
+            "pages": [
+              "plugins/traefik"
+            ]
+          },
+          {
+            "group": "Triplet",
+            "pages": [
+              "plugins/triplet"
+            ]
+          },
+          {
+            "group": "Valkey",
+            "pages": [
+              "plugins/valkey"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Application plugins",
         "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "plugins/applications"
+            ]
+          },
           {
             "group": "ArchivesSpace",
             "pages": [
@@ -110,10 +164,7 @@
               "plugins/isle/fcrepo",
               "plugins/isle/blazegraph",
               "plugins/isle/iiif",
-              "plugins/isle/tls",
-              "plugins/isle/bot-mitigation",
-              "plugins/isle/validate",
-              "plugins/isle/converge",
+              "plugins/isle/derivatives",
               "plugins/isle/sync",
               "plugins/isle/migrate",
               "plugins/isle/cache"
@@ -187,6 +238,12 @@
             ]
           },
           {
+            "group": "Runtime workflows",
+            "pages": [
+              "plugins/libops/runtime"
+            ]
+          },
+          {
             "group": "Access controls",
             "pages": [
               "plugins/libops/access-controls"
@@ -211,6 +268,7 @@
               "contributing/architecture",
               "contributing/plugin-hierarchy",
               "contributing/components",
+              "contributing/service-components",
               "contributing/development"
             ]
           }

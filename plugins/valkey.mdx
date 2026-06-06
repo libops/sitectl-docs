@@ -1,0 +1,40 @@
+---
+title: Valkey service commands
+description: Core sitectl Valkey operations and cache service inspection helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import StatusCmd from "/snippets/commands/sitectl-valkey-status.mdx";
+import PingCmd from "/snippets/commands/sitectl-valkey-ping.mdx";
+
+Valkey is a core `sitectl` service namespace. Operators use `sitectl valkey ...` from any context whose <Compose /> project has a Valkey service.
+
+## Status
+
+Check the Valkey container state:
+
+```bash
+sitectl valkey status
+```
+
+## Ping
+
+Ping Valkey from inside its container:
+
+```bash
+sitectl valkey ping
+```
+
+The command uses `valkey-cli` when present and falls back to `redis-cli`.
+
+Standalone Valkey Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated Valkey CLI plugin.
+
+## Reference
+
+### `status`
+
+<StatusCmd />
+
+### `ping`
+
+<PingCmd />

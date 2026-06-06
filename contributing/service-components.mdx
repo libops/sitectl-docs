@@ -1,0 +1,210 @@
+---
+title: Service components
+description: Architecture for reusable compose services that can run standalone or be merged into application stacks.
+---
+
+Service components are reusable infrastructure services, such as Traefik, Solr, MariaDB, Valkey, and Memcached, that can run as their own Compose projects or be merged into an application Compose project.
+
+The goal is to keep common services boring and portable. A service like MariaDB or Solr should not be reimplemented separately for Drupal, ISLE, WordPress, Omeka, OJS, and ArchivesSpace. The shared service operation belongs in one place; the application owns only the wiring that makes that service useful inside that application.
+
+## Core principle
+
+If an individual service is cross-cutting, self-contained, and used by many applications, it belongs in the core `sitectl` command.
+
+That means:
+
+- MariaDB operations live under `sitectl mariadb ...`
+- Traefik ingress operations live under `sitectl traefik ...`
+- Solr operations live under `sitectl solr ...`
+- Valkey operations live under `sitectl valkey ...`
+- Memcached operations live under `sitectl memcached ...`
+
+These services may still have standalone Compose projects because many of them can be deployed independently. They do not need dedicated CLI plugins just to expose common lifecycle, backup, restore, sync, TLS, cache, or health helpers.
+
+## Ownership boundaries
+
+Core `sitectl` owns cross-cutting service commands and helpers:
+
+- Context-aware Docker execution
+- Backup, restore, and sync flows for shared databases
+- Ingress TLS mode selection
+- Bot mitigation controls
+- Generic health, logs, and service inspection helpers
+- Component merge mechanics and status detection
+
+Standalone service projects own deployable service templates when a service is useful by itself:
+
+- Base Compose service definitions
+- Default volumes, networks, secrets, configs, and health checks
+- Makefile targets for direct standalone operation
+
+Application Compose projects own target integration:
+
+- App service dependencies, such as `depends_on`
+- Environment variables that point an app at MariaDB, Solr, Valkey, or Memcached
+- App-specific Traefik route files, labels, and middleware wiring
+- App-specific volumes, config files, and bootstrap defaults
+
+Application plugins own application workflows:
+
+- App CLIs such as Drush, WP-CLI, OJS tools, or ArchivesSpace API helpers
+- App-specific sync, migration, cache, search, and diagnostic behavior
+- Create flows and prompts that are unique to that application
+
+This keeps shared service behavior consistent while still allowing each application to express the small amount of app-specific Compose wiring it needs.
+
+## Command shape
+
+Keep service command namespaces stable even when the implementation moves into core.
+
+Examples:
+
+```bash
+sitectl mariadb backup
+sitectl mariadb restore ./backup.sql.gz
+sitectl mariadb sync --source production --target staging
+sitectl traefik tls http
+sitectl traefik tls mkcert
+sitectl traefik tls letsencrypt
+sitectl traefik tls self-managed
+sitectl traefik bot-mitigation on
+sitectl solr status
+sitectl valkey ping
+sitectl memcached stats
+```
+
+Operators should not need to know whether a service command is implemented by core or by an app plugin. For small shared services, prefer core.
+
+## Traefik ingress
+
+All application stacks use Traefik for ingress. Traefik is therefore a first-class core service area, not an app-specific add-on.
+
+Core Traefik support must cover:
+
+- `http` for plain local or internal HTTP
+- `mkcert` for local trusted development certificates
+- `letsencrypt` for ACME-managed production certificates
+- `self-managed` for bring-your-own certificate/key material
+- Bot mitigation controls that app route files can attach to
+
+Application Compose projects may add route files, labels, service dependencies, or app-specific dynamic config references, but app plugins should not each invent their own TLS or bot-mitigation implementation. Otherwise, every application drifts into a different ingress model.
+
+Bot mitigation is a reusable Traefik component helper in core `sitectl`. An app plugin registers it with the router and route-file details for that app, then delegates mutation to the core helper:
+
+```go
+coretraefik.BotMitigation(coretraefik.BotMitigationOptions{
+  RouterName:       "ojs",
+  RouterConfigPath: "conf/traefik/ojs.yml",
+  Middleware: coretraefik.CaptchaProtectMiddlewareOptions{
+    ProtectRoutes: "^/(issues|articles)",
+  },
+})
+```
+
+The same options are passed when applying the state change:
+
+```go
+coretraefik.ApplyBotMitigation(projectDir, coretraefik.BotMitigationStateOn, opts)
+```
+
+This lets plugins such as OJS, ISLE, Omeka, or WordPress choose app-specific captcha-protect values, including `protectRoutes`, without copying the plugin installation, Traefik command, Turnstile environment, or middleware rendering code.
+
+## One compose contract
+
+A reusable service should not maintain separate "standalone" and "embedded" Compose files when the real difference is target wiring.
+
+For example, Solr standalone and Solr inside Drupal are the same base service. The Drupal Compose project can add target-specific changes, such as a Drupal Solr config volume or a `depends_on` relationship. The service contract should stay inspectable and deployable without hiding large YAML fragments inside Go string constants.
+
+Use one canonical service definition when possible and apply target rules when the service is merged into a larger project.
+
+## Merge model
+
+When a service component is enabled, sitectl:
+
+1. Reads the canonical service definition.
+2. Adds its services, networks, volumes, secrets, and configs to the target Compose project.
+3. Applies target integration rules from the application project or registered component.
+4. Writes the updated Compose file.
+
+When a service component is disabled, sitectl:
+
+1. Removes the service from the target Compose project.
+2. Removes dependencies and target integration rules that only make sense while the service exists.
+3. Prunes unused Compose resources when they are no longer referenced.
+4. Leaves data migration decisions explicit. Removing a local service does not imply that data has been safely migrated elsewhere.
+
+This on/off cycle must be idempotent. Enabling a component after disabling it should restore both the imported service and the app-side wiring.
+
+## Dispositions
+
+Service components normally support:
+
+| Disposition | Meaning |
+|---|---|
+| `enabled` | Run this service in the current Compose project |
+| `disabled` | Do not run this service in the current Compose project |
+| `distributed` | The service exists outside this Compose project and the application should be wired to that external service |
+
+`distributed` is important. These services are useful as standalone projects, so application stacks should not assume every dependency must be colocated. A Drupal stack might use a local Solr today and an external Solr tomorrow. The component model should make that transition explicit.
+
+## Target rules
+
+Application Compose projects should define only the integration rules they own.
+
+Good target rules:
+
+- Restore `services.drupal.depends_on.solr`
+- Add a Drupal Solr config volume to the Solr service
+- Set app-specific environment variables that point to a distributed service
+- Attach app routes to Traefik middleware supplied by core ingress helpers
+- Override ArchivesSpace Solr image, command, and volume target
+
+Bad target rules:
+
+- Recreate the entire imported service in the application plugin
+- Keep another copy of the service Compose YAML in the application plugin
+- Hide large YAML fragments inside Go string constants
+- Add a dedicated CLI plugin for a small single-service dependency just to expose generic operations
+
+## When to add a core service namespace
+
+Add the service to core when most of these are true:
+
+- It is a single self-contained service.
+- Multiple application stacks use it.
+- Its operations are generic across apps.
+- It can reasonably run as a standalone Compose project.
+- The command namespace would be service-oriented, such as `sitectl mariadb ...`, not application-oriented.
+
+Keep behavior in an application plugin when the operation is app-specific. For example, Drush belongs in the Drupal plugin, WP-CLI belongs in the WordPress plugin, and ISLE migration workflows belong in the ISLE plugin.
+
+Triplet is an application-scale project rather than a small shared dependency, so it can keep its own plugin/workflow surface.
+
+## Application plugin composition
+
+Application plugins should include other application plugins only when there is a real application hierarchy. ISLE includes Drupal because every ISLE site is also a Drupal site.
+
+Application plugins should not include service plugins for MariaDB, Solr, Valkey, Memcached, or Traefik. A context with `plugin: wp`, `plugin: drupal`, or another app plugin can still run core service commands such as `sitectl mariadb backup` because those commands are part of core `sitectl`.
+
+Use these defaults unless the template changes:
+
+| App plugin | Include set |
+|---|---|
+| ArchivesSpace | none |
+| Drupal | none |
+| ISLE | `drupal` |
+| OJS | none |
+| Omeka Classic | none |
+| Omeka S | none |
+| WordPress | none |
+
+## Release order
+
+Because shared service behavior lives in core, changes should be released in this order:
+
+1. Release the sitectl core changes that add or change shared service commands, helpers, or component machinery.
+2. Update standalone service Compose projects when their templates change.
+3. Update application compose templates when their target wiring changes.
+4. Release application plugin changes for app-specific workflows.
+
+For local multi-repo development, use `go work`. Do not add local `replace ... => ../...` directives to app plugin `go.mod` files.

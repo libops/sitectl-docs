@@ -1,0 +1,38 @@
+---
+title: Memcached service commands
+description: Core sitectl Memcached operations and cache service inspection helpers.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import StatusCmd from "/snippets/commands/sitectl-memcached-status.mdx";
+import StatsCmd from "/snippets/commands/sitectl-memcached-stats.mdx";
+
+Memcached is a core `sitectl` service namespace. Operators use `sitectl memcached ...` from any context whose <Compose /> project has a Memcached service.
+
+## Status
+
+Check the Memcached container state:
+
+```bash
+sitectl memcached status
+```
+
+## Stats
+
+Show Memcached stats from inside its container:
+
+```bash
+sitectl memcached stats
+```
+
+Standalone Memcached Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated Memcached CLI plugin.
+
+## Reference
+
+### `status`
+
+<StatusCmd />
+
+### `stats`
+
+<StatsCmd />

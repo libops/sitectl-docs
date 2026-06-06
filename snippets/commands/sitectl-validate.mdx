@@ -10,14 +10,14 @@ checks (e.g. Drupal rootfs path, component state consistency) are also run
 and merged into the report.
 
 All flags not consumed by sitectl itself are forwarded to the plugin's
-validate handler, allowing plugin-specific flags such as `--drupal-rootfs`.
+validate handler, allowing plugin-specific flags such as `--codebase-rootfs`.
 
 Exits non-zero if any check fails.
 
 Examples:
   sitectl validate
   sitectl validate `--format` table
-  sitectl validate `--drupal-rootfs` drupal/rootfs
+  sitectl validate `--codebase-rootfs` drupal/rootfs
 
 ```bash
 sitectl validate [flags]

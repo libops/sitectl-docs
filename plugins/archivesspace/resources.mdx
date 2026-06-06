@@ -3,6 +3,10 @@ title: resources
 description: Read common ArchivesSpace resources and diagnostics through shortcut commands.
 ---
 
+import SearchCmd from "/snippets/commands/sitectl-archivesspace-search.mdx";
+import JobsCmd from "/snippets/commands/sitectl-archivesspace-jobs.mdx";
+import RepositoriesCmd from "/snippets/commands/sitectl-archivesspace-repositories.mdx";
+
 Use resource shortcuts for common read and diagnostic workflows:
 
 ```bash
@@ -31,3 +35,21 @@ sitectl archivesspace jobs --repo 2
 ```
 
 These shortcuts accept the same read flags as API requests, including `--url`, `--session`, and repeated `--query name=value` filters.
+
+## Reference
+
+`search` and `jobs` add their own scoping flags. The remaining shortcuts
+(`repositories`, `users`, `schemas`, `version`, `diagnostics`) share the standard
+read flags, with `repositories` shown as a representative example.
+
+### `search`
+
+<SearchCmd />
+
+### `jobs`
+
+<JobsCmd />
+
+### `repositories`
+
+<RepositoriesCmd />

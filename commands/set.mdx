@@ -20,11 +20,11 @@ sitectl set fcrepo off
 # Enable blazegraph using its full namespace
 sitectl set isle/blazegraph on
 
-# Configure TLS mode for the isle-tls component
-sitectl set isle-tls on --tls-mode letsencrypt
+# Move IIIF image delivery to Triplet
+sitectl set iiif triplet
 ```
 
-For Islandora TLS modes, see [TLS components](/plugins/isle/tls).
+For shared ingress settings such as TLS mode and bot mitigation, use [Traefik service commands](/plugins/traefik).
 
 ## Namespacing
 

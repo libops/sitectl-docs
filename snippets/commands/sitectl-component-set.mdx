@@ -7,15 +7,10 @@ Prefix the component name with the plugin namespace to target it directly:
   sitectl component set isle/fcrepo off
   sitectl component set isle/blazegraph off
 
-```bash
-sitectl component set <component> [disposition]
-```
+All flags after "set" are forwarded to the plugin's component set handler. Use
+"sitectl component set `--help`" or "sitectl component list `<component>`" to see
+component-specific flags.
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--disposition` |   | Disposition to apply (enabled, disabled, superceded, distributed). |
-| `--drupal-rootfs` |   | Path to the Drupal web root, relative to `--path`. |
-| `--path` |   | Path to the project directory. Defaults to the active context project directory. |
-| `--state` |   | State to apply (on, off). |
-| `--tls-mode` |   | TLS mode (http, self-managed, mkcert, letsencrypt). |
-| `--yolo` | `false` | Skip the confirmation prompt. |
+```bash
+sitectl component set <component> [disposition] [flags]
+```

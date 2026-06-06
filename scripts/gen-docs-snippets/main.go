@@ -10,8 +10,14 @@ import (
 	"regexp"
 	"strings"
 
+	archivesspacecmd "github.com/libops/sitectl-archivesspace/cmd"
 	drupalcmd "github.com/libops/sitectl-drupal/cmd"
 	islecmd "github.com/libops/sitectl-isle/cmd"
+	ojscmd "github.com/libops/sitectl-ojs/cmd"
+	omekaclassiccmd "github.com/libops/sitectl-omeka-classic/cmd"
+	omekascmd "github.com/libops/sitectl-omeka-s/cmd"
+	tripletcmd "github.com/libops/sitectl-triplet/cmd"
+	wpcmd "github.com/libops/sitectl-wp/cmd"
 	sitectlcmd "github.com/libops/sitectl/cmd"
 	"github.com/libops/sitectl/pkg/plugin"
 	"github.com/spf13/cobra"
@@ -28,33 +34,83 @@ type generator struct {
 	root          *cobra.Command
 }
 
+// pluginGen builds a generator for a plugin by creating an SDK with the given
+// metadata and running the plugin's RegisterCommands against it. The register
+// callback wraps each plugin's entrypoint so signature differences (some return
+// an error, most do not) are normalized here.
+func pluginGen(name, description string, register func(*plugin.SDK) error) *generator {
+	sdk := plugin.NewSDK(plugin.Metadata{
+		Name:        name,
+		Description: description,
+	})
+	if err := register(sdk); err != nil {
+		fmt.Fprintf(os.Stderr, "register %s commands: %v\n", name, err)
+		os.Exit(1)
+	}
+	return &generator{
+		displayPrefix: "sitectl " + name,
+		root:          sdk.RootCmd,
+	}
+}
+
 func main() {
+	// Output paths are written relative to the working directory. The module
+	// lives at <docs-root>/scripts/gen-docs-snippets, so `make docs-snippets`
+	// passes the docs root as the first argument and we chdir into it before
+	// writing. This keeps the generator a self-contained module (its own
+	// go.mod + replace directives) with no go.work file required.
+	if len(os.Args) > 1 {
+		if err := os.Chdir(os.Args[1]); err != nil {
+			fmt.Fprintf(os.Stderr, "chdir %s: %v\n", os.Args[1], err)
+			os.Exit(1)
+		}
+	}
+
 	// Core sitectl
 	core := &generator{
 		displayPrefix: "sitectl",
 		root:          sitectlcmd.RootCmd,
 	}
 
-	// Isle plugin
-	isleSdk := plugin.NewSDK(plugin.Metadata{
-		Name:        "isle",
-		Description: "Islandora (ISLE) utilities and migration tools",
-	})
-	islecmd.RegisterCommands(isleSdk)
-	isle := &generator{
-		displayPrefix: "sitectl isle",
-		root:          isleSdk.RootCmd,
-	}
-
-	// Drupal plugin
-	drupalSdk := plugin.NewSDK(plugin.Metadata{
-		Name:        "drupal",
-		Description: "Drupal utilities for sitectl",
-	})
-	drupalcmd.RegisterCommands(drupalSdk)
-	drupal := &generator{
-		displayPrefix: "sitectl drupal",
-		root:          drupalSdk.RootCmd,
+	// Plugins. Keep this list in sync with the repos in scripts/use-go-work.sh
+	// and the require/replace blocks in scripts/gen-docs-snippets/go.mod.
+	plugins := []*generator{
+		pluginGen("isle", "Islandora (ISLE) utilities and migration tools", func(s *plugin.SDK) error {
+			islecmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("drupal", "Drupal utilities for sitectl", func(s *plugin.SDK) error {
+			return drupalcmd.RegisterCommands(s)
+		}),
+		pluginGen("archivesspace", "ArchivesSpace helpers", func(s *plugin.SDK) error {
+			archivesspacecmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("ojs", "Open Journal Systems helpers", func(s *plugin.SDK) error {
+			ojscmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("omeka-classic", "Omeka Classic helpers", func(s *plugin.SDK) error {
+			omekaclassiccmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("omeka-s", "Omeka S helpers", func(s *plugin.SDK) error {
+			omekascmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("wp", "WordPress helpers", func(s *plugin.SDK) error {
+			wpcmd.RegisterCommands(s)
+			return nil
+		}),
+		pluginGen("triplet", "Triplet helpers", func(s *plugin.SDK) error {
+			tripletcmd.RegisterCommands(s)
+			return nil
+		}),
+		// NOTE: sitectl-libops is intentionally not wired in here. The local
+		// checkout imports github.com/libops/sitectl/pkg/format, which the
+		// pinned/local sitectl module does not provide, so it cannot compile
+		// against this workspace. Its docs under plugins/libops/ remain
+		// hand-maintained until the two modules are realigned.
 	}
 
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
@@ -63,7 +119,7 @@ func main() {
 	}
 
 	var total int
-	for _, gen := range []*generator{core, isle, drupal} {
+	for _, gen := range append([]*generator{core}, plugins...) {
 		gen.root.DisableAutoGenTag = true
 		count := gen.run()
 		total += count
@@ -161,7 +217,7 @@ func processDescription(s string) string {
 func collectLocalFlags(cmd *cobra.Command) []*pflag.Flag {
 	var flags []*pflag.Flag
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		if !f.Hidden {
+		if !f.Hidden && !strings.Contains(strings.ToLower(f.Usage), "deprecated alias") {
 			flags = append(flags, f)
 		}
 	})
@@ -186,13 +242,6 @@ func (g *generator) renderSnippet(cmd *cobra.Command) string {
 	b.WriteString("```bash\n")
 	b.WriteString(g.buildUseLine(cmd))
 	b.WriteString("\n```\n")
-
-	// Aliases
-	if len(cmd.Aliases) > 0 {
-		b.WriteString("\n**Aliases:** `")
-		b.WriteString(strings.Join(cmd.Aliases, "`, `"))
-		b.WriteString("`\n")
-	}
 
 	// Flags table (skip for DisableFlagParsing commands — they accept arbitrary args)
 	if !cmd.DisableFlagParsing {

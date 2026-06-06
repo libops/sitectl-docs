@@ -43,9 +43,28 @@ To regenerate after changing a command's flags or description:
 make docs-snippets
 ```
 
-This runs `scripts/gen-docs-snippets/main.go`, which imports the sitectl, sitectl-isle, and sitectl-drupal command trees and renders each command to an `.mdx` snippet file.
+This runs `scripts/gen-docs-snippets/main.go`, which imports the core sitectl command
+tree plus every locally checked-out plugin — `sitectl-isle`, `sitectl-drupal`,
+`sitectl-archivesspace`, `sitectl-ojs`, `sitectl-omeka-classic`, `sitectl-omeka-s`,
+`sitectl-wp`, and `sitectl-triplet` — and renders each command to an `.mdx` snippet
+file.
 
-The generator skips hidden commands (those starting with `__`) and thin plugin-passthrough wrappers.
+The generator is a self-contained Go module: it resolves the sibling plugin repos
+through the `require`/`replace` directives in `scripts/gen-docs-snippets/go.mod`, so
+no `go.work` file is needed. The `make docs-snippets` target runs it from inside its
+module directory and passes the docs root as the output base. To add a plugin to the
+generated reference, add it to both that `go.mod` and the `plugins` list in
+`main.go`.
+
+`sitectl-libops` is intentionally **not** generated: its checkout currently imports a
+`sitectl/pkg/format` package that the pinned sitectl module does not provide, so it
+cannot compile against this workspace. The `plugins/libops/` pages are maintained by
+hand until the two modules are realigned.
+
+The generator skips hidden commands (those starting with `__`) and thin
+plugin-passthrough wrappers (commands that disable flag parsing and only forward
+arguments, such as `sitectl wp cli` or `sitectl ojs tool`). Those passthrough commands
+are documented in hand-written prose instead.
 
 ## Tooltip snippets
 

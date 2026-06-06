@@ -151,6 +151,8 @@ A feature is a good candidate for a component if:
 
 If a feature is always on and has no meaningful off state, it does not need to be a component.
 
+If the component represents a reusable, self-contained service such as Traefik, Solr, MariaDB, Valkey, or Memcached, follow the [Service components](/contributing/service-components) architecture. The shared operation belongs in core `sitectl`; the application plugin should only add app-specific wiring.
+
 ## Component workflow
 
 <Steps>
