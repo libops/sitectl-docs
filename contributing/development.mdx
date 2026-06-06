@@ -48,7 +48,7 @@ sdk.SetComposeProjectDiscovery(plugin.ComposeProjectDiscovery{
 })
 ```
 
-The SDK exposes this through the hidden `__detect-project` command. Core sitectl uses that command during lightweight plugin discovery and creates a transient local context named `.` when the project has no matching saved context. This context is in memory only; discovery must not write to `~/.sitectl/config.yaml`.
+The SDK exposes this through the private `__sitectl-rpc` entrypoint using the `project.detect` method. Core sitectl uses that method during lightweight plugin discovery and creates a transient local context named `.` when the project has no matching saved context. This context is in memory only; discovery must not write to `~/.sitectl/config.yaml`.
 
 Discovery is cached for the lifetime of the `sitectl` process by canonical project path and requested plugin. Repeated subcommands in one invocation should not repeatedly shell out to every plugin.
 

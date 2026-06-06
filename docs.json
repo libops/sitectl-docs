@@ -56,8 +56,7 @@
                 "expanded": true,
                 "pages": [
                   "commands/job",
-                  "commands/compose",
-                  "commands/cron"
+                  "commands/compose"
                 ]
               },
               {
@@ -211,6 +210,7 @@
               "contributing/architecture",
               "contributing/plugin-hierarchy",
               "contributing/components",
+              "contributing/service-components",
               "contributing/development"
             ]
           }

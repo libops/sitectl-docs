@@ -1,0 +1,168 @@
+---
+title: Service components
+description: Architecture for reusable compose services that can run standalone or be merged into application stacks.
+---
+
+Service components are reusable infrastructure services, such as Traefik, Solr, MariaDB, Postgres, Valkey, and Triplet, that can be deployed as their own compose projects or merged into an application compose project.
+
+The goal is to keep common services boring and portable. A service like Solr should not be reimplemented separately for Drupal, ISLE, WordPress, Omeka, and ArchivesSpace. The service owns its base compose contract. The application plugin owns only the wiring that makes that service useful inside that application.
+
+## Core principle
+
+The sitectl core does not own service compose definitions.
+
+Core owns the mechanics:
+
+- Parse compose fragments into services, volumes, networks, secrets, and configs
+- Merge those definitions into a target compose project
+- Remove service definitions when a component is disabled
+- Restore target-side wiring, such as `depends_on`, environment values, and service-specific volume mounts
+- Detect whether a component is cleanly on, cleanly off, or drifted
+
+Service repos own service definitions:
+
+- `sitectl-solr` owns the canonical Solr compose service
+- `sitectl-mariadb` owns the canonical MariaDB compose service
+- `sitectl-traefik` owns the canonical Traefik compose service and its TLS and bot-mitigation settings
+- `sitectl-postgres` owns the canonical Postgres compose service
+- `sitectl-valkey` owns the canonical Valkey compose service
+- `sitectl-triplet` owns the canonical Triplet compose service
+
+Application plugins own target integration:
+
+- Drupal decides that enabling Solr should restore the Drupal Solr config volume
+- ArchivesSpace decides that its Solr service should use the ArchivesSpace Solr image and command
+- WordPress decides whether it depends on MariaDB
+- ISLE inherits Drupal service components through plugin inclusion, then adds its own ISLE-specific components
+
+This keeps service behavior consistent while still allowing an application to express the small amount of app-specific compose wiring it needs.
+
+## Repository shape
+
+A service component repo should be a normal standalone sitectl plugin and a deployable compose project.
+
+Minimum shape:
+
+```text
+sitectl-solr/
+  go.mod
+  main.go
+  cmd/root.go
+  component/
+    component.go
+    docker-compose.yml
+  Makefile
+  README.md
+  sitectl-component.yaml
+```
+
+`component/docker-compose.yml` is the canonical service compose definition. It is not copied into sitectl core and it is not stored as an inline Go string.
+
+`component/component.go` loads that compose file with Go `embed` and exports a small constructor that application plugins can import:
+
+```go
+component, err := solrcomponent.New(solrcomponent.TargetOptions{
+    AppService: "drupal",
+    ExtraOnRules: drupalSolrRules,
+})
+```
+
+The same compose file must also work as a standalone project through that service repo's `Makefile`.
+
+## One compose file
+
+A service component should not maintain separate "standalone" and "embedded" compose files when the real difference is target wiring.
+
+For example, Solr standalone and Solr inside Drupal are the same base service. The application plugin can add target-specific changes, such as a Drupal Solr config volume or a `depends_on` relationship. The Solr repo should not keep a Drupal-specific compose file.
+
+Use one canonical compose definition and apply target rules when the service is merged into a larger project.
+
+## Merge model
+
+When a service component is enabled, sitectl:
+
+1. Reads the service repo's canonical compose definition.
+2. Adds its services, networks, volumes, secrets, and configs to the target compose project.
+3. Applies target integration rules from the application plugin.
+4. Writes the updated compose file.
+
+When a service component is disabled, sitectl:
+
+1. Removes the service from the target compose project.
+2. Removes dependencies and target integration rules that only make sense while the service exists.
+3. Prunes unused compose resources when they are no longer referenced.
+4. Leaves data migration decisions explicit. Removing a local service does not imply that data has been safely migrated elsewhere.
+
+This on/off cycle must be idempotent. Enabling a component after disabling it should restore both the imported service and the app-side wiring.
+
+## Dispositions
+
+Service components normally support:
+
+| Disposition | Meaning |
+|---|---|
+| `enabled` | Run this service in the current compose project |
+| `disabled` | Do not run this service in the current compose project |
+| `distributed` | The service exists outside this compose project and the application should be wired to that external service |
+
+`distributed` is important. These services are useful as standalone projects, so application stacks should not assume every dependency must be colocated. A Drupal stack might use a local Solr today and an external Solr tomorrow. The component model should make that transition explicit.
+
+## Target rules
+
+Application plugins should define only the integration rules they own.
+
+Good target rules:
+
+- Restore `services.drupal.depends_on.solr`
+- Set `services.drupal.environment.DRUPAL_DEFAULT_DB_DRIVER` when Postgres is enabled
+- Add a Drupal Solr config volume to the Solr service
+- Override ArchivesSpace Solr image, command, and volume target
+- Set app-specific environment variables that point to a distributed service
+
+Bad target rules:
+
+- Recreate the entire imported service in the application plugin
+- Keep another copy of the service compose YAML in the application repo
+- Put service defaults in sitectl core
+- Hide large YAML fragments inside Go string constants
+
+For static service compose files, use file assets plus Go `embed`. Inline YAML strings make the service contract harder to inspect, harder to deploy standalone, and easier to fork accidentally.
+
+## Traefik ownership
+
+Traefik is a service component, not an app-specific feature.
+
+The Traefik repo owns:
+
+- TLS mode selection
+- `TLS_PROVIDER`
+- `URI_SCHEME`
+- ACME storage
+- Bot-mitigation mode
+- Reverse-proxy service shape
+
+Application plugins may add route files, labels, service dependencies, or app-specific dynamic config references, but they should not each invent their own TLS or bot-mitigation component. Otherwise, every application drifts into a different reverse-proxy model.
+
+## Adding a service component to an app
+
+To add a service component to an application plugin:
+
+1. Add the service plugin module to the workspace during local development.
+2. Import the service component package from the service repo.
+3. Register it through the shared service-component registry.
+4. Add only the target integration rules needed by that application.
+5. Set the default state to match the current template behavior.
+6. Test `component set <name> disabled`, then `component set <name> enabled`, and confirm that the target compose project returns to the expected shape.
+
+Default state matters. If a service already exists in the template, the component should usually default to `enabled`. If it is a new optional capability, default it to `disabled` unless the application has a strong reason to enable it by default.
+
+## Release order
+
+Because app plugins import service component packages, changes should be released in this order:
+
+1. Release the sitectl core changes that add or change shared component machinery.
+2. Release or tag the service component repos.
+3. Update app plugin module requirements to those service repo versions.
+4. Release the app plugins.
+
+For local multi-repo development, use `go work`. Do not add local `replace ... => ../...` directives to app plugin `go.mod` files.

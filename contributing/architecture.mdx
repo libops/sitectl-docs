@@ -43,21 +43,31 @@ Plugins extend sitectl without requiring changes to the core binary. The core bi
 
 See [Plugin hierarchy](/contributing/plugin-hierarchy) for how dispatch works at the code level.
 
+Runtime fan-out uses one private JSON RPC entrypoint, `__sitectl-rpc`, instead of one hidden command per capability. Keeping one transport command gives core sitectl one place to enforce protocol versioning, stdout/stderr behavior, structured errors, and SDK dispatch. Plugin authors still implement small typed handlers through the SDK.
+
+## Service component ownership
+
+Reusable infrastructure services are intentionally owned by their own plugin/template repos, not by sitectl core and not by each application plugin. For example, Traefik, Solr, MariaDB, Postgres, Valkey, and Triplet should each have one canonical compose definition in their own service repo.
+
+Applications merge those service definitions when a component is enabled and apply only their target-specific wiring, such as dependencies, environment variables, or app-specific volume mounts. This keeps standalone deployment and embedded deployment aligned without maintaining two compose files for the same service.
+
+See [Service components](/contributing/service-components) for the full architecture.
+
 ## SDK runner interfaces
 
-Where a core sitectl command needs plugin-specific behavior, the SDK defines a typed runner interface. The plugin implements the interface, registers it, and the SDK generates the hidden protocol command. This gives plugin authors a structured, type-safe extension point rather than requiring them to write raw Cobra commands.
+Where a core sitectl command needs plugin-specific behavior, the SDK defines a typed runner interface. The plugin implements the interface, registers it, and the SDK exposes it through the single private `__sitectl-rpc` entrypoint. This gives plugin authors a structured, type-safe extension point rather than requiring them to write raw transport code.
 
 Current runner interfaces:
 
-| Interface | Registered by | Hidden command | User command |
+| Interface | Registered by | RPC method | User command |
 |---|---|---|---|
-| `DebugHandler` | `RegisterDebugHandler` | `__debug` | `sitectl debug` |
-| `DeployRunner` | `RegisterDeployRunner` | `__deploy` | `sitectl deploy` |
-| `ConvergeRunner` | `RegisterConvergeRunner` | `__converge` | `sitectl converge` |
-| `SetRunner` | `RegisterSetRunner` | `__set` | `sitectl set` |
-| `ValidateRunner` | `RegisterValidateRunner` | `__validate` | `sitectl validate` |
+| `DebugHandler` | `RegisterDebugHandler` | `debug.run` | `sitectl debug` |
+| `DeployRunner` | `RegisterDeployRunner` | `deploy.run` | `sitectl deploy` |
+| `ConvergeRunner` | `RegisterConvergeRunner` | `converge.run` | `sitectl converge` |
+| `SetRunner` | `RegisterSetRunner` | `set.run` | `sitectl set` |
+| `ValidateRunner` | `RegisterValidateRunner` | `validate.run` | `sitectl validate` |
 
-`sitectl validate` is distinct from the others: core runs its own validators first, then captures the plugin's `__validate` output (YAML-encoded results), and merges everything before rendering. The plugin does not render; it just returns structured data.
+`sitectl validate` is distinct from the others: core runs its own validators first, then invokes the plugin's `validate.run` method, decodes the returned structured results, and merges everything before rendering. The plugin does not render; it just returns structured data.
 
 ## Component model
 
@@ -68,6 +78,6 @@ The component model was designed to solve two problems:
 
 The conservative default is that the upstream project template ships as-is. Components are an explicit override. This keeps the barrier to entry low while giving experienced operators a structured path to customization.
 
-The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands and as the hidden protocol layer that the top-level commands delegate to.
+The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands backed by the same `__sitectl-rpc` protocol methods.
 
 See [Component development](/contributing/components) for how to define a new component.

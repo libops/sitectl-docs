@@ -151,6 +151,8 @@ A feature is a good candidate for a component if:
 
 If a feature is always on and has no meaningful off state, it does not need to be a component.
 
+If the component represents a reusable service such as Traefik, Solr, MariaDB, Postgres, Valkey, or Triplet, follow the [Service components](/contributing/service-components) architecture. The service compose definition should live in that service repo, not in sitectl core or as an inline YAML string in an application plugin.
+
 ## Component workflow
 
 <Steps>
