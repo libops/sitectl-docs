@@ -1,94 +1,15 @@
 ---
-title: TLS components
-description: Configure production and local-development Traefik entrypoints for Islandora.
+title: Traefik TLS
+description: TLS mode documentation now lives with the core Traefik service commands.
 ---
 
-The ISLE plugin manages frontend TLS with two related components:
-
-- `isle-tls` controls the base `docker-compose.yml` stack used for shared, staging, and production-like environments.
-- `isle-tls-override` controls the tracked environment-specific Compose override, usually `docker-compose.local.yml`, so local development can differ from the base stack.
-
-## Production entrypoint
-
-Enable HTTPS for the base stack:
+TLS mode selection for Islandora uses the shared Traefik service command surface:
 
 ```bash
-sitectl component set isle-tls enabled --tls-mode self-managed
+sitectl traefik tls http
+sitectl traefik tls mkcert --domain local.example.test
+sitectl traefik tls letsencrypt --email ops@example.org
+sitectl traefik tls self-managed --cert-file ./cert.pem --key-file ./privkey.pem
 ```
 
-`isle-tls` updates `.env`, `docker-compose.yml`, and Drupal HTTPS settings. When enabled, `URI_SCHEME` becomes `https` and Drupal receives `DRUPAL_ENABLE_HTTPS: "true"`. When disabled, the base stack returns to HTTP.
-
-Supported modes:
-
-| Mode | Use when |
-|---|---|
-| `self-managed` | Certificates are mounted or managed outside sitectl. |
-| `mkcert` | You use local mkcert files in `certs/` but still want the base stack to behave as HTTPS. |
-| `letsencrypt` | Traefik should request certificates through Let's Encrypt using HTTP-01. |
-
-Disable the base TLS entrypoint with:
-
-```bash
-sitectl component set isle-tls disabled
-```
-
-## Let's Encrypt
-
-Use `letsencrypt` when the public domain points at this Traefik instance and inbound HTTP traffic can reach port 80 for the ACME HTTP-01 challenge:
-
-```bash
-sitectl component set isle-tls enabled --tls-mode letsencrypt
-```
-
-The component adds the Traefik Let's Encrypt resolver command lines and sets:
-
-```dotenv
-URI_SCHEME="https"
-TLS_PROVIDER="letsencrypt"
-```
-
-Traefik also reads `ACME_EMAIL` and `ACME_URL` from the environment:
-
-```dotenv
-ACME_EMAIL="admin@example.edu"
-ACME_URL="your-acme-directory-url"
-```
-
-Keep the `ACME_URL` value supplied by your site template, or set it to the ACME directory you want Traefik to use. Use a staging ACME directory for testing so you do not consume production certificate rate limits.
-
-## Local override
-
-Use `isle-tls-override` when local development should not match the base stack. The most common pattern is production HTTPS with local HTTP:
-
-```bash
-sitectl component set isle-tls enabled --tls-mode letsencrypt
-sitectl component set isle-tls-override enabled --tls-mode http
-```
-
-The override writes Drupal, fcrepo, and Traefik environment values to the tracked Compose override file. In `http` mode, local Drupal URLs use `http://${DOMAIN}` and Traefik does not add Let's Encrypt resolver lines to the override.
-
-Supported override modes:
-
-| Mode | Use when |
-|---|---|
-| `http` | Local development should run without HTTPS. |
-| `mkcert` | Local development should use mkcert HTTPS. |
-| `self-managed` | Local development should use mounted or externally managed certificates. |
-| `letsencrypt` | The override environment should request certificates through Let's Encrypt. |
-
-Disable the override to inherit the base stack:
-
-```bash
-sitectl component set isle-tls-override disabled
-```
-
-## Status and drift
-
-Check TLS state with:
-
-```bash
-sitectl component status
-sitectl component status --path /path/to/project
-```
-
-`isle-tls` reports drift when `.env`, `DRUPAL_ENABLE_HTTPS`, and Traefik resolver command lines do not agree. `isle-tls-override` reports drift when the tracked override contains a partial or inconsistent TLS override.
+See [Traefik service commands](/plugins/traefik) for supported TLS modes, Let's Encrypt settings, certificate inputs, context override behavior, and ingress status.

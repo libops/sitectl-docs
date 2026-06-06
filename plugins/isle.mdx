@@ -5,7 +5,9 @@ description: Islandora sitectl workflows including guided site creation, compone
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The Islandora plugin adds Islandora-specific behavior on top of the core sitectl workflow. The plugin binary is `sitectl-isle` and the command namespace is `sitectl isle`. Because every Islandora site is also a Drupal site, the Islandora plugin includes the Drupal plugin — all `sitectl drupal` commands work against Islandora contexts automatically.
+The Islandora plugin adds Islandora-specific behavior on top of the core sitectl workflow. The plugin binary is `sitectl-isle`. Direct plugin commands live under `sitectl isle` for ISLE-only operations such as cache warming, migration helpers, and fcrepo sync. Create, validate, debug, healthcheck, set, converge, and component inspection are core sitectl commands that dispatch to the Islandora plugin through the active context.
+
+Because every Islandora site is also a Drupal-backed stack, the Islandora plugin includes the Drupal plugin. Shared service commands for MariaDB, Solr, and Traefik come from core `sitectl` and work against Islandora contexts automatically.
 
 ## Create
 
@@ -25,59 +27,66 @@ The create flow:
     sitectl creates a local sitectl context for the new project directory.
   </Step>
   <Step title="Answer component questions">
-    sitectl asks about each component that requires a decision at create time, including fcrepo, Blazegraph, IIIF, and bot mitigation. You can answer interactively or pre-supply answers with flags.
+    sitectl asks about each application component that requires a decision at create time, including fcrepo, Blazegraph, and IIIF. You can answer interactively or pre-supply answers with flags.
   </Step>
   <Step title="Apply component state">
     sitectl writes the <Compose /> file and Drupal config changes that reflect your component choices, so the first `docker compose up` starts the stack you asked for.
   </Step>
 </Steps>
 
-Pass `--git-remote-url` to keep the template as `upstream` and add your own repository as `origin`.
+After create completes, review the generated changes and add your own Git remote before committing the checkout.
 
 ## Component status
 
 See which components are registered and how the project is currently configured:
 
 ```bash
-sitectl component status
-sitectl component status --path /path/to/project
+sitectl component describe
+sitectl component describe --path /path/to/project
 ```
 
-`sitectl component status` is a core command that dispatches to the Islandora plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
+`sitectl component describe` is a core command that dispatches to the Islandora plugin based on the active context. See [Components](/components) for a full explanation of what each status value means.
 
 ## Managed components
 
-The Islandora plugin currently manages these components:
+The Islandora plugin currently manages these application components directly:
 
 | Component | What it controls | Common commands |
 |---|---|---|
-| [`fcrepo`](/plugins/isle/fcrepo) | Fedora Commons service, volume, Drupal Fedora config, and filesystem migration guidance. | `sitectl component set fcrepo enabled` or `sitectl component set fcrepo superceded --isle-file-system-uri public` |
-| [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl component set blazegraph enabled` or `sitectl component set blazegraph disabled` |
-| [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl component set iiif cantaloupe` or `sitectl component set iiif triplet` |
-| [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |
-| [`isle-tls`](/plugins/isle/tls) | Base Traefik HTTP/HTTPS mode for the main stack. | `sitectl component set isle-tls enabled --tls-mode letsencrypt` |
-| [`isle-tls-override`](/plugins/isle/tls) | Environment-specific Traefik override, usually local development. | `sitectl component set isle-tls-override enabled --tls-mode http` |
-| [`bot-mitigation`](/plugins/isle/bot-mitigation) | Traefik captcha-protect middleware and Turnstile environment defaults for Drupal routes. | `sitectl component set bot-mitigation enabled` |
+| [`fcrepo`](/plugins/isle/fcrepo) | Fedora Commons service, volume, Drupal Fedora config, and filesystem migration guidance. | `sitectl set fcrepo enabled` or `sitectl set fcrepo superceded --isle-file-system-uri public` |
+| [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl set blazegraph enabled` or `sitectl set blazegraph disabled` |
+| [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl set iiif cantaloupe` or `sitectl set iiif triplet` |
+| [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |
+| [`fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, `mergepdf`](/plugins/isle/derivatives) | Whether each derivative microservice runs in this Compose project or uses the managed LibOps endpoint. | `sitectl set homarus distributed` or `sitectl set homarus enabled` |
 
 All ISLE component changes are local-only. Run them against the checkout you intend to modify, review the diff, then commit the generated changes.
+
+## Shared services and ingress
+
+Islandora contexts use core service commands for shared infrastructure such as MariaDB, Solr, and Traefik. Use [`sitectl traefik`](/plugins/traefik) for TLS modes, local certificates, Let's Encrypt settings, ingress status, and bot mitigation. The Islandora plugin supplies Drupal-specific route and override wiring where the stack needs it, but the operator-facing ingress command surface belongs to core `sitectl`.
 
 ## Component set
 
 Turn a component on or off:
 
 ```bash
-sitectl component set fcrepo off
-sitectl component set blazegraph on --yolo
-sitectl component set iiif triplet
-sitectl component set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
-sitectl component set isle-tls enabled --tls-mode letsencrypt
-sitectl component set isle-tls-override enabled --tls-mode http
-sitectl component set bot-mitigation on
+sitectl set fcrepo off
+sitectl set blazegraph on --yolo
+sitectl set iiif triplet
+sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+sitectl set fits distributed
+sitectl set crayfits distributed
+sitectl set homarus distributed
+sitectl set houdini distributed
+sitectl set hypercube distributed
+sitectl set mergepdf distributed
 ```
 
 sitectl updates the relevant <Compose /> files and Drupal config sync files, then prompts for confirmation. Pass `--yolo` to skip confirmation in automation.
 
-See [TLS components](/plugins/isle/tls) for Let's Encrypt and local override details. See [bot-mitigation](/plugins/isle/bot-mitigation) for Turnstile key requirements and the local Traefik plugin source behavior.
+Use `enabled` to move a distributed derivative service back into the base Compose stack, for example `sitectl set homarus enabled`.
+
+See [derivative microservices](/plugins/isle/derivatives) for the full managed endpoint list. See [Traefik service commands](/plugins/traefik) for TLS, ingress status, and bot mitigation.
 
 ## Sync
 
@@ -94,15 +103,15 @@ This backs up fcrepo on the source, stages the artifact, and imports it into the
 Check that the active context's project configuration is valid:
 
 ```bash
-sitectl isle validate
+sitectl validate
 ```
 
 ## Migrate
 
-Migrate a legacy ISLE configuration to the current format:
+Migrate legacy ISLE Compose service profiles to the current format:
 
 ```bash
-sitectl isle migrate --input legacy-config.yaml --output updated-config.yaml
+sitectl isle migrate merge-compose-profiles --input docker-compose.yml --output docker-compose.yml
 ```
 
 ## Drupal commands

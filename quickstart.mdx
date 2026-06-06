@@ -49,10 +49,10 @@ The four commands you'll use most often form a natural progression:
 
     ```bash
     sitectl set fcrepo off
-    sitectl set isle-tls on --tls-mode letsencrypt
+    sitectl set iiif triplet
     ```
 
-    For Islandora TLS modes and local override behavior, see [TLS components](/plugins/isle/tls).
+    Shared ingress settings such as TLS mode and bot mitigation use [Traefik service commands](/plugins/traefik).
   </Step>
   <Step title="Converge — apply changes">
     Use `sitectl converge` to bring project files into alignment with the current desired state. Run `--report` first to preview what would change.

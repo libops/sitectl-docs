@@ -32,4 +32,4 @@ The `--format` flag controls how the report is rendered:
 
 If the active context's plugin registers a validate handler, its checks are merged automatically into the same report. For the ISLE plugin this includes: Drupal rootfs path, Traefik configuration, and per-component drift state.
 
-Plugin-specific flags (e.g. `--drupal-rootfs`) are passed through to the plugin's validator unchanged.
+Plugin-specific flags such as `--codebase-rootfs` are promoted into typed RPC params when the core contract owns them. Other plugin-specific flags are passed through to the plugin's validator unchanged.

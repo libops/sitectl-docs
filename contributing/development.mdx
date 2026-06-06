@@ -20,6 +20,12 @@ cd ../sitectl-isle && make install
 cd ../sitectl-drupal && make install
 ```
 
+## Application plugin template
+
+Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when starting a new application plugin for a Compose-backed app that uses Traefik, MariaDB, and Solr. The template includes the standard SDK entrypoint, Compose create and lifecycle registration, service plugin includes, app database helpers, GitHub Actions workflows, GoReleaser config, Makefile targets, and a local `go.work` helper.
+
+After creating a repo from the template, replace the app constants, module path, binary name, Compose template repository, project discovery rules, and app-specific commands. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
+
 ## Developing against a local sitectl checkout
 
 Plugins import sitectl as a Go module dependency. When you need to test plugin changes against an unreleased version of sitectl, use Go workspaces instead of `replace` directives:
@@ -48,7 +54,7 @@ sdk.SetComposeProjectDiscovery(plugin.ComposeProjectDiscovery{
 })
 ```
 
-The SDK exposes this through the hidden `__detect-project` command. Core sitectl uses that command during lightweight plugin discovery and creates a transient local context named `.` when the project has no matching saved context. This context is in memory only; discovery must not write to `~/.sitectl/config.yaml`.
+The SDK exposes this through the private `__sitectl-rpc` entrypoint using the `project.detect` method. Core sitectl uses that method during lightweight plugin discovery and creates a transient local context named `.` when the project has no matching saved context. This context is in memory only; discovery must not write to `~/.sitectl/config.yaml`.
 
 Discovery is cached for the lifetime of the `sitectl` process by canonical project path and requested plugin. Repeated subcommands in one invocation should not repeatedly shell out to every plugin.
 
@@ -90,19 +96,34 @@ This is the same script the GitHub Actions integration workflow runs. It require
 
 ### `sitectl component describe`
 
-Both `sitectl create isle` and `sitectl component describe` accept `--drupal-rootfs`. The shared sitectl component SDK defaults this to `./`. The ISLE plugin overrides the default to `./drupal/rootfs/var/www/drupal` so Drupal-specific paths like `composer.json` and `config/sync` resolve correctly for the site template layout.
+`sitectl component describe` and `sitectl component reconcile` accept `--codebase-rootfs`. The shared RPC contract carries this as `codebase_rootfs` so the same field works for Drupal and non-Drupal plugins. ISLE defaults it to `./drupal/rootfs/var/www/drupal` so Drupal-specific paths like `composer.json` and `config/sync` resolve correctly for the site template layout.
+
+Use `--codebase-rootfs` in examples and tests. Compatibility flags may exist in older plugins, but docs should show the canonical rootfs flag.
 
 ```bash
-sitectl component describe --path /path/to/project
+sitectl component describe --path /path/to/project --codebase-rootfs drupal/rootfs/var/www/drupal
 ```
 
 ### `sitectl converge` / `sitectl validate`
 
-Both commands use `DisableFlagParsing: true` and forward all flags to the plugin's registered runner. The ISLE plugin's `ConvergeRunner` and `ValidateRunner` both accept `--drupal-rootfs` to resolve the Drupal web root correctly.
+Both commands use `DisableFlagParsing: true` and forward unclaimed flags to the plugin's registered runner. The ISLE plugin's `ConvergeRunner` and `ValidateRunner` both accept `--codebase-rootfs` to resolve the Drupal web root correctly.
 
 ```bash
 sitectl converge --report
-sitectl validate --drupal-rootfs drupal/rootfs/var/www/drupal
+sitectl validate --codebase-rootfs drupal/rootfs/var/www/drupal
+```
+
+### `sitectl create`
+
+`create` also uses `DisableFlagParsing: true` and forwards every argument after it to
+the selected plugin's create runner. As a result, global `sitectl` flags such as
+`--context` and `--log-level` must be placed **before** the `create` subcommand, while
+plugin create flags (`--path`, `--type`, `--checkout-source`, `--setup-only`, and so
+on) go after the target. Placing `--context` after `create` forwards it to the plugin,
+which fails with `unknown flag: --context`.
+
+```bash
+sitectl --context integration-test create drupal/default --path ./drupal --type local
 ```
 
 ## Why `make install` matters for plugin chaining

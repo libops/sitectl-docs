@@ -9,12 +9,10 @@ what would change without applying it.
 sitectl component reconcile
 ```
 
-**Aliases:** `review`, `align`
-
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--codebase-rootfs` |   | Path to the application codebase rootfs, relative to `--path`. |
 | `-c, --component` |   | Component to reconcile, e.g. isle/fcrepo. Defaults to all components. |
-| `--drupal-rootfs` |   | Path to the Drupal web root, relative to `--path`. |
 | `--format` |   | Output format (default: table). |
 | `--path` |   | Path to the project directory. Defaults to the active context project directory. |
 | `--report` | `false` | Preview changes without applying them. |

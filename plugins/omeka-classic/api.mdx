@@ -3,6 +3,9 @@ title: API
 description: Call the Omeka Classic REST API through sitectl.
 ---
 
+import ApiGet from "/snippets/commands/sitectl-omeka-classic-api-get.mdx";
+import ApiRequest from "/snippets/commands/sitectl-omeka-classic-api-request.mdx";
+
 Omeka Classic exposes a REST API rather than a standalone administration CLI. sitectl provides direct API helpers and resource shortcuts:
 
 ```bash
@@ -17,3 +20,13 @@ API helpers accept:
 - `--key` for the Omeka Classic API key
 - `--query name=value` for repeated query parameters
 - `--data` or `--file` for JSON request bodies on arbitrary requests
+
+## Reference
+
+### `api get`
+
+<ApiGet />
+
+### `api request`
+
+<ApiRequest />

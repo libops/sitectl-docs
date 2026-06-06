@@ -1,0 +1,74 @@
+---
+title: MariaDB service commands
+description: Core sitectl MariaDB operations for backups, restores, sync, and service inspection.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import BackupCmd from "/snippets/commands/sitectl-mariadb-backup.mdx";
+import RestoreCmd from "/snippets/commands/sitectl-mariadb-restore.mdx";
+import SyncCmd from "/snippets/commands/sitectl-mariadb-sync.mdx";
+import StatusCmd from "/snippets/commands/sitectl-mariadb-status.mdx";
+
+MariaDB is a core `sitectl` service namespace. Operators use `sitectl mariadb ...` from any context whose <Compose /> project has a MariaDB-compatible service.
+
+## Backups
+
+Export a SQL backup from the active context:
+
+```bash
+sitectl mariadb backup --output /tmp/site.sql.gz --gzip
+sitectl mariadb backup appdb --output /tmp/appdb.sql.gz --gzip
+```
+
+Without a database argument, `backup` exports all databases. The command runs `mariadb-dump` or `mysqldump` inside the database service and reads the root password from `/run/secrets/DB_ROOT_PASSWORD`, `MARIADB_ROOT_PASSWORD`, or `MYSQL_ROOT_PASSWORD`.
+
+Use `--service` when a project uses a different database service name.
+
+## Restore
+
+Import a SQL backup into the active context:
+
+```bash
+sitectl mariadb restore /tmp/site.sql.gz --yolo
+sitectl mariadb restore /tmp/appdb.sql.gz appdb
+```
+
+Restore is destructive. Without `--yolo`, sitectl prompts before replacing the target database.
+
+## Sync
+
+Sync a database artifact between two sitectl contexts:
+
+```bash
+sitectl mariadb sync --source production --target staging --database appdb
+```
+
+The sync flow reuses a recent source backup when possible, stages the artifact between contexts, and runs the same confirmed restore path on the target.
+
+## Inspection
+
+Check the MariaDB container status:
+
+```bash
+sitectl mariadb status
+```
+
+Standalone MariaDB Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated MariaDB CLI plugin.
+
+## Reference
+
+### `backup`
+
+<BackupCmd />
+
+### `restore`
+
+<RestoreCmd />
+
+### `sync`
+
+<SyncCmd />
+
+### `status`
+
+<StatusCmd />

@@ -1,22 +1,28 @@
 ---
 title: lifecycle
-description: Build, initialize, start, stop, inspect, and roll out an OJS stack.
+description: Build, start, stop, inspect, and roll out an OJS stack with core sitectl commands.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-All LibOps application plugins expose the same <Compose /> lifecycle commands:
+OJS does not define its own lifecycle commands. Like every application plugin, an
+OJS stack is built, started, stopped, inspected, and rolled out with the **core**
+`sitectl` commands, which operate on whichever context is active:
 
 ```bash
-sitectl ojs build
-sitectl ojs init
-sitectl ojs up
-sitectl ojs down
-sitectl ojs status
-sitectl ojs logs
-sitectl ojs rollout
+sitectl create ojs            # scaffold the stack and its context
+sitectl compose build         # build images
+sitectl compose up -d         # start the stack
+sitectl compose ps            # service status
+sitectl compose logs -f       # follow logs
+sitectl compose down          # stop the stack
+sitectl deploy                # pull updates and restart (rollout)
 ```
 
-These delegate to the template Makefile where appropriate, so local development, production rollout, and VM automation all use the same operational contract.
+`sitectl ojs ...` is reserved for OJS-specific operations — the PHP
+[tools](/plugins/ojs/tools), [PKP tools](/plugins/ojs/pkp-tools), and related
+helpers. General <Compose /> lifecycle stays in the core CLI so the same operational
+contract applies to every stack.
 
-Use `init` when you intentionally want to create or reset the environment's required secrets and volumes. Use `up` for the normal start path.
+See [`sitectl create`](/commands/create), [`sitectl compose`](/commands/compose), and
+[`sitectl deploy`](/commands/deploy) for the full lifecycle reference.

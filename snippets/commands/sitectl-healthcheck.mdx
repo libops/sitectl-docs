@@ -1,0 +1,23 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Check whether the active site is online.
+
+Core checks verify Docker Compose service containers are running and healthy.
+If the active context's plugin registers a healthcheck handler, plugin-specific
+runtime checks are also run and merged into the report.
+
+All flags not consumed by sitectl itself are forwarded to the plugin's
+healthcheck handler, allowing plugin-specific flags such as `--codebase-rootfs`.
+
+By default, healthcheck waits for Docker services that are still starting, then
+prints one status report and exits non-zero if any check fails. Use `--persist` to
+keep retrying all failures until every check passes or `--timeout` is reached.
+
+Examples:
+  sitectl healthcheck
+  sitectl healthcheck `--persist` `--timeout` 10m `--interval` 15s
+  sitectl healthcheck `--format` table
+
+```bash
+sitectl healthcheck [flags]
+```

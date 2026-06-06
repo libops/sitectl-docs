@@ -1,6 +1,6 @@
 ---
 title: OJS plugin
-description: Open Journal Systems sitectl workflows including template creation, Compose lifecycle commands, OJS tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
+description: Open Journal Systems sitectl workflows including template creation, OJS tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -21,6 +21,6 @@ The created context uses `plugin: ojs`, so `sitectl ojs ...` commands run agains
 
 The OJS plugin exposes focused helper pages for common operations:
 
-- [Lifecycle](/plugins/ojs/lifecycle) for `build`, `init`, `up`, `down`, `status`, `logs`, and `rollout`
+- [Lifecycle](/plugins/ojs/lifecycle) — building, starting, and rolling out the stack with core `sitectl` commands
 - [OJS tools](/plugins/ojs/tools) for `/var/www/ojs/tools` helpers
 - [PKP tools](/plugins/ojs/pkp-tools) for scheduled tasks, jobs, and plugin maintenance

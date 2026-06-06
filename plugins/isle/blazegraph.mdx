@@ -17,7 +17,7 @@ Supported dispositions:
 ## Check current state
 
 ```bash
-sitectl component status
+sitectl component describe
 ```
 
 The output shows whether `blazegraph` is on, off, or drifted.
@@ -25,7 +25,7 @@ The output shows whether `blazegraph` is on, off, or drifted.
 ## Enable Blazegraph
 
 ```bash
-sitectl component set blazegraph enabled
+sitectl set blazegraph enabled
 ```
 
 This adds the Blazegraph service and `blazegraph-data` volume back to `docker-compose.yml`, enables `ALPACA_TRIPLESTORE_INDEXER_ENABLED`, restores Drupal's default triplestore namespace, and restores the managed Drupal triplestore action config.
@@ -33,7 +33,7 @@ This adds the Blazegraph service and `blazegraph-data` volume back to `docker-co
 ## Disable Blazegraph
 
 ```bash
-sitectl component set blazegraph disabled
+sitectl set blazegraph disabled
 ```
 
 This removes the Blazegraph service and volume from `docker-compose.yml`, disables Alpaca triplestore indexing, clears Drupal's default triplestore namespace, and removes managed Drupal triplestore action config. A future `docker compose up` will not start Blazegraph.

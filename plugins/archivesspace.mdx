@@ -1,6 +1,6 @@
 ---
 title: ArchivesSpace plugin
-description: ArchivesSpace sitectl workflows including template creation, Compose lifecycle commands, REST API helpers, diagnostics, and container script wrappers.
+description: ArchivesSpace sitectl workflows including template creation, REST API helpers, diagnostics, and container script wrappers.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -21,7 +21,7 @@ The created context uses `plugin: archivesspace`, so `sitectl archivesspace ...`
 
 The ArchivesSpace plugin exposes focused helper pages for common operations:
 
-- [Lifecycle](/plugins/archivesspace/lifecycle) for `build`, `init`, `up`, `down`, `status`, `logs`, and `rollout`
+- [Lifecycle](/plugins/archivesspace/lifecycle) — building, starting, and rolling out the stack with core `sitectl` commands
 - [API](/plugins/archivesspace/api) for ArchivesSpace API login and arbitrary REST API requests
 - [Resources](/plugins/archivesspace/resources) for version, repositories, users, search, jobs, schemas, and diagnostics
 - [Scripts](/plugins/archivesspace/scripts) for container script wrappers such as `setup-database` and `backup`

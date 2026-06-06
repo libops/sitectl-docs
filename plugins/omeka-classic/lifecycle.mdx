@@ -1,22 +1,28 @@
 ---
 title: lifecycle
-description: Build, initialize, start, stop, inspect, and roll out an Omeka Classic stack.
+description: Build, start, stop, inspect, and roll out an Omeka Classic stack with core sitectl commands.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-All LibOps application plugins expose the same <Compose /> lifecycle commands:
+Omeka Classic does not define its own lifecycle commands. Like every application
+plugin, an Omeka Classic stack is built, started, stopped, inspected, and rolled out
+with the **core** `sitectl` commands, which operate on whichever context is active:
 
 ```bash
-sitectl omeka-classic build
-sitectl omeka-classic init
-sitectl omeka-classic up
-sitectl omeka-classic down
-sitectl omeka-classic status
-sitectl omeka-classic logs
-sitectl omeka-classic rollout
+sitectl create omeka-classic   # scaffold the stack and its context
+sitectl compose build          # build images
+sitectl compose up -d          # start the stack
+sitectl compose ps             # service status
+sitectl compose logs -f        # follow logs
+sitectl compose down           # stop the stack
+sitectl deploy                 # pull updates and restart (rollout)
 ```
 
-These delegate to the template Makefile where appropriate, so local development, production rollout, and VM automation all use the same operational contract.
+`sitectl omeka-classic ...` is reserved for Omeka Classic-specific operations — the
+[API helpers](/plugins/omeka-classic/api) and [resource shortcuts](/plugins/omeka-classic/resources).
+General <Compose /> lifecycle stays in the core CLI so the same operational contract
+applies to every stack.
 
-Use `init` when you intentionally want to create or reset the environment's required secrets and volumes. Use `up` for the normal start path.
+See [`sitectl create`](/commands/create), [`sitectl compose`](/commands/compose), and
+[`sitectl deploy`](/commands/deploy) for the full lifecycle reference.

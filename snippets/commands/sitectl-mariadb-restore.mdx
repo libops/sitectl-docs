@@ -1,0 +1,13 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Import a MariaDB SQL backup into the active compose stack
+
+```bash
+sitectl mariadb restore INPUT [DATABASE]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--database` |   | Database to replace before import |
+| `--service` | `mariadb` | MariaDB compose service name |
+| `--yolo` | `false` | Apply destructive database changes without confirmation |

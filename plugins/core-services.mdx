@@ -1,0 +1,53 @@
+---
+title: Core service commands
+description: Shared sitectl commands for infrastructure services used across application stacks.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Core service commands are built into `sitectl` for infrastructure behavior that repeats across application stacks. Use them from any context whose <Compose /> project contains the relevant service.
+
+```bash
+sitectl mariadb backup
+sitectl solr status
+sitectl traefik tls letsencrypt --email ops@example.org
+sitectl traefik bot-mitigation on
+```
+
+The boundary is ownership:
+
+- Core `sitectl` owns shared service operations, stable command namespaces, and helpers that are useful across many applications.
+- Application plugins own app-specific workflows, create flows, CLIs, migrations, sync helpers, and the small amount of route or config wiring needed to connect an app to shared services.
+
+This keeps common operations consistent across Drupal, Islandora, WordPress, OJS, Omeka, and ArchivesSpace without requiring every app plugin to carry its own MariaDB, Solr, cache, or Traefik implementation.
+
+## Ingress belongs here
+
+TLS mode selection, local certificate setup, Let's Encrypt settings, bring-your-own certificate installation, ingress status, and bot mitigation are Traefik service commands. App plugins can supply app-specific router names or route-file details, but operators should start with [`sitectl traefik`](/plugins/traefik) for shared ingress behavior.
+
+## Service areas
+
+<CardGroup cols={2}>
+  <Card title="MariaDB" icon="database" href="/plugins/mariadb">
+    Back up, restore, sync, and inspect MariaDB-compatible database services.
+  </Card>
+  <Card title="Memcached" icon="memory" href="/plugins/memcached">
+    Inspect Memcached containers and read runtime stats from cache services.
+  </Card>
+  <Card title="Solr" icon="magnifying-glass" href="/plugins/solr">
+    Inspect Solr containers and run Solr's built-in status command.
+  </Card>
+  <Card title="Traefik" icon="route" href="/plugins/traefik">
+    Manage ingress status, TLS modes, certificate inputs, and bot mitigation.
+  </Card>
+  <Card title="Triplet" icon="images" href="/plugins/triplet">
+    Work with standalone Triplet workflows and reusable IIIF service component support.
+  </Card>
+  <Card title="Valkey" icon="database" href="/plugins/valkey">
+    Inspect Valkey containers and ping cache services from inside the stack.
+  </Card>
+</CardGroup>
+
+## When to use an app plugin
+
+Use an application plugin when the command is about the application itself: Drush for Drupal, WP-CLI for WordPress, OJS tools, Omeka API resources, ArchivesSpace API helpers, or ISLE migration and repository workflows. Use core service commands when the operation is about a shared infrastructure service inside the stack.

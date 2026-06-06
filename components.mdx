@@ -103,26 +103,20 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
     Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
   <Accordion title="iiif-topology">
-    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when public IIIF traffic should route to an external Cantaloupe or Triplet service. See [IIIF components](/plugins/isle/iiif).
+    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. sitectl keeps a local override in `docker-compose.dev.yml`. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
-  <Accordion title="isle-tls">
-    Controls whether the base stack serves traffic over HTTP or HTTPS. It manages `.env`, Drupal HTTPS settings, and Traefik command lines for `self-managed`, `mkcert`, or `letsencrypt` modes. See [TLS components](/plugins/isle/tls).
-  </Accordion>
-  <Accordion title="isle-tls-override">
-    Controls whether the tracked environment-specific Compose override changes frontend TLS behavior from the base stack. Commonly used to keep production on HTTPS while local development runs over HTTP. See [TLS components](/plugins/isle/tls).
-  </Accordion>
-  <Accordion title="bot-mitigation">
-    Controls Traefik captcha-protect for Drupal routes. Enabling it adds Turnstile environment defaults, local Traefik plugin source, challenge template mounting, and a Drupal router middleware reference. See [bot-mitigation](/plugins/isle/bot-mitigation).
+  <Accordion title="Derivative microservices">
+    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml`, update Alpaca's service URL where applicable, and keep a local development override in `docker-compose.dev.yml`. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
   </Accordion>
 </AccordionGroup>
+
+Shared ingress behavior such as TLS mode, certificate inputs, ingress status, and bot mitigation is documented with [Traefik service commands](/plugins/traefik). Application plugins may still provide app-specific route wiring, but the reusable command surface belongs to core `sitectl`.
 
 ## What's planned
 
 The component model is designed to grow. Planned additions include:
 
-- **PostgreSQL** — switch the Drupal database backend from MariaDB to PostgreSQL
 - **Memcached / Redis** — add caching layers to the Drupal stack
 - **Load balancer support** — configure ISLE to run behind an upstream reverse proxy
-- **mergepdf** — enable PDF aggregation for paged content in Islandora
 
 See the [developer component guide](/contributing/components) for how components are defined and what each field in the definition struct means.

@@ -1,0 +1,56 @@
+---
+title: Application plugins
+description: How sitectl uses plugins so you install only the application workflows for the apps you actually run.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Core `sitectl` knows how to drive any <Compose /> stack - building, starting, stopping,
+deploying, and inspecting services, plus [shared service commands](/plugins/core-services)
+for Traefik, MariaDB, Solr, and cache services. **Application plugins** add the commands and guided create flows for a specific
+application on top of that foundation: Drupal, Islandora, WordPress, OJS, Omeka, and
+ArchivesSpace.
+
+You install only the plugins for the apps you work with. A plugin is just a binary
+named `sitectl-<app>` on your `$PATH`. Direct app helpers use the plugin namespace,
+while core workflows such as create, validate, healthcheck, debug, set, converge,
+and component describe stay in the core namespace and dispatch to the active
+context's plugin over RPC.
+
+```bash
+# the OJS plugin binary on your PATH unlocks these
+sitectl create ojs        # scaffold an OJS stack
+sitectl ojs tool upgrade  # OJS-specific helpers
+```
+
+General lifecycle stays in the core CLI ([`sitectl compose`](/commands/compose),
+[`sitectl deploy`](/commands/deploy), [`sitectl create`](/commands/create)), so every
+stack shares the same operational contract regardless of which application plugin is
+installed. See [Plugins](/plugins) for how discovery, inclusion, and command routing
+work across all plugin types.
+
+## Choose your application
+
+<CardGroup cols={2}>
+  <Card title="Drupal" icon="square-d" href="/plugins/drupal">
+    Drupal-oriented workflows: drush execution, user login links, and database and config sync between environments.
+  </Card>
+  <Card title="Islandora" icon="layer-group" href="/plugins/isle">
+    Islandora workflows: guided site creation, component management, Fedora and Blazegraph sync, and migration utilities. Includes the Drupal plugin.
+  </Card>
+  <Card title="WordPress" icon="globe" href="/plugins/wordpress">
+    WordPress workflows: template creation, WP-CLI, Composer, plugin/theme maintenance, cache, and database helpers.
+  </Card>
+  <Card title="OJS" icon="book-open" href="/plugins/ojs">
+    Open Journal Systems workflows: template creation, OJS PHP tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
+  </Card>
+  <Card title="Omeka Classic" icon="landmark" href="/plugins/omeka-classic">
+    Omeka Classic workflows: template creation and REST API helpers for collection, item, file, tag, user, and metadata operations.
+  </Card>
+  <Card title="Omeka S" icon="boxes-stacked" href="/plugins/omeka-s">
+    Omeka S workflows: template creation and REST API helpers for resources, media, sites, modules, and vocabularies.
+  </Card>
+  <Card title="ArchivesSpace" icon="archive" href="/plugins/archivesspace">
+    ArchivesSpace workflows: template creation, API helpers, search, job inspection, diagnostics, and container script wrappers.
+  </Card>
+</CardGroup>

@@ -7,16 +7,6 @@ import { Compose } from "/snippets/compose-tooltip.mdx";
 
 This page captures the reasoning behind the main architectural decisions in sitectl. Understanding the "why" makes it easier to contribute in a way that stays consistent with the project's direction.
 
-## Why <Compose />, not Kubernetes
-
-Though <Compose /> isn't designed for massive-scale orchestration, the applications hosted by most <Tooltip headline="LAC-GLAM" tip="Libraries, Archives, and Museums — the cultural heritage sector that sitectl is primarily built for.">LAC-GLAM</Tooltip> institutions rarely require more than modest scaling.
-
-The real advantage of <Compose /> is the developer experience. Because the exact same orchestration runs in both development and production — with only minor environmental tweaks — you can reliably mirror production on your local machine. This provides built-in deployment safety long before your CI pipeline runs a single test.
-
-We could have spent resources building Kubernetes operators for various LAC-GLAM stacks instead of creating sitectl. But sitectl was a deliberate choice: it empowers institutions to adopt open-source projects without the hurdle of hiring a Kubernetes administrator or absorbing the heavy operational overhead of a Kubernetes cluster.
-
-The goal was to let institutions adopt open-source software without being blocked by infrastructure complexity.
-
 ## Why not just use Docker Contexts?
 
 While [Docker's native context feature](https://docs.docker.com/engine/manage-resources/contexts/) handles basic Docker daemon connections, `sitectl` is purpose-built for <Compose /> projects and adds:
@@ -43,21 +33,35 @@ Plugins extend sitectl without requiring changes to the core binary. The core bi
 
 See [Plugin hierarchy](/contributing/plugin-hierarchy) for how dispatch works at the code level.
 
+Runtime fan-out uses one private JSON RPC entrypoint, `__sitectl-rpc`, instead of one hidden command per capability. Keeping one transport command gives core sitectl one place to enforce protocol versioning, stdout/stderr behavior, structured errors, and SDK dispatch. Plugin authors still implement small typed handlers through the SDK.
+
+The RPC contract is versioned in lockstep between core and plugins. Request envelopes, response envelopes, params, and result payloads use explicit lower snake_case JSON tags, and typed request builders in `pkg/plugin` should be preferred over hand-written JSON maps.
+
+## Service component ownership
+
+Reusable infrastructure services that are self-contained and cross-cutting belong in sitectl core, not in one plugin per service and not copied into every application plugin. Traefik, MariaDB, Solr, Valkey, and Memcached are core service command namespaces because many application stacks use them and the operational behavior is generic.
+
+Those services may still run as standalone Compose projects. Core owns the shared command surface and helpers, while application compose projects own target-specific wiring such as dependencies, environment variables, routes, and app-specific volume mounts.
+
+See [Service components](/contributing/service-components) for the full architecture.
+
 ## SDK runner interfaces
 
-Where a core sitectl command needs plugin-specific behavior, the SDK defines a typed runner interface. The plugin implements the interface, registers it, and the SDK generates the hidden protocol command. This gives plugin authors a structured, type-safe extension point rather than requiring them to write raw Cobra commands.
+Where a core sitectl command needs plugin-specific behavior, the SDK defines a typed runner interface. The plugin implements the interface, registers it, and the SDK exposes it through the single private `__sitectl-rpc` entrypoint. This gives plugin authors a structured, type-safe extension point rather than requiring them to write raw transport code.
 
 Current runner interfaces:
 
-| Interface | Registered by | Hidden command | User command |
+| Interface | Registered by | RPC method | User command |
 |---|---|---|---|
-| `DebugHandler` | `RegisterDebugHandler` | `__debug` | `sitectl debug` |
-| `DeployRunner` | `RegisterDeployRunner` | `__deploy` | `sitectl deploy` |
-| `ConvergeRunner` | `RegisterConvergeRunner` | `__converge` | `sitectl converge` |
-| `SetRunner` | `RegisterSetRunner` | `__set` | `sitectl set` |
-| `ValidateRunner` | `RegisterValidateRunner` | `__validate` | `sitectl validate` |
+| `DebugRunner` | `RegisterDebugRunner` | `debug.run` | `sitectl debug` |
+| `DeployRunner` | `RegisterDeployRunner` | `deploy.run` | `sitectl deploy` |
+| `ConvergeRunner` | `RegisterConvergeRunner` | `converge.run` | `sitectl converge` |
+| `SetRunner` | `RegisterSetRunner` | `set.run` | `sitectl set` |
+| `ValidateRunner` | `RegisterValidateRunner` | `validate.run` | `sitectl validate` |
 
-`sitectl validate` is distinct from the others: core runs its own validators first, then captures the plugin's `__validate` output (YAML-encoded results), and merges everything before rendering. The plugin does not render; it just returns structured data.
+`sitectl validate` is distinct from the others: core runs its own validators first, then invokes the plugin's `validate.run` method, decodes the returned structured results, and merges everything before rendering. The plugin does not render; it just returns structured data.
+
+Runner diagnostics, progress, and prompts should write to stderr. Stdout is captured by the RPC layer for the response envelope and may not be displayed directly by the caller.
 
 ## Component model
 
@@ -68,6 +72,17 @@ The component model was designed to solve two problems:
 
 The conservative default is that the upstream project template ships as-is. Components are an explicit override. This keeps the barrier to entry low while giving experienced operators a structured path to customization.
 
-The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands and as the hidden protocol layer that the top-level commands delegate to.
+The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands backed by the same `__sitectl-rpc` protocol methods.
 
 See [Component development](/contributing/components) for how to define a new component.
+
+
+## Why <Compose />, not Kubernetes
+
+Though <Compose /> isn't designed for massive-scale orchestration, the applications hosted by most <Tooltip headline="LAC-GLAM" tip="Libraries, Archives, and Museums — the cultural heritage sector that sitectl is primarily built for.">LAC-GLAM</Tooltip> institutions rarely require more than modest scaling.
+
+The real advantage of <Compose /> is the developer experience. Because the exact same orchestration runs in both development and production — with only minor environmental tweaks — you can reliably mirror production on your local machine. This provides built-in deployment safety long before your CI pipeline runs a single test.
+
+We could have spent resources building Kubernetes operators for various LAC-GLAM stacks instead of creating sitectl. But sitectl was a deliberate choice: it empowers institutions to adopt open-source projects without the hurdle of hiring a Kubernetes administrator or absorbing the heavy operational overhead of a Kubernetes cluster.
+
+The goal was to let institutions adopt open-source software without being blocked by infrastructure complexity.

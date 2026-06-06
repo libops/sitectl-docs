@@ -9,17 +9,53 @@ General Docker operations stay in the core CLI. Use [`sitectl compose`](/command
 
 ## How discovery works
 
-sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-<plugin>`. When you run `sitectl drupal drush`, sitectl finds `sitectl-drupal` on your path and delegates the `drush` subcommand to it — passing through flags and context automatically.
+sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-<plugin>`. When you run a direct plugin command such as `sitectl drupal drush`, sitectl finds `sitectl-drupal` on your path and delegates the subcommand to it — passing through flags and context automatically.
 
 This means installing a plugin is as simple as putting its binary on your path. No configuration needed.
 
+## Command routing
+
+Plugins expose two kinds of behavior:
+
+- **Direct plugin commands** use the plugin namespace, such as `sitectl drupal drush`, `sitectl isle sync fcrepo`, or `sitectl wp cache flush`.
+- **Core workflow commands** stay in the core namespace and dispatch to the active context's plugin over RPC. This includes `sitectl create`, `sitectl validate`, `sitectl healthcheck`, `sitectl debug`, `sitectl set`, `sitectl converge`, and `sitectl component describe`.
+
+Plugin pages document the canonical command path. Older namespace-shaped compatibility commands are not listed as separate docs pages.
+
 ## Plugin hierarchy
 
-Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` because every Islandora site is also a Drupal site. When a command is dispatched to the Islandora plugin, it can invoke the Drupal plugin for Drupal-specific work. This hierarchy is reflected in install dependencies: installing `sitectl-isle` via Homebrew or Linux packages will also install `sitectl-drupal`.
+Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` because every Islandora site is also a Drupal site.
 
-The active context's `plugin` field determines which plugin is responsible for a given site. Commands like `sitectl debug` use this to route diagnostic collection to the right plugin automatically.
+Shared, self-contained services are different. Services such as Traefik, MariaDB, Solr, Valkey, and Memcached are cross-cutting enough to live in the core `sitectl` command namespace. Operators still use service-oriented commands such as `sitectl mariadb backup`, but the command comes from core rather than an included service plugin.
 
-## Available plugins
+The active context's `plugin` field determines which plugin is responsible for a given site. Commands like `sitectl debug`, `sitectl validate`, and `sitectl converge` use this to route plugin-specific work automatically.
+
+## Core service commands
+
+Self-contained services may still run as standalone Compose projects, but their shared command surface belongs to core `sitectl`. Start with the [Core service commands](/plugins/core-services) landing page when the operation is about Traefik, MariaDB, Solr, Valkey, Memcached, or another reusable service inside a stack.
+
+<CardGroup cols={2}>
+  <Card title="MariaDB" icon="database" href="/plugins/mariadb">
+    Core `sitectl mariadb` operations for backups, restores, sync, and MariaDB service helpers.
+  </Card>
+  <Card title="Memcached" icon="memory" href="/plugins/memcached">
+    Core `sitectl memcached` operations and reusable cache service helpers.
+  </Card>
+  <Card title="Solr" icon="magnifying-glass" href="/plugins/solr">
+    Core `sitectl solr` operations and reusable Solr service helpers.
+  </Card>
+  <Card title="Traefik" icon="route" href="/plugins/traefik">
+    Core `sitectl traefik` ingress operations for HTTP, mkcert, Let's Encrypt, bring-your-own TLS certificates, and bot mitigation.
+  </Card>
+  <Card title="Triplet" icon="images" href="/plugins/triplet">
+    Triplet remains an application-scale project with its own workflows.
+  </Card>
+  <Card title="Valkey" icon="database" href="/plugins/valkey">
+    Core `sitectl valkey` operations and reusable cache service helpers.
+  </Card>
+</CardGroup>
+
+## Application plugins
 
 <CardGroup cols={2}>
   <Card title="sitectl-drupal" icon="square-d" href="/plugins/drupal">
@@ -32,19 +68,19 @@ The active context's `plugin` field determines which plugin is responsible for a
     LibOps platform workflows from the `sitectl-libops` plugin: authentication, organizations, projects, sites, access controls, domains, hosted templates, and Task Agent tasks.
   </Card>
   <Card title="sitectl-wp" icon="globe" href="/plugins/wordpress">
-    WordPress workflows: template creation, Compose lifecycle commands, WP-CLI, Composer, plugin/theme maintenance, cache, and database helpers.
+    WordPress workflows: template creation, WP-CLI, Composer, plugin/theme maintenance, cache, and database helpers.
   </Card>
   <Card title="sitectl-ojs" icon="book-open" href="/plugins/ojs">
-    Open Journal Systems workflows: template creation, Compose lifecycle commands, OJS PHP tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
+    Open Journal Systems workflows: template creation, OJS PHP tools, PKP tools, scheduled tasks, jobs, and import/export helpers.
   </Card>
   <Card title="sitectl-omeka-classic" icon="landmark" href="/plugins/omeka-classic">
-    Omeka Classic workflows: template creation, Compose lifecycle commands, and REST API helpers for collection, item, file, tag, user, and metadata operations.
+    Omeka Classic workflows: template creation and REST API helpers for collection, item, file, tag, user, and metadata operations.
   </Card>
   <Card title="sitectl-omeka-s" icon="boxes-stacked" href="/plugins/omeka-s">
-    Omeka S workflows: template creation, Compose lifecycle commands, and REST API helpers for resources, media, sites, modules, and vocabularies.
+    Omeka S workflows: template creation and REST API helpers for resources, media, sites, modules, and vocabularies.
   </Card>
   <Card title="sitectl-archivesspace" icon="archive" href="/plugins/archivesspace">
-    ArchivesSpace workflows: template creation, Compose lifecycle commands, API helpers, search, job inspection, diagnostics, and container script wrappers.
+    ArchivesSpace workflows: template creation, API helpers, search, job inspection, diagnostics, and container script wrappers.
   </Card>
 </CardGroup>
 
@@ -52,4 +88,26 @@ The active context's `plugin` field determines which plugin is responsible for a
 
 When you create or configure a context, you specify which plugin owns it. This is stored in the context's `plugin` field. Only commands from that plugin (and any plugins it includes) are valid against that context.
 
-For example, a context with `plugin: isle` accepts both `sitectl isle ...` and `sitectl drupal ...` commands, because the Islandora plugin includes Drupal.
+For example, a context with `plugin: isle` accepts ISLE direct commands such as `sitectl isle sync fcrepo` and Drupal direct commands such as `sitectl drupal drush`, because the Islandora plugin includes Drupal. Core workflow commands such as `sitectl validate` and `sitectl set fcrepo off` dispatch to the Islandora plugin through that same context.
+
+## Composition matrix
+
+First-class application plugins follow the same composition rules:
+
+- Web applications use Traefik for ingress.
+- LAMP-style applications include MariaDB by default.
+- Drupal and ArchivesSpace include Solr by default because their templates ship search enabled.
+- Shared service commands come from core `sitectl`, not from app plugin includes.
+- Traefik edge features, including TLS mode and bot mitigation, are first-class core ingress operations.
+
+| App plugin | Default compose project | Default services | Included plugins |
+|---|---|---|---|
+| `archivesspace` | `./archivesspace` | ArchivesSpace, Traefik, MariaDB, Solr | none |
+| `drupal` | `./drupal` | Drupal, Traefik, MariaDB, Solr | none |
+| `isle` | Chosen during create | Islandora Drupal stack with MariaDB, Solr, Traefik, Fedora, Blazegraph, IIIF services | `drupal` |
+| `ojs` | `./ojs` | OJS, Traefik, MariaDB | none |
+| `omeka-classic` | `./omeka-classic` | Omeka Classic, Traefik, MariaDB | none |
+| `omeka-s` | `./omeka-s` | Omeka S, Traefik, MariaDB | none |
+| `wp` | `./wp` | WordPress, Traefik, MariaDB | none |
+
+Application compose projects remain standalone repositories. App plugins own app-specific workflows; core `sitectl` owns shared service operations and helpers.

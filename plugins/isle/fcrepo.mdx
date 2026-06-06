@@ -17,7 +17,7 @@ Supported dispositions:
 ## Check current state
 
 ```bash
-sitectl component status
+sitectl component describe
 ```
 
 The output shows whether `fcrepo` is on, off, or drifted (meaning the project files no longer match the last applied state).
@@ -25,7 +25,7 @@ The output shows whether `fcrepo` is on, off, or drifted (meaning the project fi
 ## Enable fcrepo
 
 ```bash
-sitectl component set fcrepo enabled
+sitectl set fcrepo enabled
 ```
 
 This adds the fcrepo service and its volumes back to `docker-compose.yml` and restores the Islandora configuration required to connect Drupal to Fedora.
@@ -33,7 +33,7 @@ This adds the fcrepo service and its volumes back to `docker-compose.yml` and re
 ## Disable fcrepo
 
 ```bash
-sitectl component set fcrepo superceded --isle-file-system-uri public
+sitectl set fcrepo superceded --isle-file-system-uri public
 ```
 
 This removes the fcrepo service and volumes from `docker-compose.yml`, disables Fedora indexing in Alpaca, removes Fedora-specific Drupal config sync files, and rewrites managed media field storage to use the requested filesystem URI.

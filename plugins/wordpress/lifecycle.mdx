@@ -1,22 +1,29 @@
 ---
 title: lifecycle
-description: Build, initialize, start, stop, inspect, and roll out a WordPress stack.
+description: Build, start, stop, inspect, and roll out a WordPress stack with core sitectl commands.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-All LibOps application plugins expose the same <Compose /> lifecycle commands:
+WordPress does not define its own lifecycle commands. Like every application plugin, a
+WordPress stack is built, started, stopped, inspected, and rolled out with the **core**
+`sitectl` commands, which operate on whichever context is active:
 
 ```bash
-sitectl wp build
-sitectl wp init
-sitectl wp up
-sitectl wp down
-sitectl wp status
-sitectl wp logs
-sitectl wp rollout
+sitectl create wp             # scaffold the stack and its context
+sitectl compose build         # build images
+sitectl compose up -d         # start the stack
+sitectl compose ps            # service status
+sitectl compose logs -f       # follow logs
+sitectl compose down          # stop the stack
+sitectl deploy                # pull updates and restart (rollout)
 ```
 
-These delegate to the template Makefile where appropriate, so local development, production rollout, and VM automation all use the same operational contract.
+`sitectl wp ...` is reserved for WordPress-specific operations — [WP-CLI](/plugins/wordpress/wp-cli),
+[Composer](/plugins/wordpress/composer), [plugin and theme](/plugins/wordpress/plugins-themes)
+maintenance, and [core, cache, and database](/plugins/wordpress/core-cache-db) helpers.
+General <Compose /> lifecycle stays in the core CLI so the same operational contract
+applies to every stack.
 
-Use `init` when you intentionally want to create or reset the environment's required secrets and volumes. Use `up` for the normal start path.
+See [`sitectl create`](/commands/create), [`sitectl compose`](/commands/compose), and
+[`sitectl deploy`](/commands/deploy) for the full lifecycle reference.

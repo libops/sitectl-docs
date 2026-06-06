@@ -3,6 +3,8 @@ title: resources
 description: Read common Omeka Classic resources through shortcut commands.
 ---
 
+import ItemsCmd from "/snippets/commands/sitectl-omeka-classic-items.mdx";
+
 Use resource commands for common read operations:
 
 ```bash
@@ -24,3 +26,10 @@ sitectl omeka-classic items 12
 ```
 
 These shortcuts accept the same read flags as `api get`, including `--url`, `--key`, and repeated `--query name=value` filters.
+
+## Reference
+
+Every resource shortcut shares the same read flags. `items` is shown as a
+representative example:
+
+<ItemsCmd />

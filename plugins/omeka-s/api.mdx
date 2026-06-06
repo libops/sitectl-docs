@@ -3,6 +3,9 @@ title: API
 description: Call the Omeka S REST API through sitectl.
 ---
 
+import ApiGet from "/snippets/commands/sitectl-omeka-s-api-get.mdx";
+import ApiRequest from "/snippets/commands/sitectl-omeka-s-api-request.mdx";
+
 Omeka S exposes a REST API rather than a standalone administration CLI. sitectl provides direct API helpers and resource shortcuts:
 
 ```bash
@@ -18,3 +21,13 @@ API helpers accept:
 - `--credential` for the Omeka S API key credential
 - `--query name=value` for repeated query parameters
 - `--data` or `--file` for JSON request bodies on arbitrary requests
+
+## Reference
+
+### `api get`
+
+<ApiGet />
+
+### `api request`
+
+<ApiRequest />

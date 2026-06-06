@@ -3,6 +3,9 @@ title: API
 description: Log in to ArchivesSpace and call arbitrary REST API paths through sitectl.
 ---
 
+import ApiLogin from "/snippets/commands/sitectl-archivesspace-api-login.mdx";
+import ApiRequest from "/snippets/commands/sitectl-archivesspace-api-request.mdx";
+
 Log in and use the returned session token for authenticated API calls:
 
 ```bash
@@ -25,3 +28,13 @@ Use `api request` when you need a path that does not have a named shortcut:
 sitectl archivesspace api request GET repositories/2/archival_objects --query page=1 --session "$ARCHIVESSPACE_SESSION"
 sitectl archivesspace api request POST repositories/2/resources --file resource.json --session "$ARCHIVESSPACE_SESSION"
 ```
+
+## Reference
+
+### `api login`
+
+<ApiLogin />
+
+### `api request`
+
+<ApiRequest />
