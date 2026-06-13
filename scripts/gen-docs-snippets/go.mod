@@ -11,7 +11,7 @@ require (
 	github.com/libops/sitectl-omeka-classic v0.0.0
 	github.com/libops/sitectl-omeka-s v0.0.0
 	github.com/libops/sitectl-triplet v0.0.0
-	github.com/libops/sitectl-wp v0.0.0
+	github.com/libops/sitectl-wp v0.1.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 )
