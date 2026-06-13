@@ -8,7 +8,7 @@ require (
 	github.com/libops/sitectl-drupal v0.0.0
 	github.com/libops/sitectl-isle v0.0.0
 	github.com/libops/sitectl-ojs v0.0.0
-	github.com/libops/sitectl-omeka-classic v0.0.0
+	github.com/libops/sitectl-omeka-classic v0.1.0
 	github.com/libops/sitectl-omeka-s v0.0.0
 	github.com/libops/sitectl-triplet v0.0.0
 	github.com/libops/sitectl-wp v0.0.0
