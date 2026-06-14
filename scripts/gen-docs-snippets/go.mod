@@ -6,7 +6,7 @@ require (
 	github.com/libops/sitectl v0.20.0
 	github.com/libops/sitectl-archivesspace v0.0.0
 	github.com/libops/sitectl-drupal v0.0.0
-	github.com/libops/sitectl-isle v0.0.0
+	github.com/libops/sitectl-isle v0.14.0
 	github.com/libops/sitectl-ojs v0.0.0
 	github.com/libops/sitectl-omeka-classic v0.0.0
 	github.com/libops/sitectl-omeka-s v0.0.0
