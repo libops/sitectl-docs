@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/libops/sitectl v0.20.0
-	github.com/libops/sitectl-archivesspace v0.0.0
+	github.com/libops/sitectl-archivesspace v0.1.0
 	github.com/libops/sitectl-drupal v0.0.0
 	github.com/libops/sitectl-isle v0.0.0
 	github.com/libops/sitectl-ojs v0.0.0
