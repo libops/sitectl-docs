@@ -25,6 +25,8 @@ Core commands that fan out to plugins:
 
 - `sitectl debug` → `debug.run`
 - `sitectl validate` → core validators + `validate.run` (results merged)
+- `sitectl healthcheck` → core Compose runtime checks + `healthcheck.run` (results merged)
+- `sitectl verify` → `verify.run` (results rendered by core)
 - `sitectl converge` → `converge.run`
 - `sitectl set` → `set.run`
 - `sitectl deploy` → `deploy.run`

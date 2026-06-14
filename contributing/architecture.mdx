@@ -58,8 +58,10 @@ Current runner interfaces:
 | `ConvergeRunner` | `RegisterConvergeRunner` | `converge.run` | `sitectl converge` |
 | `SetRunner` | `RegisterSetRunner` | `set.run` | `sitectl set` |
 | `ValidateRunner` | `RegisterValidateRunner` | `validate.run` | `sitectl validate` |
+| `HealthcheckRunner` | `RegisterHealthcheckRunner` | `healthcheck.run` | `sitectl healthcheck` |
+| `VerifyRunner` | `RegisterVerifyRunner` | `verify.run` | `sitectl verify` |
 
-`sitectl validate` is distinct from the others: core runs its own validators first, then invokes the plugin's `validate.run` method, decodes the returned structured results, and merges everything before rendering. The plugin does not render; it just returns structured data.
+`sitectl validate`, `sitectl healthcheck`, and `sitectl verify` return structured check results instead of rendering directly. For `validate`, core runs its own validators first, then invokes the plugin's `validate.run` method and merges the returned results. For `healthcheck`, core checks Compose service runtime state first, then merges plugin runtime checks. For `verify`, core delegates behavioral verification to the active plugin and renders the returned results.
 
 Runner diagnostics, progress, and prompts should write to stderr. Stdout is captured by the RPC layer for the response envelope and may not be displayed directly by the caller.
 

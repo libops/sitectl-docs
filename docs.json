@@ -46,6 +46,7 @@
                 "expanded": true,
                 "pages": [
                   "commands/validate",
+                  "commands/verify",
                   "commands/converge",
                   "commands/set",
                   "commands/deploy"

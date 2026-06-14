@@ -6,11 +6,11 @@ description: Check whether the active site is online and healthy.
 import HealthcheckCmd from "/snippets/commands/sitectl-healthcheck.mdx";
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Use `healthcheck` to verify that the active context's site is up. Core checks confirm
-the <Compose /> service containers are running and healthy. If the context's plugin
-registers a healthcheck handler, its runtime checks run too and are merged into the
-report. The command exits non-zero if any check still fails after the timeout, so it
-is safe to use in scripts and CI.
+Use `healthcheck` for a basic status check of the running application. Core checks
+confirm the <Compose /> service containers are running and healthy. If the
+context's plugin registers a healthcheck handler, its runtime checks run too and
+are merged into the report. The command exits non-zero if any check still fails
+after the timeout, so it is safe to use in scripts and CI.
 
 ## Reference
 

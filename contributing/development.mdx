@@ -104,13 +104,14 @@ Use `--codebase-rootfs` in examples and tests. Compatibility flags may exist in 
 sitectl component describe --path /path/to/project --codebase-rootfs drupal/rootfs/var/www/drupal
 ```
 
-### `sitectl converge` / `sitectl validate`
+### `sitectl converge` / `sitectl validate` / `sitectl verify`
 
-Both commands use `DisableFlagParsing: true` and forward unclaimed flags to the plugin's registered runner. The ISLE plugin's `ConvergeRunner` and `ValidateRunner` both accept `--codebase-rootfs` to resolve the Drupal web root correctly.
+These commands use `DisableFlagParsing: true` and forward unclaimed flags to the plugin's registered runner. The ISLE plugin's `ConvergeRunner` and `ValidateRunner` both accept `--codebase-rootfs` to resolve the Drupal web root correctly. The ISLE plugin's `VerifyRunner` accepts expected-state flags such as `--fcrepo`, `--blazegraph`, `--iiif`, `--iiif-topology`, and `--bot-mitigation`.
 
 ```bash
 sitectl converge --report
 sitectl validate --codebase-rootfs drupal/rootfs/var/www/drupal
+sitectl verify --fcrepo off --iiif triplet --bot-mitigation on
 ```
 
 ### `sitectl create`

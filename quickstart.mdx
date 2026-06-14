@@ -32,7 +32,7 @@ Once you have a context, sitectl knows:
 
 ## Core workflow
 
-The four commands you'll use most often form a natural progression:
+The core workflow commands form a natural progression:
 
 <Steps>
   <Step title="Validate — check before you act">
@@ -68,6 +68,22 @@ The four commands you'll use most often form a natural progression:
     ```bash
     sitectl deploy
     sitectl deploy --branch main
+    ```
+  </Step>
+  <Step title="Healthcheck — confirm the app is running">
+    Run `sitectl healthcheck` for a basic status check of the running application.
+
+    ```bash
+    sitectl healthcheck
+    sitectl healthcheck --format table
+    ```
+  </Step>
+  <Step title="Verify — prove site behavior">
+    Use `sitectl verify` after updates to run healthcheck-style status plus additional checks supplied by the active plugin. Wire this into CI to make sure important site functionality remains intact.
+
+    ```bash
+    sitectl verify
+    sitectl verify --format table
     ```
   </Step>
 </Steps>

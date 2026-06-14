@@ -5,7 +5,7 @@ description: Islandora sitectl workflows including guided site creation, compone
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The Islandora plugin adds Islandora-specific behavior on top of the core sitectl workflow. The plugin binary is `sitectl-isle`. Direct plugin commands live under `sitectl isle` for ISLE-only operations such as cache warming, migration helpers, and fcrepo sync. Create, validate, debug, healthcheck, set, converge, and component inspection are core sitectl commands that dispatch to the Islandora plugin through the active context.
+The Islandora plugin adds Islandora-specific behavior on top of the core sitectl workflow. The plugin binary is `sitectl-isle`. Direct plugin commands live under `sitectl isle` for ISLE-only operations such as cache warming, migration helpers, and fcrepo sync. Create, validate, healthcheck, verify, debug, set, converge, and component inspection are core sitectl commands that dispatch to the Islandora plugin through the active context.
 
 Because every Islandora site is also a Drupal-backed stack, the Islandora plugin includes the Drupal plugin. Shared service commands for MariaDB, Solr, and Traefik come from core `sitectl` and work against Islandora contexts automatically.
 
@@ -105,6 +105,21 @@ Check that the active context's project configuration is valid:
 ```bash
 sitectl validate
 ```
+
+## Verify
+
+After the site is online or after a site update, run verification checks for the
+Islandora stack. These checks are meant for CI and update validation: basic
+runtime status plus Islandora-specific functionality that should keep working.
+
+```bash
+sitectl verify
+sitectl verify --fcrepo off --iiif triplet --bot-mitigation on
+```
+
+Use `--demo-objects` only against disposable CI, preview, development, or staging
+sites because it creates demo content before checking that repository storage
+grew.
 
 ## Migrate
 
