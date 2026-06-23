@@ -292,7 +292,7 @@ Prefer the typed constructors when the method has params:
 ```go
 req, err := plugin.NewComponentDescribeRequest(plugin.ComponentTargetParams{
     Name: "fcrepo",
-    CodebaseRootfs: "drupal/rootfs/var/www/drupal",
+    CodebaseRootfs: ".",
 })
 if err != nil {
     return err

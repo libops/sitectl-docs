@@ -96,12 +96,12 @@ This is the same script the GitHub Actions integration workflow runs. It require
 
 ### `sitectl component describe`
 
-`sitectl component describe` and `sitectl component reconcile` accept `--codebase-rootfs`. The shared RPC contract carries this as `codebase_rootfs` so the same field works for Drupal and non-Drupal plugins. ISLE defaults it to `./drupal/rootfs/var/www/drupal` so Drupal-specific paths like `composer.json` and `config/sync` resolve correctly for the site template layout.
+`sitectl component describe` and `sitectl component reconcile` accept `--codebase-rootfs`. The shared RPC contract carries this as `codebase_rootfs` so the same field works for Drupal and non-Drupal plugins. ISLE defaults it to `./drupal` so Drupal-specific paths like `composer.json` and `config/sync` resolve correctly for the site template layout.
 
 Use `--codebase-rootfs` in examples and tests. Compatibility flags may exist in older plugins, but docs should show the canonical rootfs flag.
 
 ```bash
-sitectl component describe --path /path/to/project --codebase-rootfs drupal/rootfs/var/www/drupal
+sitectl component describe --path /path/to/project
 ```
 
 ### `sitectl converge` / `sitectl validate` / `sitectl verify`
@@ -110,7 +110,7 @@ These commands use `DisableFlagParsing: true` and forward unclaimed flags to the
 
 ```bash
 sitectl converge --report
-sitectl validate --codebase-rootfs drupal/rootfs/var/www/drupal
+sitectl validate
 sitectl verify --fcrepo off --iiif triplet --bot-mitigation on
 ```
 
