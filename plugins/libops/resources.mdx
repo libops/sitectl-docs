@@ -42,12 +42,12 @@ sitectl libops create site \
   --compose-path /mnt/disks/data/compose \
   --compose-file docker-compose.yml \
   --application-type islandora \
-  --up-cmd "make up" \
-  --init-cmd "make init-if-needed" \
-  --rollout-cmd "make rollout"
+  --up-cmd "sitectl compose up" \
+  --init-cmd "sitectl compose up" \
+  --rollout-cmd "sitectl compose build && sitectl compose up"
 ```
 
-Site records define how LibOps finds and operates the repository, Compose files, and application lifecycle commands for that dashboard Site.
+Site records define how LibOps finds and operates the repository, Compose files, and application lifecycle commands for that dashboard Site. `sitectl compose up` prepares declared init artifacts, builds missing local images when needed, and then starts the Compose stack.
 
 ## List and get
 
