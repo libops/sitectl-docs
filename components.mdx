@@ -103,20 +103,22 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
     Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
   <Accordion title="iiif-topology">
-    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. sitectl keeps a local override in `docker-compose.dev.yml`. See [IIIF components](/plugins/isle/iiif).
+    Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
   <Accordion title="Derivative microservices">
-    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml`, update Alpaca's service URL where applicable, and keep a local development override in `docker-compose.dev.yml`. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
+    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
+  </Accordion>
+  <Accordion title="reverse-proxy">
+    Controls trust for an upstream load balancer or reverse proxy. Use `enabled` with one or more `--trusted-ip` values to add matching Traefik `forwardedHeaders.trustedIPs` and app nginx `NGINX_SET_REAL_IP_FROM` settings. Use `disabled` to remove those overrides.
+  </Accordion>
+  <Accordion title="upload-limits">
+    Controls explicit upload size and timeout overrides. Use `enabled` with `--max-upload-size` and `--upload-timeout` to set PHP, nginx, and Traefik read timeout values together. Use `disabled` to remove app-level overrides and restore the default Traefik read timeout.
+  </Accordion>
+  <Accordion title="dev-mode">
+    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and host bind mounts for editable code. Use `disabled` to remove the override.
   </Accordion>
 </AccordionGroup>
 
 Shared ingress behavior such as TLS mode, certificate inputs, ingress status, and bot mitigation is documented with [Traefik service commands](/plugins/traefik). Application plugins may still provide app-specific route wiring, but the reusable command surface belongs to core `sitectl`.
-
-## What's planned
-
-The component model is designed to grow. Planned additions include:
-
-- **Memcached / Redis** — add caching layers to the Drupal stack
-- **Load balancer support** — configure ISLE to run behind an upstream reverse proxy
 
 See the [developer component guide](/contributing/components) for how components are defined and what each field in the definition struct means.

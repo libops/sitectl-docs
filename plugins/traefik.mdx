@@ -49,6 +49,30 @@ For `mkcert`, sitectl generates `certs/cert.pem` and `certs/privkey.pem`. For `s
 
 When a `docker-compose.tls.yml` override exists and the context is named, sitectl adds or removes that override from the context's compose file list as the TLS mode changes. Application templates can use the shared env values to set app-specific HTTPS behavior, but TLS mode selection belongs to the Traefik service command.
 
+## Upstream Reverse Proxies
+
+Application plugins expose a `reverse-proxy` component for sites that sit behind a load balancer or another trusted proxy:
+
+```bash
+sitectl component set reverse-proxy enabled --trusted-ip 203.0.113.10/32 --trusted-ip 2001:db8::/48
+sitectl component set reverse-proxy disabled
+```
+
+Enabling the component adds Traefik `forwardedHeaders.trustedIPs` to the active HTTP entrypoint and sets matching nginx real-IP environment values on the app service when the app uses nginx. Disabling it removes those overrides.
+
+`sitectl validate` reports drift when Traefik and nginx do not trust the same IP/CIDR list, when nginx has real-IP settings but Traefik does not, or when trusted IP values are invalid.
+
+## Upload Limits
+
+Application plugins expose an `upload-limits` component for stacks that need explicit upload settings:
+
+```bash
+sitectl component set upload-limits enabled --max-upload-size 2G --upload-timeout 10m
+sitectl component set upload-limits disabled
+```
+
+Enabling the component sets the app service's PHP and nginx upload environment values and updates Traefik `transport.respondingTimeouts.readTimeout` on the active entrypoints. Disabling it removes the app-level overrides and restores Traefik's default read timeout.
+
 ### Let's Encrypt
 
 Use `letsencrypt` when the public domain points at this Traefik instance and inbound HTTP traffic can reach port 80 for the ACME HTTP-01 challenge:

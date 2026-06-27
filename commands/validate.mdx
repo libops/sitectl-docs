@@ -28,6 +28,7 @@ The `--format` flag controls how the report is rendered:
 
 - After `sitectl config set-context` to verify the new context is wired correctly.
 - Before deploying to confirm component state is consistent.
+- After changing `reverse-proxy` to confirm Traefik trusted IPs match app nginx real-IP settings.
 - When `sitectl compose up` fails with an unexpected error — validate often points to the root cause.
 
 ## Plugin validators

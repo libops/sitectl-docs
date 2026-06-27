@@ -57,6 +57,8 @@ The Islandora plugin currently manages these application components directly:
 | [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl set blazegraph enabled` or `sitectl set blazegraph disabled` |
 | [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl set iiif cantaloupe` or `sitectl set iiif triplet` |
 | [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |
+| `reverse-proxy` | Traefik forwarded-header trust and matching Drupal nginx real-IP settings for an upstream proxy or load balancer. | `sitectl set reverse-proxy enabled --trusted-ip 203.0.113.10/32` |
+| `dev-mode` | Local `docker-compose.override.yml` bind mounts and UID propagation for editable Drupal code. | `sitectl set dev-mode enabled` or `sitectl set dev-mode disabled` |
 | [`fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, `mergepdf`](/plugins/isle/derivatives) | Whether each derivative microservice runs in this Compose project or uses the managed LibOps endpoint. | `sitectl set homarus distributed` or `sitectl set homarus enabled` |
 
 All ISLE component changes are local-only. Run them against the checkout you intend to modify, review the diff, then commit the generated changes.
