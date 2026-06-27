@@ -12,6 +12,8 @@ The `compose` command is a core `sitectl` command that runs <Compose /> commands
 
 Use it when you want the same <Compose /> operation to respect the site and environment wiring already stored in the context.
 
+For local development contexts, `sitectl compose up` checks whether the default HTTP host port is already in use. If another process owns it, sitectl passes `HOST_INSECURE_PORT` to Docker Compose with the next available development port. It only checks and sets `HOST_SECURE_PORT` when the active Compose files publish target port `443` or reference `HOST_SECURE_PORT`, so HTTP-only stacks do not bind HTTPS. This behavior only applies to local dev contexts, not local production workloads.
+
 ## Reference
 
 <ComposeCmd />
