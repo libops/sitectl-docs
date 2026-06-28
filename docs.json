@@ -26,6 +26,7 @@
             "pages": [
               "tui",
               "context",
+              "apps",
               "plugins",
               "components"
             ]
@@ -57,6 +58,7 @@
                 "expanded": true,
                 "pages": [
                   "commands/job",
+                  "commands/image",
                   "commands/compose"
                 ]
               },
@@ -267,6 +269,8 @@
               "contributing/docs",
               "contributing/architecture",
               "contributing/plugin-hierarchy",
+              "contributing/compose-reconcile",
+              "contributing/app-template",
               "contributing/components",
               "contributing/service-components",
               "contributing/development"

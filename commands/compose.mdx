@@ -12,7 +12,26 @@ The `compose` command is a core `sitectl` command that runs <Compose /> commands
 
 Use it when you want the same <Compose /> operation to respect the site and environment wiring already stored in the context.
 
-For local development contexts, `sitectl compose up` checks whether the default HTTP host port is already in use. If another process owns it, sitectl passes `HOST_INSECURE_PORT` to Docker Compose with the next available development port. It only checks and sets `HOST_SECURE_PORT` when the active Compose files publish target port `443` or reference `HOST_SECURE_PORT`, so HTTP-only stacks do not bind HTTPS. This behavior only applies to local dev contexts, not local production workloads.
+For local development contexts, `sitectl compose up` checks whether the default HTTP or HTTPS host port is already in use. If another process owns a needed port, sitectl writes `docker-compose.override.yml` with a Compose `ports: !override` entry for the next available development port before invoking Docker Compose.
+
+HTTP-only stacks publish target port `80` and use `URI_SCHEME=http`. Stacks that publish target port `443`, or whose Traefik command declares an HTTPS entrypoint on `:443`, use `URI_SCHEME=https`. This behavior only applies to local dev contexts, not local production workloads.
+
+See [Managed applications](/apps) for the application template Compose contract.
+
+## First-Run Reconcile
+
+For local plugin-owned contexts, `sitectl compose up` can perform a first-run reconcile before handing off to Docker Compose. It reads the plugin's default create definition, checks init artifacts and local image metadata, then runs the plugin's init and build commands when they are still needed.
+
+This lets a setup-only checkout start cleanly:
+
+```bash
+sitectl create ojs/default --setup-only --path ./ojs --type local --checkout-source template
+sitectl compose up
+```
+
+The reconcile step is a synchronous CLI workflow for one local <Compose /> project. It borrows condition names such as `Initialized` and `ImagesAvailable`, but it is not a Kubernetes controller or background loop.
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the contributor-facing contract.
 
 ## Reference
 

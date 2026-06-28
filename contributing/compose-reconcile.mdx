@@ -1,0 +1,89 @@
+---
+title: Compose reconcile contract
+description: The local sitectl compose up reconcile contract for plugin-owned Compose projects.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Core `sitectl compose up` performs a command-scoped reconcile for local contexts owned by an installed plugin. The contract belongs to core `sitectl`, not to an individual app template.
+
+The goal is a smooth first start for setup-only checkouts:
+
+```bash
+sitectl create app/default --setup-only --path ./app --type local --checkout-source template
+sitectl compose up
+```
+
+The first `compose up` can initialize missing files, build missing local images, and start the stack. A fresh `sitectl create --setup-only` may already run clone-time init; reconcile checks artifacts before deciding what is still needed. Later calls use a local cache unless the plugin create metadata or image override file changes.
+
+## Flow
+
+For local plugin-owned contexts, core `sitectl compose up`:
+
+1. Loads the active context and the plugin's default create definition, or the first create definition when none is marked default.
+2. Checks the local reconcile cache. The cache key includes host, user, plugin, canonical project directory, `docker-compose.override.yml` fingerprint, and create spec fingerprint.
+3. If there is no cache hit, inspects desired state:
+   - missing or empty `InitArtifacts` make `Initialized=False`
+   - missing local images or build-arg overrides make `ImagesAvailable=False`
+   - when explicit metadata is absent, core falls back to `docker compose config --format json` and checks file-backed secrets and buildable services
+4. Runs `DockerComposeInit` when init is needed.
+5. Runs `DockerComposeBuild` when images are needed.
+6. Runs `DockerComposeUp`.
+7. Marks the current host, user, project, override fingerprint, and create-spec fingerprint as checked after the commands succeed.
+
+The cache is marked only after the selected commands complete successfully. If a command fails, the next `sitectl compose up` inspects and retries instead of assuming the project is reconciled.
+
+## Conditions
+
+Reconcile status uses Kubernetes-style condition vocabulary for local facts:
+
+| Condition | Meaning |
+|---|---|
+| `Initialized` | Required init artifacts are present, or fallback secret checks pass. |
+| `ImagesAvailable` | Required local images exist, no build policy requires a build, and build-arg overrides have been applied. |
+| `Reconciled` | No init or build work is needed for this project/spec/override state. |
+
+Condition status values are `True` or `False`. `ObservedGeneration` records the create-spec fingerprint that was inspected.
+
+## Kubernetes Analogy Boundary
+
+The vocabulary is deliberately familiar to contributors who have used Kubernetes controllers:
+
+- "reconcile" means compare desired metadata with observed local project state, then run the missing lifecycle steps
+- `conditions` report current facts rather than command history
+- `ObservedGeneration` records which desired create-spec fingerprint was checked
+
+The analogy stops there. This is not a Kubernetes controller, background control loop, scheduler, or distributed reconciler. It is a synchronous CLI workflow for one local <Compose /> project. There is no API server, watch stream, lease, work queue, leader election, multi-worker retry contract, or Kubernetes-style eventual consistency guarantee.
+
+That boundary is important for plugin authors. Lifecycle commands must be safe to retry because users can rerun `sitectl compose up` after a failure, but core does not provide a persistent controller that will eventually converge the project without another CLI invocation.
+
+## Plugin Authoring Contract
+
+Create definitions that participate in reconcile should follow these rules:
+
+1. Keep `DockerComposeInit`, `DockerComposeBuild`, and `DockerComposeUp` idempotent enough to rerun after partial failure.
+2. Make `InitArtifacts` explicit and deterministic. Prefer files such as `.env` and secret files over probing container state.
+3. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` when a generated marker file must match the local host user.
+4. List locally built images in `Images` with the Compose service name, image reference, and build policy.
+5. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for images that should not trigger the build phase.
+6. Avoid global mutable state in lifecycle commands. The same project path, create spec, and override file should produce the same result.
+7. Do not make init destructive. Existing application data must survive a repeated init command.
+8. Keep plugin namespace commands app-specific. Shared lifecycle belongs to core `sitectl compose`.
+
+## Image Overrides
+
+Core `sitectl image set` writes `docker-compose.override.yml` for local contexts:
+
+```bash
+sitectl image set --tag wp=nginx-1.30.3-php84
+sitectl image set --image app=ghcr.io/example/app:pr-123
+sitectl image set --build-arg app.BASE_IMAGE=libops/app:php84
+```
+
+Image overrides affect reconcile:
+
+- an explicit image override for a service means core does not require the plugin's default image to exist locally
+- a build-arg override triggers the build phase so the new arguments are applied
+- the override file fingerprint is part of the reconcile cache key
+
+Use `--image` or `--build-arg` for app-specific services that are not known to the shared `--tag` map.

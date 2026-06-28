@@ -5,7 +5,7 @@ description: How sitectl plugins extend the core CLI with stack-specific workflo
 
 Plugins extend `sitectl` with commands and workflows specific to the technology stack your site runs on.
 
-General Docker operations stay in the core CLI. Use [`sitectl compose`](/commands/compose) for context-aware Docker Compose commands and [`sitectl port-forward`](/commands/port-forward) for remote service tunnels. Plugins add stack-specific value on top of that foundation: create flows, application CLIs, API helpers, sync workflows, lifecycle shortcuts, migrations, and other project-specific operations.
+General Docker operations stay in the core CLI. Use [`sitectl compose`](/commands/compose) for context-aware Docker Compose commands and [`sitectl port-forward`](/commands/port-forward) for remote service tunnels. Plugins add stack-specific value on top of that foundation: create definitions, application CLIs, API helpers, sync workflows, migrations, diagnostics, and other project-specific operations.
 
 ## How discovery works
 
@@ -29,6 +29,8 @@ Plugins can include other plugins. `sitectl-isle` includes `sitectl-drupal` beca
 Shared, self-contained services are different. Services such as Traefik, MariaDB, Solr, Valkey, and Memcached are cross-cutting enough to live in the core `sitectl` command namespace. Operators still use service-oriented commands such as `sitectl mariadb backup`, but the command comes from core rather than an included service plugin.
 
 The active context's `plugin` field determines which plugin is responsible for a given site. Commands like `sitectl debug`, `sitectl validate`, `sitectl healthcheck`, `sitectl verify`, and `sitectl converge` use this to route plugin-specific work automatically.
+
+For first-class application plugins, build, init, up, down, logs, status, and rollout behavior generally stay in core `sitectl compose` and related core workflow commands. The plugin namespace is for app-specific operations, not thin aliases over shared lifecycle.
 
 ## Core service commands
 
@@ -110,4 +112,4 @@ First-class application plugins follow the same composition rules:
 | `omeka-s` | `./omeka-s` | Omeka S, Traefik, MariaDB | none |
 | `wp` | `./wp` | WordPress, Traefik, MariaDB | none |
 
-Application compose projects remain standalone repositories. App plugins own app-specific workflows; core `sitectl` owns shared service operations and helpers.
+Application compose projects remain standalone repositories. App plugins own create definitions and app-specific workflows; core `sitectl` owns shared lifecycle, service operations, and helpers.

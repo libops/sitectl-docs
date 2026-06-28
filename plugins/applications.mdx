@@ -29,6 +29,11 @@ stack shares the same operational contract regardless of which application plugi
 installed. See [Plugins](/plugins) for how discovery, inclusion, and command routing
 work across all plugin types.
 
+Application plugins still publish create definitions and app-specific helpers. Core
+`sitectl compose up` can use those create definitions for local first-run reconcile;
+see [Compose reconcile contract](/contributing/compose-reconcile) for the contributor
+contract.
+
 ## Choose your application
 
 <CardGroup cols={2}>

@@ -22,9 +22,11 @@ cd ../sitectl-drupal && make install
 
 ## Application plugin template
 
-Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when starting a new application plugin for a Compose-backed app that uses Traefik, MariaDB, and Solr. The template includes the standard SDK entrypoint, Compose create and lifecycle registration, service plugin includes, app database helpers, GitHub Actions workflows, GoReleaser config, Makefile targets, and a local `go.work` helper.
+Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when starting a new application plugin for a Compose-backed app that uses shared services such as Traefik, MariaDB, or Solr. The template includes the standard SDK entrypoint, Compose create metadata, project discovery, an app `exec` helper, debug/validate/healthcheck runners, GitHub Actions workflows, GoReleaser config, Makefile targets, and a local `go.work` helper.
 
-After creating a repo from the template, replace the app constants, module path, binary name, Compose template repository, project discovery rules, and app-specific commands. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
+After creating a repo from the template, replace the app constants, module path, binary name, Compose template repository, project discovery rules, and app-specific commands. Core `sitectl compose` owns build, init, up, down, logs, status, and rollout behavior; core service commands own shared MariaDB, Solr, Traefik, Valkey, and Memcached operations. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
+
+See [Application plugin template](/contributing/app-template) for the template checklist.
 
 ## Developing against a local sitectl checkout
 

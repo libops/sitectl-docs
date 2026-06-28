@@ -1,0 +1,120 @@
+---
+title: Application plugin template
+description: How to build a new Compose-backed sitectl application plugin from sitectl-app-tmpl.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when adding a new application plugin for a standalone <Compose /> template repository.
+
+The template is intentionally thin. The application repository owns the Compose workload. Core `sitectl` owns shared lifecycle commands. The plugin contributes app-specific metadata and helpers.
+
+## Command Ownership
+
+| Concern | Owner | Examples |
+|---|---|---|
+| Compose lifecycle | Core `sitectl` | `sitectl compose up`, `sitectl compose down`, `sitectl compose logs`, `sitectl compose ps` |
+| Create flow metadata | App plugin | `CreateSpec`, template repo, init artifacts, image specs |
+| App-specific commands | App plugin | `sitectl <app> exec ...`, API wrappers, application maintenance helpers |
+| Shared service operations | Core `sitectl` | `sitectl mariadb backup`, `sitectl solr info`, `sitectl traefik tls` |
+| Cross-cutting reports | Core command plus plugin runner | `sitectl debug`, `sitectl validate`, `sitectl healthcheck` |
+
+New app plugins should usually call `RegisterComposeTemplateCreateRunner`, not `RegisterStandardComposeTemplate`. The latter still exists for plugins that deliberately want direct namespace lifecycle commands, but first-class app plugins should let core `sitectl compose` provide the shared lifecycle surface.
+
+## Create Definition Contract
+
+The create definition is more than a clone recipe. It is also the desired state metadata used by core `sitectl compose up` to decide whether a local checkout needs first-run init or image build work. See [Compose reconcile contract](/contributing/compose-reconcile) for the shared core behavior.
+
+```go
+func createDefinition() plugin.CreateSpec {
+    return plugin.CreateSpec{
+        Name:                "default",
+        Default:             true,
+        DockerComposeRepo:   TemplateRepo,
+        DockerComposeBranch: TemplateBranch,
+        DockerComposeInit: []string{
+            "if [ ! -f .env ]; then cp sample.env .env; fi",
+            "docker compose run --rm init",
+        },
+        InitArtifacts: []plugin.InitArtifact{
+            {Path: ".env"},
+            {Path: "secrets/DB_ROOT_PASSWORD"},
+            {Path: "secrets/APP_DB_PASSWORD"},
+        },
+        DockerComposeBuild: []string{
+            "docker compose pull --ignore-buildable",
+            "docker compose build --pull",
+        },
+        Images: []plugin.ComposeImageSpec{
+            {
+                Service:     "app",
+                Image:       "libops/app:local",
+                BuildPolicy: plugin.BuildPolicyIfNotPresent,
+            },
+        },
+        DockerComposeUp: []string{
+            "docker compose up --remove-orphans -d",
+        },
+        DockerComposeDown:    []string{"docker compose down"},
+        DockerComposeRollout: []string{"./scripts/rollout.sh"},
+    }
+}
+```
+
+`DockerComposeInit` should be idempotent. It may create `.env`, run an `init` service, and write deterministic secret files. It must not destroy existing application data when run again.
+
+`InitArtifacts` should list files that prove init has completed. Prefer explicit files over probing container state. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` for a UID marker file when generated files need to match the local host user.
+
+`Images` should list local images the template expects to build. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for services that should never trigger the build phase.
+
+## Image Overrides
+
+Core `sitectl image set` writes `docker-compose.override.yml` for local contexts:
+
+```bash
+sitectl image set --tag mariadb=11.4
+sitectl image set --image app=ghcr.io/example/app:pr-123
+sitectl image set --build-arg app.BASE_IMAGE=libops/app:php84
+```
+
+Image overrides affect reconcile:
+
+- an explicit image override for a service means core does not require the plugin's default image to exist locally
+- a build-arg override triggers the build phase so the new arguments are applied
+- the override file fingerprint is part of the reconcile cache key
+
+Use `--image` or `--build-arg` for app-specific services that are not known to the shared `--tag` map.
+
+## Template Checklist
+
+After creating a repository from `sitectl-app-tmpl`:
+
+1. Rename the Go module, binary, plugin name, display name, and release workflow outputs.
+2. Set `TemplateRepo`, `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants.
+3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, and `Images` to match the real template repository.
+4. Tune project discovery in `SetComposeProjectDiscovery`. Use service names and durable codebase markers that identify the real project.
+5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
+6. Use core service commands for shared operations. For example, document `sitectl mariadb backup app` rather than adding a thin app plugin alias.
+7. Implement debug, validate, and healthcheck runners through the SDK. Results should be structured; progress and diagnostics should go to stderr.
+8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
+9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run `sitectl healthcheck`.
+10. Add a plugin page to `sitectl-docs` for app-specific operations.
+
+## Local Verification
+
+Run the standard local workflow:
+
+```bash
+make work
+make test
+make install
+```
+
+Then verify the installed plugin can be discovered and used through core commands:
+
+```bash
+sitectl create app-tmpl/default --path ./app --type local --checkout-source template --setup-only
+sitectl compose up
+sitectl healthcheck
+sitectl app-tmpl exec -- printenv
+```
