@@ -38,6 +38,20 @@ Application plugins use the same mechanism only for real application hierarchies
 
 sitectl resolves inclusion transitively: if `isle` includes `drupal` and `drupal` includes `core`, then `isle` covers all three.
 
+## Create Definitions
+
+Plugins expose create definitions through `plugin.metadata`. A create definition describes a first-class Compose template: repository, branch, lifecycle commands, init artifacts, image specs, and the default definition for the plugin.
+
+Core sitectl consumes create definitions in several places:
+
+- `sitectl create list` and `sitectl create <plugin>/<definition>` for guided stack creation
+- `sitectl image set` and create-time image flags for local Compose image and build-arg overrides
+- `sitectl compose up` for local first-run reconcile on plugin-owned contexts
+
+The same metadata should therefore be deterministic and safe to reuse. Lifecycle command output can be human-facing when run directly, but plugin RPC stdout rules still apply: logs, prompts, and progress from RPC handlers belong on stderr, while stdout is reserved for the response envelope.
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the local `compose up` contract and [Application plugin template](/contributing/app-template) for the thin app-plugin scaffold.
+
 ## RPC protocol
 
 Core sitectl commands that fan out to plugins do so through one private entrypoint: `__sitectl-rpc`. The host sends a JSON request envelope and the plugin writes one JSON response envelope to stdout. Human-facing plugin output is captured and returned in the response `output` field; structured data is returned in `result`. Plugin logs, progress, and interactive prompts use stderr so stdout remains reserved for the envelope.
@@ -131,7 +145,7 @@ When a runner binds its own rootfs flag name, call `plugin.MarkCodebaseRootfsFla
 
 | Method | Purpose | Registered by |
 |---|---|---|
-| `plugin.metadata` | Returns plugin name, version, description, includes, create/deploy definitions, and capability flags. | `plugin.NewSDK(metadata)` |
+| `plugin.metadata` | Returns plugin name, version, description, includes, create definitions, deploy definitions, image specs, and capability flags. | `plugin.NewSDK(metadata)` |
 | `project.detect` | Lets a plugin claim the current Compose project for transient `--context .` discovery. | `sdk.SetProjectDiscovery(...)` |
 | `create.component_definitions` | Returns component-backed create definitions for including plugins. | create definition registration |
 | `create.run` | Runs a create definition. | create definition registration |
@@ -256,6 +270,8 @@ type VerifyRunner interface {
 ### `create.run` / `create.component_definitions`
 
 Registered implicitly when create definitions are registered. `create.run` powers `sitectl create <plugin>/<definition>` flows. `create.component_definitions` lets including plugins reuse component create options from included plugins.
+
+Create definitions are also used outside `create.run`: core reads them from metadata for `sitectl create list`, local image override handling, and command-scoped `sitectl compose up` reconcile.
 
 ## Core fan-out summary
 

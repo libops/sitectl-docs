@@ -12,6 +12,13 @@ context's plugin registers a healthcheck handler, its runtime checks run too and
 are merged into the report. The command exits non-zero if any check still fails
 after the timeout, so it is safe to use in scripts and CI.
 
+Application plugins use shared helpers for common web stacks: route checks, MariaDB
+ping checks, optional HTTP service checks, and the expected `depends_on:
+condition: service_healthy` relationship between the app container and MariaDB.
+For route checks, localhost-style URLs are tested from the host first; app-domain
+URLs can be checked from inside the app container with the correct HTTP `Host`
+header.
+
 ## Reference
 
 <HealthcheckCmd />

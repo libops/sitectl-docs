@@ -37,6 +37,14 @@ Runtime fan-out uses one private JSON RPC entrypoint, `__sitectl-rpc`, instead o
 
 The RPC contract is versioned in lockstep between core and plugins. Request envelopes, response envelopes, params, and result payloads use explicit lower snake_case JSON tags, and typed request builders in `pkg/plugin` should be preferred over hand-written JSON maps.
 
+## Compose lifecycle metadata
+
+Plugin create definitions are the shared contract between `sitectl create` and local `sitectl compose up`. A `CreateSpec` declares the template repository, init commands, build commands, up/down/rollout commands, init artifacts, and image metadata for a Compose-backed project.
+
+Core `sitectl create` uses that metadata to scaffold a context. Core `sitectl compose up` uses the same metadata for command-scoped first-run reconcile on local plugin-owned contexts. The reconcile step can run missing init and build work before starting Compose, but it remains a synchronous CLI workflow, not a background controller.
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the detailed authoring contract and the boundary around Kubernetes-style terminology.
+
 ## Service component ownership
 
 Reusable infrastructure services that are self-contained and cross-cutting belong in sitectl core, not in one plugin per service and not copied into every application plugin. Traefik, MariaDB, Solr, Valkey, and Memcached are core service command namespaces because many application stacks use them and the operational behavior is generic.

@@ -1,0 +1,71 @@
+---
+title: image
+description: Manage local Docker Compose image and build-arg overrides.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import ImageCmd from "/snippets/commands/sitectl-image.mdx";
+import ImageClearCmd from "/snippets/commands/sitectl-image-clear.mdx";
+import ImageSetCmd from "/snippets/commands/sitectl-image-set.mdx";
+
+The `image` command manages local <Compose /> image overrides for the active `sitectl` context.
+
+Use `sitectl image set` when you want a local site to run a different image tag, image reference, or build argument without editing the upstream template files directly.
+
+```bash
+sitectl image set --tag wp=nginx-1.30.3-php84
+sitectl image set --image app=ghcr.io/example/app:pr-123
+sitectl image set --build-arg app.BASE_IMAGE=libops/app:php84
+```
+
+`sitectl image set` currently requires a local context with a project directory. It writes `docker-compose.override.yml` in that project.
+
+Use `sitectl image clear` to remove image and build-arg override keys without deleting unrelated local override content:
+
+```bash
+sitectl image clear
+sitectl image clear wp
+```
+
+With no service arguments, `clear` removes image/build-arg overrides for every service in the override file. With service arguments, it clears only those services.
+
+## Flags
+
+| Flag | Format | Use |
+|---|---|---|
+| `--tag` | `SERVICE=TAG` | Set a known LibOps service to a published LibOps tag. |
+| `--image` | `SERVICE=IMAGE` | Set any Compose service to an explicit image reference. |
+| `--build-arg` | `SERVICE.ARG=VALUE` | Set a Compose build argument for a service. |
+
+`--tag` only works for services known to sitectl's shared LibOps image map. For app-specific services, use `--image` or `--build-arg`.
+
+## Compose Reconcile
+
+Image overrides participate in the first-run `sitectl compose up` reconcile contract:
+
+- an explicit image override for a service means core does not require the plugin's default image to exist locally
+- a build-arg override triggers the build phase so the new arguments are applied
+- the override file fingerprint is part of the local reconcile cache key
+
+After changing overrides, run:
+
+```bash
+sitectl compose up
+```
+
+If you clear a build-arg override and want to rebuild with the default image metadata immediately, run:
+
+```bash
+sitectl image clear wp
+sitectl compose reconcile --force
+```
+
+See [Compose reconcile contract](/contributing/compose-reconcile) for the contributor-facing contract.
+
+## Reference
+
+<ImageCmd />
+
+<ImageSetCmd />
+
+<ImageClearCmd />

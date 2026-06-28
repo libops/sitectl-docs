@@ -7,7 +7,6 @@ based on the current context. All docker compose commands and flags are supporte
 
 Automatic behaviors:
   - `compose up` automatically adds `-d `--remove-orphans`` if not already specified
-  - `compose build` automatically adds `--pull` if not already specified
   - Compose file paths (-f flags) are injected from context.ComposeFile setting
   - Env file paths (`--env-file` flags) are injected from context.EnvFile setting
   - Working directory is set to context.ProjectDir
