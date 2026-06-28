@@ -3,14 +3,13 @@ module github.com/libops/sitectl-docs/gen-docs-snippets
 go 1.26.1
 
 require (
-	github.com/libops/sitectl v0.20.0
+	github.com/libops/sitectl v0.23.1
 	github.com/libops/sitectl-archivesspace v0.1.0
 	github.com/libops/sitectl-drupal v0.5.0
 	github.com/libops/sitectl-isle v0.14.0
 	github.com/libops/sitectl-ojs v0.1.0
 	github.com/libops/sitectl-omeka-classic v0.1.0
 	github.com/libops/sitectl-omeka-s v0.1.0
-	github.com/libops/sitectl-triplet v0.0.0
 	github.com/libops/sitectl-wp v0.1.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -24,15 +23,15 @@ require (
 	charm.land/lipgloss/v2 v2.0.4 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/NimbleMarkets/ntcharts/v2 v2.2.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.26.1 // indirect
+	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260608091853-35bcb7319efa // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
-	github.com/charmbracelet/x/exp/charmtone v0.0.0-20260614010340-86573f9427fd // indirect
-	github.com/charmbracelet/x/exp/slice v0.0.0-20260614010340-86573f9427fd // indirect
+	github.com/charmbracelet/x/exp/charmtone v0.0.0-20260622092256-25656177ba8e // indirect
+	github.com/charmbracelet/x/exp/slice v0.0.0-20260622092256-25656177ba8e // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
@@ -41,7 +40,7 @@ require (
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
+	github.com/dlclark/regexp2/v2 v2.2.2 // indirect
 	github.com/docker/docker v28.5.2+incompatible // indirect
 	github.com/docker/go-connections v0.7.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -96,6 +95,5 @@ replace (
 	github.com/libops/sitectl-ojs => ../../../sitectl-ojs
 	github.com/libops/sitectl-omeka-classic => ../../../sitectl-omeka-classic
 	github.com/libops/sitectl-omeka-s => ../../../sitectl-omeka-s
-	github.com/libops/sitectl-triplet => ../../../sitectl-triplet
 	github.com/libops/sitectl-wp => ../../../sitectl-wp
 )

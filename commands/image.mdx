@@ -4,6 +4,9 @@ description: Manage local Docker Compose image and build-arg overrides.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
+import ImageCmd from "/snippets/commands/sitectl-image.mdx";
+import ImageClearCmd from "/snippets/commands/sitectl-image-clear.mdx";
+import ImageSetCmd from "/snippets/commands/sitectl-image-set.mdx";
 
 The `image` command manages local <Compose /> image overrides for the active `sitectl` context.
 
@@ -16,6 +19,15 @@ sitectl image set --build-arg app.BASE_IMAGE=libops/app:php84
 ```
 
 `sitectl image set` currently requires a local context with a project directory. It writes `docker-compose.override.yml` in that project.
+
+Use `sitectl image clear` to remove image and build-arg override keys without deleting unrelated local override content:
+
+```bash
+sitectl image clear
+sitectl image clear wp
+```
+
+With no service arguments, `clear` removes image/build-arg overrides for every service in the override file. With service arguments, it clears only those services.
 
 ## Flags
 
@@ -41,4 +53,19 @@ After changing overrides, run:
 sitectl compose up
 ```
 
+If you clear a build-arg override and want to rebuild with the default image metadata immediately, run:
+
+```bash
+sitectl image clear wp
+sitectl compose reconcile --force
+```
+
 See [Compose reconcile contract](/contributing/compose-reconcile) for the contributor-facing contract.
+
+## Reference
+
+<ImageCmd />
+
+<ImageSetCmd />
+
+<ImageClearCmd />

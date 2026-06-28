@@ -16,7 +16,6 @@ import (
 	ojscmd "github.com/libops/sitectl-ojs/cmd"
 	omekaclassiccmd "github.com/libops/sitectl-omeka-classic/cmd"
 	omekascmd "github.com/libops/sitectl-omeka-s/cmd"
-	tripletcmd "github.com/libops/sitectl-triplet/cmd"
 	wpcmd "github.com/libops/sitectl-wp/cmd"
 	sitectlcmd "github.com/libops/sitectl/cmd"
 	"github.com/libops/sitectl/pkg/plugin"
@@ -100,10 +99,6 @@ func main() {
 		}),
 		pluginGen("wp", "WordPress helpers", func(s *plugin.SDK) error {
 			wpcmd.RegisterCommands(s)
-			return nil
-		}),
-		pluginGen("triplet", "Triplet helpers", func(s *plugin.SDK) error {
-			tripletcmd.RegisterCommands(s)
 			return nil
 		}),
 		// NOTE: sitectl-libops is intentionally not wired in here. The local

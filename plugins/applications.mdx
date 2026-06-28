@@ -34,6 +34,11 @@ Application plugins still publish create definitions and app-specific helpers. C
 see [Compose reconcile contract](/contributing/compose-reconcile) for the contributor
 contract.
 
+For common MariaDB-backed web apps, plugins can use the shared healthcheck runner
+instead of repeating route, MariaDB, and Compose dependency checks. App-specific
+checks still belong in the plugin, such as Solr core checks or optional Islandora
+microservice HTTP checks.
+
 ## Choose your application
 
 <CardGroup cols={2}>

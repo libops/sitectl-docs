@@ -13,6 +13,8 @@ import { Compose } from "/snippets/compose-tooltip.mdx";
 
 Local-only changes belong in `docker-compose.override.yml`. That file is intentionally ignored by template repositories. Developers can use it for temporary bind mounts, image overrides, secrets used only on their workstation, and port swaps. Production should not rely on a Compose override file; production behavior should be visible in the tracked Compose file and tracked component changes.
 
+When an application service requires MariaDB during startup, declare that relationship in the tracked Compose file with `depends_on` and `condition: service_healthy`. The application plugins' standard healthcheck runner verifies that policy for MariaDB-backed web apps.
+
 ## Local Image Builds
 
 Every application template includes a Dockerfile for the local application image. The Dockerfile starts from the matching LibOps base image, copies lockfiles and downloaded dependencies before copying local modules, plugins, themes, config, or other customization points, and leaves runtime configuration to the Compose environment where possible.

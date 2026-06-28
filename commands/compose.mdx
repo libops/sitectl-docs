@@ -5,6 +5,8 @@ description: Run Docker Compose commands through the active sitectl context.
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 import ComposeCmd from "/snippets/commands/sitectl-compose.mdx";
+import ComposeCleanCmd from "/snippets/commands/sitectl-compose-clean.mdx";
+import ComposeReconcileCmd from "/snippets/commands/sitectl-compose-reconcile.mdx";
 
 # <Compose /> command
 
@@ -18,9 +20,9 @@ HTTP-only stacks publish target port `80` and use `URI_SCHEME=http`. Stacks that
 
 See [Managed applications](/apps) for the application template Compose contract.
 
-## First-Run Reconcile
+## Reconcile
 
-For local plugin-owned contexts, `sitectl compose up` can perform a first-run reconcile before handing off to Docker Compose. It reads the plugin's default create definition, checks init artifacts and local image metadata, then runs the plugin's init and build commands when they are still needed.
+For local plugin-owned contexts, `sitectl compose up` can perform a reconcile before handing off to Docker Compose. It reads the plugin's default create definition, checks init artifacts, declared volumes, and local image metadata, then runs the plugin's init and build commands when they are still needed.
 
 This lets a setup-only checkout start cleanly:
 
@@ -29,10 +31,35 @@ sitectl create ojs/default --setup-only --path ./ojs --type local --checkout-sou
 sitectl compose up
 ```
 
+You can also run the same workflow explicitly:
+
+```bash
+sitectl compose reconcile
+sitectl compose reconcile --force
+sitectl compose reconcile --reset-init
+```
+
+The reconcile cache is local to the workstation and expires after 7 days. `--force` ignores the cache and reruns build/up. `--reset-init` removes plugin-declared init artifacts and init volumes, clears the cache entry, then reconciles again.
+
 The reconcile step is a synchronous CLI workflow for one local <Compose /> project. It borrows condition names such as `Initialized` and `ImagesAvailable`, but it is not a Kubernetes controller or background loop.
+
+## Clean
+
+Use `sitectl compose clean` when you need to throw away local runtime state and return to a fresh init/build flow:
+
+```bash
+sitectl compose clean
+sitectl compose clean --yes
+```
+
+`clean` runs `docker compose down -v`, removes plugin-declared init artifacts such as generated secrets, certs, UID markers, and env files, and clears the reconcile cache entry. It is destructive and prompts for a typed confirmation unless `--yes` is passed.
 
 See [Compose reconcile contract](/contributing/compose-reconcile) for the contributor-facing contract.
 
 ## Reference
 
 <ComposeCmd />
+
+<ComposeReconcileCmd />
+
+<ComposeCleanCmd />
