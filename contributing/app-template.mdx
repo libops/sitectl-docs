@@ -41,6 +41,9 @@ func createDefinition() plugin.CreateSpec {
             {Path: "secrets/DB_ROOT_PASSWORD"},
             {Path: "secrets/APP_DB_PASSWORD"},
         },
+        InitVolumes: []plugin.InitVolume{
+            {Name: "mariadb-data"},
+        },
         DockerComposeBuild: []string{
             "docker compose pull --ignore-buildable",
             "docker compose build --pull",
@@ -64,6 +67,8 @@ func createDefinition() plugin.CreateSpec {
 `DockerComposeInit` should be idempotent. It may create `.env`, run an `init` service, and write deterministic secret files. It must not destroy existing application data when run again.
 
 `InitArtifacts` should list files that prove init has completed. Prefer explicit files over probing container state. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` for a UID marker file when generated files need to match the local host user.
+
+`InitVolumes` should list named Compose volumes that prove first-start runtime state exists, such as database volumes and application file/upload volumes. Core resolves those names through `docker compose config`, so custom Compose project names and explicit volume names still work.
 
 `Images` should list local images the template expects to build. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for services that should never trigger the build phase.
 
@@ -91,7 +96,7 @@ After creating a repository from `sitectl-app-tmpl`:
 
 1. Rename the Go module, binary, plugin name, display name, and release workflow outputs.
 2. Set `TemplateRepo`, `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants.
-3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, and `Images` to match the real template repository.
+3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, `InitVolumes`, and `Images` to match the real template repository.
 4. Tune project discovery in `SetComposeProjectDiscovery`. Use service names and durable codebase markers that identify the real project.
 5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
 6. Use core service commands for shared operations. For example, document `sitectl mariadb backup app` rather than adding a thin app plugin alias.

@@ -24,8 +24,9 @@ For local plugin-owned contexts, core `sitectl compose up`:
 2. Checks the local reconcile cache. The cache key includes host, user, plugin, canonical project directory, `docker-compose.override.yml` fingerprint, and create spec fingerprint.
 3. If there is no cache hit, inspects desired state:
    - missing or empty `InitArtifacts` make `Initialized=False`
+   - missing `InitVolumes` make `Initialized=False`
    - missing local images or build-arg overrides make `ImagesAvailable=False`
-   - when explicit metadata is absent, core falls back to `docker compose config --format json` and checks file-backed secrets and buildable services
+   - when explicit metadata is absent, core falls back to `docker compose config --format json` and checks file-backed secrets, named service volumes, and buildable services
 4. Runs `DockerComposeInit` when init is needed.
 5. Runs `DockerComposeBuild` when images are needed.
 6. Runs `DockerComposeUp`.
@@ -39,7 +40,7 @@ Reconcile status uses Kubernetes-style condition vocabulary for local facts:
 
 | Condition | Meaning |
 |---|---|
-| `Initialized` | Required init artifacts are present, or fallback secret checks pass. |
+| `Initialized` | Required init files and volumes are present, or fallback Compose checks pass. |
 | `ImagesAvailable` | Required local images exist, no build policy requires a build, and build-arg overrides have been applied. |
 | `Reconciled` | No init or build work is needed for this project/spec/override state. |
 
@@ -64,11 +65,12 @@ Create definitions that participate in reconcile should follow these rules:
 1. Keep `DockerComposeInit`, `DockerComposeBuild`, and `DockerComposeUp` idempotent enough to rerun after partial failure.
 2. Make `InitArtifacts` explicit and deterministic. Prefer files such as `.env` and secret files over probing container state.
 3. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` when a generated marker file must match the local host user.
-4. List locally built images in `Images` with the Compose service name, image reference, and build policy.
-5. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for images that should not trigger the build phase.
-6. Avoid global mutable state in lifecycle commands. The same project path, create spec, and override file should produce the same result.
-7. Do not make init destructive. Existing application data must survive a repeated init command.
-8. Keep plugin namespace commands app-specific. Shared lifecycle belongs to core `sitectl compose`.
+4. List named Compose volumes that prove first-start state in `InitVolumes`. Core resolves the actual Docker volume name through `docker compose config`.
+5. List locally built images in `Images` with the Compose service name, image reference, and build policy.
+6. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for images that should not trigger the build phase.
+7. Avoid global mutable state in lifecycle commands. The same project path, create spec, and override file should produce the same result.
+8. Do not make init destructive. Existing application data must survive a repeated init command.
+9. Keep plugin namespace commands app-specific. Shared lifecycle belongs to core `sitectl compose`.
 
 ## Image Overrides
 
