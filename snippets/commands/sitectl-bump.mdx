@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Run Renovate for targeted dependency bumps
+
+```bash
+sitectl bump (--patch|--minor|--major)
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--actions` | `on` | Update GitHub Actions dependencies: on or off. |
+| `--compose` | `on` | Update Docker Compose dependencies: on or off. |
+| `--dependencies` | `on` | Update application dependencies: on or off. |
+| `--dry-run` | `false` | Print Renovate's candidate updates without creating branches or PRs. |
+| `--major` | `false` | Allow major updates only. |
+| `--minor` | `false` | Allow minor updates only. |
+| `--patch` | `false` | Allow patch updates only. |

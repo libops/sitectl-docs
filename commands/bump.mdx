@@ -1,0 +1,49 @@
+---
+title: bump
+description: Run targeted Renovate dependency updates for a sitectl project.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+import BumpCmd from "/snippets/commands/sitectl-bump.mdx";
+
+The `bump` command runs Renovate in Docker for a `sitectl` project. Use it to update <Compose /> image tags, GitHub Actions, and application dependencies without editing dependency files by hand.
+
+Pick exactly one update level:
+
+```bash
+sitectl bump --patch
+sitectl bump --minor
+sitectl bump --major
+```
+
+With `--context`, `sitectl` uses that local context's project directory:
+
+```bash
+sitectl bump --major --context drupal-local
+```
+
+Without `--context`, it uses the current working directory:
+
+```bash
+cd ./drupal
+sitectl bump --minor
+```
+
+Use `--dry-run` to inspect Renovate's candidate updates without creating branches or pull requests:
+
+```bash
+sitectl bump --patch --dry-run
+```
+
+By default, all update scopes are enabled. Turn scopes off when you want a narrower update:
+
+```bash
+sitectl bump --minor --compose=off
+sitectl bump --patch --actions=off --dependencies=off
+```
+
+For non-dry runs, Renovate needs a GitHub token. Set `RENOVATE_TOKEN` or `GITHUB_TOKEN` in the shell before running the command.
+
+## Reference
+
+<BumpCmd />

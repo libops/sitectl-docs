@@ -59,6 +59,7 @@
                 "pages": [
                   "commands/job",
                   "commands/image",
+                  "commands/bump",
                   "commands/compose"
                 ]
               },
