@@ -26,14 +26,28 @@ sitectl set iiif triplet
 # Keep the default local HTTP ingress
 sitectl set ingress enabled --mode http --domain localhost
 
-# Publish the site with a local HTTPS domain
-sitectl set ingress enabled --mode https-default --domain app.localhost
+# Publish the site behind Cloudflare with an Origin CA cert in certs/
+sitectl set ingress enabled --mode https --domain app.example.org
 
 # Publish the site with Let's Encrypt
 sitectl set ingress enabled --mode https-letsencrypt --domain app.example.org --acme-email ops@example.org
+
+# Publish the site with your own certs/cert.pem and certs/privkey.pem
+sitectl set ingress enabled --mode https-custom --domain app.example.org
+
+# Use mkcert for a development context
+sitectl set ingress enabled --mode https-mkcert --domain app.localhost
+
+# Enable local bind mounts and add a Codex cli-sandbox service
+sitectl set dev-mode --assistant --harness codex
+
+# Let the assistant inspect the running Compose stack and Docker daemon
+sitectl set dev-mode enabled --assistant --harness claude --compose-access
 ```
 
 Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`. Run `sitectl converge` after changing them.
+
+`dev-mode --assistant` writes a `cli-sandbox` service into `docker-compose.override.yml` with the plugin's editable code mounts. The service is on the `assistant` profile, so start it explicitly with Docker Compose when you want an interactive coding agent.
 
 ## Namespacing
 

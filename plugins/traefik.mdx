@@ -21,13 +21,25 @@ Use `sitectl set ingress ...` followed by `sitectl converge` for the settings th
 
 ```bash
 sitectl set ingress enabled --mode http --domain localhost
-sitectl set ingress enabled --mode https-default --domain app.localhost
+sitectl set ingress enabled --mode https --domain app.example.org
 sitectl set ingress enabled --mode https-letsencrypt --domain app.example.org --acme-email ops@example.org
+sitectl set ingress enabled --mode https-custom --domain app.example.org
+sitectl set ingress enabled --mode https-mkcert --domain app.localhost
 sitectl set ingress enabled --trusted-ip 203.0.113.10/32 --max-upload-size 2G --upload-timeout 10m
 sitectl converge
 ```
 
 The ingress component updates the Compose Traefik service, dynamic router files, app URL/HTTPS environment values, trusted proxy settings, and upload/read timeout settings together. Application plugins provide the app-specific service names and route files that need to move with those choices.
+
+## TLS Modes
+
+Use `--mode https` for the default Cloudflare path. This configures Traefik for HTTPS with certificates mounted at `certs/cert.pem` and `certs/privkey.pem`; put a Cloudflare Origin CA certificate and private key at those paths, then run `sitectl converge`.
+
+Use `--mode https-letsencrypt` when the hostname resolves directly to the origin and is not proxied through Cloudflare during issuance. This mode requires `--acme-email` and stores ACME state in the `acme-data` Compose volume.
+
+Use `--mode https-custom` when you bring your own certificate pair. Drop the public certificate chain at `certs/cert.pem` and the private key at `certs/privkey.pem`.
+
+Use `--mode https-mkcert` only for development-style contexts such as local, dev, test, qa, or sandbox. sitectl runs `mkcert` for the selected domain and writes the same `certs/cert.pem` and `certs/privkey.pem` files for Traefik.
 
 ## Bot Mitigation
 

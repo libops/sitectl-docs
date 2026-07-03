@@ -58,9 +58,22 @@ That smart port allocation is a development convenience only. It should not be c
 If production runs HTTPS and a developer wants the local site to behave the same way, use the `ingress` component:
 
 ```bash
-sitectl set ingress enabled --mode https-default --domain app.localhost
+sitectl set ingress enabled --mode https-mkcert --domain app.localhost
 sitectl converge
 sitectl compose up --remove-orphans -d
 ```
 
 See [Components](/components) for ingress settings and [Compose commands](/commands/compose) for the local port behavior.
+
+## Assistant Dev Mode
+
+`sitectl set dev-mode --assistant` enables the normal development bind mounts and adds a profiled `cli-sandbox` service to `docker-compose.override.yml`.
+
+```bash
+sitectl set dev-mode --assistant --harness codex
+docker compose --profile assistant run --rm cli-sandbox
+```
+
+The application plugin owns the editable code mount list. For example, Drupal and ISLE mount custom modules, themes, config, and assets; WordPress mounts plugins and themes; OJS and Omeka mount their plugin, module, and theme directories.
+
+Use `--compose-access` only when the coding agent should reach the Compose network and host Docker daemon. That adds the Docker socket mount and socket group to the `cli-sandbox` service. By default, the sandbox keeps its egress firewall enabled and receives `NET_ADMIN`/`NET_RAW`; `--skip-egress-firewall` sets `SKIP_EGRESS_FIREWALL=true` and omits those capabilities.

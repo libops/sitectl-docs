@@ -12,6 +12,15 @@ sitectl converge
 
 Dev mode keeps the stack in the normal Compose model while adding the bind mounts expected for local custom module and theme work. Use ordinary git commands in the project checkout for branch, remote, and upstream management.
 
+To work through a sandboxed coding agent, add the assistant service:
+
+```bash
+sitectl set dev-mode --assistant --harness codex
+docker compose --profile assistant run --rm cli-sandbox
+```
+
+The Drupal plugin supplies the Drupal-specific code mounts; the shared dev-mode component supplies the `cli-sandbox` service.
+
 Disable dev mode the same way:
 
 ```bash

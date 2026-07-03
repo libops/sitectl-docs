@@ -57,15 +57,15 @@ The Islandora plugin currently manages these application components directly:
 | [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl set blazegraph enabled` or `sitectl set blazegraph disabled` |
 | [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl set iiif cantaloupe` or `sitectl set iiif triplet` |
 | [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |
-| `ingress` | Traefik mode, domain, Let's Encrypt email, Drupal URL/HTTPS settings, trusted proxy IPs, and upload/read timeout settings. | `sitectl set ingress enabled --mode https-letsencrypt --domain islandora.example.org --acme-email ops@example.org` |
-| `dev-mode` | Local `docker-compose.override.yml` bind mounts and UID propagation for editable Drupal code. | `sitectl set dev-mode enabled` or `sitectl set dev-mode disabled` |
+| `ingress` | Traefik mode, domain, TLS certificate strategy, Drupal URL/HTTPS settings, trusted proxy IPs, and upload/read timeout settings. | `sitectl set ingress enabled --mode https --domain islandora.example.org` |
+| `dev-mode` | Local `docker-compose.override.yml` bind mounts, UID propagation, ISLE development routers, and optional `cli-sandbox` assistant wiring for editable Drupal code. | `sitectl set dev-mode --assistant --harness codex` or `sitectl set dev-mode disabled` |
 | [`fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, `mergepdf`](/plugins/isle/derivatives) | Whether each derivative microservice runs in this Compose project or uses the managed LibOps endpoint. | `sitectl set homarus distributed` or `sitectl set homarus enabled` |
 
-All ISLE component changes are local-only. Run them against the checkout you intend to modify, review the diff, then commit the generated changes.
+Review component changes through version control before promoting them. Some file mutations can run against remote contexts for QA or recovery, but the normal path is still to run them against the checkout you intend to commit.
 
 ## Shared services and ingress
 
-Islandora contexts use core service commands for shared infrastructure such as MariaDB, Solr, and Traefik status. Use the `ingress` component for TLS mode, domain, Let's Encrypt settings, trusted proxies, and upload/read timeout settings. The Islandora plugin supplies Drupal-specific route and override wiring where the stack needs it.
+Islandora contexts use core service commands for shared infrastructure such as MariaDB, Solr, and Traefik status. Use the `ingress` component for TLS mode, domain, Cloudflare Origin CA, Let's Encrypt, custom certificates, mkcert development certificates, trusted proxies, and upload/read timeout settings. The Islandora plugin supplies Drupal-specific route and override wiring where the stack needs it.
 
 ## Component set
 

@@ -79,8 +79,10 @@ All application stacks use Traefik for ingress. Traefik is therefore a first-cla
 Core ingress component support must cover:
 
 - `http` for plain local or internal HTTP
-- `https-default` for certificates mounted from the app template
-- `https-letsencrypt` for ACME-managed production certificates
+- `https` / `https-cloudflare-origin` for Cloudflare Origin CA certificates mounted at `certs/cert.pem` and `certs/privkey.pem`
+- `https-letsencrypt` for ACME-managed certificates when the hostname resolves directly to the origin
+- `https-custom` for an operator-supplied certificate and private key pair mounted at the same paths
+- `https-mkcert` for mkcert-generated development certificates
 - domain and ACME email values stored directly in Compose and dynamic Traefik config
 - trusted upstream proxy IPs and upload/read timeout tuning
 

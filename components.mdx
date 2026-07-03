@@ -109,13 +109,13 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
     Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
   </Accordion>
   <Accordion title="ingress">
-    Controls public URL behavior for Traefik-backed applications. The default is `enabled --mode http --domain localhost`, so new stacks start at `http://localhost`. Use `enabled` with `--mode http|https-default|https-letsencrypt`, `--domain`, `--acme-email`, `--trusted-ip`, `--max-upload-size`, and `--upload-timeout` to update Traefik commands, dynamic router config, app URL environment values, trusted proxy settings, and upload/read timeout settings together.
+    Controls public URL behavior for Traefik-backed applications. The default is `enabled --mode http --domain localhost`, so new stacks start at `http://localhost`. Use `enabled` with `--mode http|https|https-letsencrypt|https-custom|https-mkcert`, `--domain`, `--acme-email`, `--trusted-ip`, `--max-upload-size`, and `--upload-timeout` to update Traefik commands, dynamic router config, app URL environment values, trusted proxy settings, and upload/read timeout settings together. `https` is the Cloudflare Origin CA path; `https-custom` reads `certs/cert.pem` and `certs/privkey.pem`; `https-mkcert` generates that pair for development contexts.
   </Accordion>
   <Accordion title="bot-mitigation">
     Controls Cloudflare Turnstile-backed Traefik challenge middleware where the application plugin supports it. Use `on` to install captcha-protect wiring and `off` to remove the middleware.
   </Accordion>
   <Accordion title="dev-mode">
-    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and host bind mounts for editable code. Use `disabled` to remove the override.
+    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and plugin-declared host bind mounts for editable code. Add `--assistant` to include a profiled `cli-sandbox` coding-agent service using the same plugin-owned code mounts. Use `--harness codex|claude|pi|opencode|gemini`, `--model default|MODEL|URL`, `--compose-access`, and `--skip-egress-firewall` to tune that assistant container. Use `disabled` to remove the override.
   </Accordion>
 </AccordionGroup>
 

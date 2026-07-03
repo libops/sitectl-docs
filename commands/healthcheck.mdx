@@ -18,8 +18,8 @@ condition: service_healthy` relationship between the app container and MariaDB.
 For route checks, plugins resolve the public URL from Traefik's Compose command,
 file-provider mount, dynamic router config, TLS settings, and locally published
 ports. That keeps healthchecks aligned with `ingress` changes such as switching
-between `http`, `https-default`, and `https-letsencrypt`, publishing a new
-domain, or using a local override like `8080:80`. Localhost-style URLs are tested
+between `http`, `https`, `https-letsencrypt`, `https-custom`, and `https-mkcert`,
+publishing a new domain, or using a local override like `8080:80`. Localhost-style URLs are tested
 from the host at the resolved public URL, so a failed route check points at the
 same URL an operator would open in a browser.
 
