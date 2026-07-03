@@ -19,7 +19,9 @@ The template is intentionally thin. The application repository owns the Compose 
 | Shared service operations | Core `sitectl` | `sitectl mariadb backup`, `sitectl solr info`, `sitectl traefik status` |
 | Cross-cutting reports | Core command plus plugin runner | `sitectl debug`, `sitectl validate`, `sitectl healthcheck` |
 
-New app plugins should usually call `RegisterComposeTemplateCreateRunner`, not `RegisterStandardComposeTemplate`. The latter still exists for plugins that deliberately want direct namespace lifecycle commands, but first-class app plugins should let core `sitectl compose` provide the shared lifecycle surface.
+New app plugins should usually call `RegisterStandardComposeAppPlugin`. That helper registers the common compose-backed plugin shape in one place: project discovery, create metadata, ingress component wiring, dev-mode wiring, healthcheck registration, and public route discovery.
+
+Use the lower-level `RegisterComposeTemplateCreateRunner` only when an app plugin needs custom registration behavior. Avoid `RegisterStandardComposeTemplate` for first-class app plugins unless the plugin deliberately wants direct namespace lifecycle commands; core `sitectl compose` should provide the shared lifecycle surface.
 
 ## Create Definition Contract
 
@@ -66,6 +68,48 @@ func createDefinition() plugin.CreateSpec {
 }
 ```
 
+## Standard App Registration
+
+Most application plugins should keep `main` small and declarative:
+
+```go
+sdk := plugin.NewSDK(plugin.Metadata{
+    Name:        "example",
+    Description: "Example application plugin",
+})
+
+sdk.MustRegisterStandardComposeAppPlugin(plugin.StandardComposeAppPluginOptions{
+    DisplayName:  "Example",
+    AppService:   "example",
+    Router:       "example",
+    DefaultPath:  "./example",
+    ReadyMessage: "Example is ready.",
+    CreateSpec:   createDefinition(),
+    CreateOptions: plugin.ComposeTemplateCreateOptions{
+        DefaultDatabaseService:        "mariadb",
+        DefaultDatabaseUser:           "example",
+        DefaultDatabasePasswordSecret: "APP_DB_PASSWORD",
+        DefaultDatabaseName:           "example",
+    },
+    IngressOptions: coretraefik.IngressOptions{
+        AppService: "example",
+    },
+    DevModeOptions: coredevmode.Options{
+        AppService: "example",
+        Volumes: []string{
+            "./rootfs/app/plugins:/var/www/app/plugins:rw",
+        },
+    },
+    Healthcheck: plugin.StandardComposeWebHealthcheck(plugin.StandardComposeWebHealthcheckOptions{
+        AppService:      "example",
+        TraefikRouter:   "example",
+        DatabaseService: "mariadb",
+    }),
+})
+```
+
+The helper is intentionally a registration helper, not a new runtime abstraction. App behavior still lives in the template repository, buildkit image, or app-specific plugin command where it belongs.
+
 `DockerComposeInit` should be idempotent. It may run an `init` service and write deterministic secret files. It must not destroy existing application data when run again.
 
 `DockerComposeRollout` should keep rollout commands in plugin metadata, not in a template `scripts/rollout.sh` or Makefile target. Core rollout/deploy handles git sync from the checkout's configured upstream branch when one exists, then runs the plugin's Compose rollout commands.
@@ -101,7 +145,7 @@ After creating a repository from `sitectl-app-tmpl`:
 1. Rename the Go module, binary, plugin name, display name, and release workflow outputs.
 2. Set `TemplateRepo`, `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants.
 3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, `InitVolumes`, and `Images` to match the real template repository.
-4. Tune project discovery in `SetComposeProjectDiscovery`. Use service names and durable codebase markers that identify the real project.
+4. Prefer `RegisterStandardComposeAppPlugin`; tune its `Discovery` option only when service-name detection is not enough.
 5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
 6. Use core service commands for shared operations. For example, document `sitectl mariadb backup app` rather than adding a thin app plugin alias.
 7. Implement debug, validate, and healthcheck runners through the SDK. Results should be structured; progress and diagnostics should go to stderr.
