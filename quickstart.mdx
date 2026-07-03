@@ -50,7 +50,7 @@ The core workflow commands form a natural progression:
     ```bash
     sitectl set fcrepo off
     sitectl set iiif triplet
-    sitectl set ingress enabled --mode https-default --domain app.localhost
+    sitectl set ingress enabled --mode https-mkcert --domain app.localhost
     ```
 
     New stacks default to `http://localhost`. Ingress settings such as TLS mode, domain, trusted proxies, and upload limits are handled by the `ingress` component.

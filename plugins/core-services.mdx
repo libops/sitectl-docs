@@ -11,7 +11,7 @@ Core service commands are built into `sitectl` for infrastructure behavior that 
 sitectl mariadb backup
 sitectl solr status
 sitectl traefik status
-sitectl set ingress enabled --mode https-letsencrypt --domain app.example.org --acme-email ops@example.org
+sitectl set ingress enabled --mode https --domain app.example.org
 ```
 
 The boundary is ownership:
@@ -23,7 +23,7 @@ This keeps common operations consistent across Drupal, Islandora, WordPress, OJS
 
 ## Ingress is a component
 
-TLS mode selection, domain publication, Let's Encrypt settings, trusted upstream proxies, and upload/read timeout tuning belong to the `ingress` component. App plugins supply app-specific router names, route files, and service environment values so a single component update can keep Traefik and the application aligned.
+TLS mode selection, domain publication, Cloudflare Origin CA, Let's Encrypt settings, custom certificates, mkcert development certificates, trusted upstream proxies, and upload/read timeout tuning belong to the `ingress` component. App plugins supply app-specific router names, route files, and service environment values so a single component update can keep Traefik and the application aligned.
 
 ## Service areas
 

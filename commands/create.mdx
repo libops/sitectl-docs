@@ -51,6 +51,31 @@ Plugin-specific create flags (for example `--path`, `--type`, `--checkout-source
 `--setup-only`, or ISLE's `--fcrepo` and `--blazegraph`) still go after the target,
 because they belong to the plugin's create runner.
 
+## Remote Prerequisites
+
+For `--type remote`, the standard create runner checks the SSH target before cloning
+or starting the stack. The remote host needs `git`, `make`, Docker, the Docker
+Compose v2 plugin, and Docker daemon access for the SSH user.
+
+If those tools are missing on a supported mutable host, sitectl asks before installing
+or starting them. Pass `--yolo` for unattended QA or automation:
+
+```bash
+sitectl create wp/default \
+  --type remote \
+  --checkout-source template \
+  --ssh-hostname 203.0.113.10 \
+  --ssh-user root \
+  --ssh-key ~/.ssh/id_ed25519 \
+  --yolo
+```
+
+Supported automatic bootstrap paths are Ubuntu/Debian through `apt`, Fedora/RHEL
+through `dnf` or `yum`, and Fedora CoreOS through `rpm-ostree`. Fedora CoreOS package
+layering requires a reboot, so rerun `sitectl create` after the host comes back.
+Google Container-Optimized OS is detected separately: sitectl can start Docker if
+that is the only missing item, but it will not try to install host packages on COS.
+
 ## Setup-Only and First Start
 
 `--setup-only` creates the local checkout and context without starting the stack. A fresh template checkout may still run clone-time init. For plugin-owned local contexts, the first later `sitectl compose up` checks the plugin's declared init artifacts and images, then runs any remaining init or build commands before starting Compose:
