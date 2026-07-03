@@ -8,7 +8,7 @@ import BumpCmd from "/snippets/commands/sitectl-bump.mdx";
 
 The `bump` command runs Renovate in Docker for a `sitectl` project. Use it to update <Compose /> image tags, GitHub Actions, and application dependencies without editing dependency files by hand.
 
-Pick exactly one update level:
+Pick exactly one update level. Levels are cumulative: `--minor` includes patch updates, and `--major` includes minor and patch updates.
 
 ```bash
 sitectl bump --patch
