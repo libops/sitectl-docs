@@ -32,7 +32,7 @@ sitectl libops create project \
   --region us-central1 \
   --zone us-central1-f \
   --machine-type e2-standard-2 \
-  --disk-size-gb 20
+  --disk-size-gb 100
 
 sitectl libops create site \
   --project-id "$PROJECT_ID" \
@@ -82,3 +82,5 @@ Delete commands prompt before removing resources. Pass `--yes` for automation:
 sitectl libops delete site "$SITE_ID"
 sitectl libops delete project "$PROJECT_ID" --yes
 ```
+
+Delete commands start irreversible removal of the selected resource and its managed infrastructure. Back up data before requesting deletion; LibOps cannot guarantee recovery after deletion starts.
