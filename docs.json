@@ -7,7 +7,7 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.ico",
+  "favicon": "/logo/libops-vertical.png",
   "navigation": {
     "tabs": [
       {
@@ -119,12 +119,6 @@
             ]
           },
           {
-            "group": "Triplet",
-            "pages": [
-              "plugins/triplet"
-            ]
-          },
-          {
             "group": "Valkey",
             "pages": [
               "plugins/valkey"
@@ -168,6 +162,7 @@
               "plugins/isle/fcrepo",
               "plugins/isle/blazegraph",
               "plugins/isle/iiif",
+              "plugins/triplet",
               "plugins/isle/derivatives",
               "plugins/isle/sync",
               "plugins/isle/cache"

@@ -44,8 +44,8 @@ The core workflow commands form a natural progression:
 
     Exits with an error if anything is wrong. Safe to run any time.
   </Step>
-  <Step title="Record a configuration choice">
-    Use `sitectl set` to turn optional features on or off. This records your intent but does not immediately change project files.
+  <Step title="Apply a configuration choice">
+    Use `sitectl set` to turn optional features on or off. The command previews risky changes, asks for confirmation when needed, and updates the component-owned project files immediately.
 
     ```bash
     sitectl set fcrepo off
@@ -55,8 +55,8 @@ The core workflow commands form a natural progression:
 
     New stacks default to `http://localhost`. Ingress settings such as TLS mode, domain, trusted proxies, and upload limits are handled by the `ingress` component.
   </Step>
-  <Step title="Apply changes">
-    Use `sitectl converge` to bring project files into alignment with the current desired state. Run `--report` first to preview what would change.
+  <Step title="Inspect or repair drift">
+    Use `sitectl converge` after manual edits or an upstream update to inspect component drift and repair only components that are out of alignment. `set` changes do not require this extra step.
 
     ```bash
     sitectl converge --report   # preview

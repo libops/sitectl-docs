@@ -5,7 +5,7 @@ description: Detect and repair component configuration drift.
 
 import ConvergeCmd from "/snippets/commands/sitectl-converge.mdx";
 
-Use `converge` when component files have drifted from what sitectl expects, for example after pulling new upstream changes or toggling a component with `sitectl set`. It reads each component's desired state and applies any missing changes.
+Use `converge` when component files have drifted from the state represented by the project, for example after pulling upstream changes or editing component-owned files by hand. `sitectl set` applies its change immediately and does not require a follow-up converge.
 
 ## Reference
 
@@ -26,7 +26,7 @@ sitectl converge --component fcrepo
 
 ## Relationship to validate
 
-`sitectl validate` tells you *whether* something has drifted. `sitectl converge` fixes it. Run validate first to understand what needs to change, then converge to apply it.
+`sitectl validate` tells you *whether* something has drifted. `sitectl converge` repairs drifted components while preserving components that are already in a valid enabled or disabled state. Run validate first to understand what needs to change.
 
 ## Plugin flags
 

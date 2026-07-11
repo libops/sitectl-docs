@@ -1,0 +1,21 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Create a new site
+
+```bash
+sitectl libops create site
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--application-type` |   | Type of application (drupal, ojs, wordpress, omeka-classic, omeka-s, archivesspace, islandora) |
+| `--compose-file` | `docker-compose.yml` | Docker compose file name |
+| `--compose-path` | `/mnt/disks/data/compose` | Path to docker-compose directory |
+| `--github-ref` |   | GitHub reference (e.g., heads/main, tags/v1.0) |
+| `--github-repository` |   | GitHub repository URL (required) |
+| `--init-cmd` | `[]` | Commands to run on initial setup |
+| `--name` |   | Site name (required) |
+| `--port` | `80` | Port the application listens on |
+| `--project-id` |   | Project ID (required) |
+| `--rollout-cmd` | `[]` | Commands to run during rollout |
+| `--up-cmd` | `[]` | Commands to start containers |

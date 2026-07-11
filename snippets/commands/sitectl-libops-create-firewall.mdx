@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Create a firewall rule for an organization, project, or site. Specify one of `--organization-id`, `--project-id`, or `--site-id`.
+
+```bash
+sitectl libops create firewall
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--cidr` |   | CIDR block (required) |
+| `--name` |   | Firewall rule name (required) |
+| `--organization-id` |   | Organization ID |
+| `--project-id` |   | Project ID |
+| `--site-id` |   | Site ID |
+| `--type` | `FIREWALL_RULE_TYPE_HTTPS_ALLOWED` | Rule type: FIREWALL_RULE_TYPE_HTTPS_ALLOWED (allow HTTPS), FIREWALL_RULE_TYPE_SSH_ALLOWED (allow SSH), FIREWALL_RULE_TYPE_BLOCKED (block traffic) |

@@ -1,13 +1,24 @@
 ---
 title: composer
-description: Run Composer commands inside the active WordPress stack.
+description: Run Composer commands against the active WordPress checkout.
 ---
 
-Run Composer in the WordPress container:
+Run Composer in a one-shot container with the active project checkout mounted at `/workspace`:
 
 ```bash
 sitectl wp composer
+sitectl wp composer require vendor/package
 sitectl wp composer update vendor/package
 ```
 
-With no arguments, this runs `composer install --no-interaction`.
+With no arguments, this runs `composer install --no-interaction`. The helper uses
+the host user's UID and GID, bind-mounts the project root, and runs Composer from
+that mounted checkout. Commands such as `require`, `remove`, and `update` therefore
+persist changes to the checked-in `composer.json` and `composer.lock` instead of
+modifying the disposable application image.
+
+Composer also populates the Bedrock installer destinations at `web/app/mu-plugins`,
+`web/app/plugins`, and `web/app/themes`. WordPress `dev-mode` bind-mounts all three
+directories so the running application sees a local install immediately. With dev
+mode disabled, rebuild and deploy after changing Composer dependencies so the
+application image is recreated from the updated lockfile.

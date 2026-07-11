@@ -1,49 +1,38 @@
 ---
-title: Triplet plugin
-description: Standalone Triplet sitectl workflows and reusable Triplet service component support.
+title: Triplet service
+description: How the ISLE plugin manages Triplet as the local or distributed IIIF implementation.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-The Triplet plugin provides a standalone Triplet <Compose /> template and exports the reusable `triplet` service component for application plugins.
+Triplet is the default IIIF implementation in the LibOps ISLE template. It is managed by the ISLE plugin's `iiif` and `iiif-topology` components rather than by a separate `sitectl-triplet` binary or lifecycle namespace.
 
-The plugin binary is `sitectl-triplet`. The command namespace is `sitectl triplet`, and contexts created by this plugin use `plugin: triplet`.
-
-## Create
-
-Start a standalone Triplet project:
+## Select Triplet
 
 ```bash
-sitectl create triplet
+sitectl set iiif triplet
 ```
 
-The create flow clones the Triplet template, configures a sitectl context, and uses the template's Makefile targets for initialization and lifecycle commands.
-
-## Lifecycle
-
-Run lifecycle commands against the active Triplet context:
+This adds the Triplet service, derivative cache, Traefik route, and Drupal IIIF URL expected by the Islandora stack. Use core Compose commands for its runtime lifecycle:
 
 ```bash
-sitectl triplet init
-sitectl triplet up
-sitectl triplet down
-sitectl triplet status
-sitectl triplet logs
-sitectl triplet rollout
+sitectl compose up -d
+sitectl compose logs triplet
+sitectl compose ps triplet
 ```
 
-Project discovery claims local Compose projects that contain a `triplet` service, so `--context .` can resolve a checked-out Triplet project without a saved context.
+## Local or Distributed
 
-## Service component
-
-Application plugins can import the Triplet component package and register it with their own target rules. The component supports `enabled`, `disabled`, and `distributed` dispositions.
+Keep Triplet in the Compose project with the default local topology:
 
 ```bash
-sitectl component describe triplet
-sitectl component set triplet enabled
-sitectl component set triplet disabled
-sitectl component set triplet distributed
+sitectl set iiif-topology disabled
 ```
 
-Use `distributed` when the application should point at an external Triplet service instead of managing Triplet in the current Compose project.
+Point the production stack at an external Triplet endpoint while retaining local development wiring with:
 
+```bash
+sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu
+```
+
+See [IIIF components](/plugins/isle/iiif) for the complete Cantaloupe/Triplet and topology contract.

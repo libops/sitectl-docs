@@ -6,6 +6,17 @@ description: Install or upgrade sitectl with Homebrew, native Linux packages, or
 Select a tab for the core `sitectl` command or one of its plugins to see install and upgrade instructions.
 When you install a `sitectl` plugin with Homebrew or Linux packages, the package manager also installs the core `sitectl` command.
 
+Core and plugins are separately built executables. Current application-plugin releases use the v0.37 SDK and require `sitectl` 0.37.0 or newer. Debian, RPM, and APK packages encode that minimum dependency; Homebrew installs the current core formula first. If you install release binaries manually, upgrade core and every plugin you use as one tested set:
+
+```bash
+sitectl --version
+sitectl-drupal --version
+sitectl-isle --version
+sitectl create list
+```
+
+Installing a new core binary does not change the SDK and lifecycle metadata embedded in an older plugin binary. A protocol error or missing lifecycle behavior after an upgrade is an installation/version problem, not a project migration; update the plugin before changing project files.
+
 <Tabs>
   <Tab title="sitectl">
 
@@ -208,6 +219,8 @@ brew install libops/homebrew/sitectl-isle
 
 Homebrew will also install `sitectl` and `sitectl-drupal` as dependencies.
 
+The current ISLE release line requires core `sitectl` 0.37.0 or newer and `sitectl-drupal` 0.10.0 or newer. Homebrew satisfies this by publishing core, then Drupal, then ISLE formulas.
+
 To upgrade later:
 
 ```bash
@@ -245,7 +258,7 @@ sudo dnf install sitectl-isle
 
 </CodeGroup>
 
-The package manager will also install `sitectl` and `sitectl-drupal` as dependencies.
+The package manager will also install `sitectl` 0.37.0 or newer and `sitectl-drupal` 0.10.0 or newer as dependencies.
 
 To upgrade later:
 
@@ -290,5 +303,58 @@ make build
 To upgrade a binary install, download the newest release or rebuild from the latest source, then replace the existing binary in your `$PATH`.
 
 Once `sitectl-isle` is on your system, put the binary in a directory that is in your `$PATH`.
+  </Tab>
+
+  <Tab title="Application plugins">
+
+Install the plugin for each application template you operate. Package names and release repositories are:
+
+| Application | Package | Releases |
+|---|---|---|
+| ArchivesSpace | `sitectl-archivesspace` | [GitHub releases](https://github.com/libops/sitectl-archivesspace/releases/latest) |
+| OJS | `sitectl-ojs` | [GitHub releases](https://github.com/libops/sitectl-ojs/releases/latest) |
+| Omeka Classic | `sitectl-omeka-classic` | [GitHub releases](https://github.com/libops/sitectl-omeka-classic/releases/latest) |
+| Omeka S | `sitectl-omeka-s` | [GitHub releases](https://github.com/libops/sitectl-omeka-s/releases/latest) |
+| WordPress | `sitectl-wp` | [GitHub releases](https://github.com/libops/sitectl-wp/releases/latest) |
+
+## Homebrew
+
+```bash
+brew tap libops/homebrew https://github.com/libops/homebrew
+brew install libops/homebrew/sitectl-ojs
+```
+
+Replace `sitectl-ojs` with the package from the table. Homebrew installs core `sitectl` as a dependency. Upgrade with `brew update` and `brew upgrade libops/homebrew/PACKAGE`.
+
+## Linux Packages
+
+After configuring the LibOps package repository from the `sitectl` tab, install the selected plugin by package name:
+
+<CodeGroup>
+
+```bash Debian / Ubuntu
+sudo apt update
+sudo apt install sitectl-ojs
+```
+
+```bash Fedora / Rocky / RHEL
+sudo dnf install sitectl-ojs
+```
+
+</CodeGroup>
+
+The package manager installs core `sitectl` as a dependency. Use the same package name with `apt install --only-upgrade` or `dnf upgrade` later.
+
+## Binary Install
+
+Download the plugin from its release link in the table, place `sitectl-<app>` in the same `$PATH` as core `sitectl`, and verify discovery:
+
+```bash
+sitectl create list
+```
+
+Core discovers plugin binaries by name from `$PATH`; there is no separate registration file.
+
+For a manual binary installation, run both `sitectl --version` and `sitectl-PACKAGE --version` after every upgrade. Keep the previous binaries available until `sitectl create list`, `sitectl validate`, and the relevant plugin help command work with the new set.
   </Tab>
 </Tabs>

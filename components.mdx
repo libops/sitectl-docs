@@ -13,7 +13,7 @@ When a plugin defines a component, sitectl can:
 
 - **Ask about it during site creation**, prompting you to enable or disable it before the first launch.
 - **Report its current state.** `sitectl component describe` lists all components registered by the active context's plugin and shows whether each one is on, off, or out of alignment with the project files.
-- **Apply state changes safely.** `sitectl set <name> <on|off>` records the desired state, and `sitectl converge` applies the resulting file changes with a confirmation step before anything destructive happens.
+- **Apply state changes safely.** `sitectl set <name> <on|off>` previews the transition, confirms destructive changes, and updates the component-owned files immediately. `sitectl converge` is for later drift repair.
 
 ## Component states
 
@@ -65,7 +65,7 @@ sitectl set blazegraph on
 sitectl set isle/fcrepo off
 ```
 
-After running `sitectl set`, the desired state is recorded but project files are not yet changed. Follow up with `sitectl converge` to apply the change.
+After a successful `sitectl set`, the relevant <Compose /> and application configuration files are already updated. Review and commit those changes in the downstream template fork.
 
 <Warning>
   Component changes can rewrite <Compose /> files and Drupal configuration sync files. Make sure you have a recent backup before enabling or disabling components on a production site.
@@ -84,7 +84,7 @@ sitectl converge
 sitectl converge --component fcrepo
 ```
 
-`converge` compares each component's expected configuration against the project files on disk and repairs any differences. Use `--report` to review changes before applying them.
+`converge` detects the component state represented by the project, compares its owned files with that state, and repairs drifted components. It does not read a separate persistent desired-state store. Use `--report` to review drift before applying repairs.
 
 ## The create flow
 
@@ -94,13 +94,13 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
 
 <AccordionGroup>
   <Accordion title="fcrepo">
-    Fedora Commons repository. Controls whether Fedora services, volumes, Alpaca indexing, Drupal Fedora config, and filesystem URI rewrites are included in the stack. Use `enabled` for the standard Fedora-backed Islandora repository or `superceded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
+    Fedora Commons repository. The LibOps default is `superceded` with Drupal private files. Use `enabled` for a Fedora-backed Islandora repository or `superceded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
   </Accordion>
   <Accordion title="blazegraph">
-    Blazegraph triple store. Controls the Blazegraph service, volume, Alpaca triplestore indexing, Drupal triplestore namespace, and managed triplestore actions. Use `enabled` for standard RDF/SPARQL indexing or `disabled` for stacks that do not use linked data queries. See [Blazegraph](/plugins/isle/blazegraph).
+    Blazegraph triple store. The LibOps default is `disabled`. Use `enabled` for RDF/SPARQL indexing or `disabled` for stacks that do not use linked data queries. See [Blazegraph](/plugins/isle/blazegraph).
   </Accordion>
   <Accordion title="iiif">
-    Controls which IIIF image server implementation the stack uses. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL. `triplet` replaces it with Triplet, routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
+    Controls which IIIF image server implementation the stack uses. The LibOps default is `triplet`. `cantaloupe` keeps the Cantaloupe service and `/cantaloupe/iiif/2` Drupal URL; `triplet` routes `/iiif`, writes Triplet config, and updates Drupal to use `/iiif/3`. See [IIIF components](/plugins/isle/iiif).
   </Accordion>
   <Accordion title="iiif-topology">
     Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. See [IIIF components](/plugins/isle/iiif).

@@ -1,0 +1,116 @@
+name: docs-check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out documentation
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - name: Check out sitectl
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl
+          path: .dependencies/cli/sitectl
+          persist-credentials: false
+
+      - name: Check out sitectl-archivesspace
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-archivesspace
+          path: .dependencies/cli/sitectl-archivesspace
+          persist-credentials: false
+
+      - name: Check out sitectl-drupal
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-drupal
+          path: .dependencies/cli/sitectl-drupal
+          persist-credentials: false
+
+      - name: Check out sitectl-isle
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-isle
+          path: .dependencies/cli/sitectl-isle
+          persist-credentials: false
+
+      - name: Check out sitectl-libops
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-libops
+          path: .dependencies/cli/sitectl-libops
+          persist-credentials: false
+
+      - name: Check out sitectl-ojs
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-ojs
+          path: .dependencies/cli/sitectl-ojs
+          persist-credentials: false
+
+      - name: Check out sitectl-omeka-classic
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-omeka-classic
+          path: .dependencies/cli/sitectl-omeka-classic
+          persist-credentials: false
+
+      - name: Check out sitectl-omeka-s
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-omeka-s
+          path: .dependencies/cli/sitectl-omeka-s
+          persist-credentials: false
+
+      - name: Check out sitectl-wp
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: libops/sitectl-wp
+          path: .dependencies/cli/sitectl-wp
+          persist-credentials: false
+
+      - name: Link snippet generator dependencies
+        shell: bash
+        run: |
+          dependency_root="$GITHUB_WORKSPACE/../../cli"
+          mkdir -p "$dependency_root"
+          for repository in sitectl sitectl-archivesspace sitectl-drupal sitectl-isle sitectl-libops sitectl-ojs sitectl-omeka-classic sitectl-omeka-s sitectl-wp; do
+            ln -sfn "$GITHUB_WORKSPACE/.dependencies/cli/$repository" "$dependency_root/$repository"
+          done
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: "1.26.x"
+          cache-dependency-path: scripts/gen-docs-snippets/go.sum
+
+      - name: Check generated command references
+        run: make docs-snippets-check
+
+      - name: Remove generator checkouts before docs validation
+        run: rm -rf .dependencies
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "22.x"
+
+      - name: Validate documentation build and links
+        run: make docs-check

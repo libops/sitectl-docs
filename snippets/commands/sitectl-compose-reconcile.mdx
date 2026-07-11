@@ -2,10 +2,13 @@
 
 Run plugin Docker Compose init/build/up reconciliation.
 
-This is the same lifecycle repair path sitectl runs automatically before
-`sitectl compose up` for plugin-managed local Compose projects. Use `--force` to
-rerun build/up even when the project is cached as current. Use `--reset-init` to
-remove plugin-declared init artifacts and init volumes before reconciling.
+This is the same lifecycle repair path sitectl runs automatically before a
+plain full-stack `sitectl compose up` for plugin-managed local Compose projects.
+Starts with additional Compose flags or selected services pass through unchanged;
+run this command explicitly first when those starts also need lifecycle repair.
+Use `--force` to rerun build/up even when the project is cached as current. Use
+`--reset-init` to remove plugin-declared init artifacts and init volumes before
+reconciling.
 
 ```bash
 sitectl compose reconcile

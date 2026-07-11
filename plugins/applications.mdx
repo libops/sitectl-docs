@@ -34,6 +34,10 @@ Application plugins still publish create definitions and app-specific helpers. C
 see [Compose reconcile contract](/contributing/compose-reconcile) for the contributor
 contract.
 
+For OJS, Omeka, and ArchivesSpace, the published LibOps base-image tag names the upstream application release and the downstream template image adds local customizations. Drupal, ISLE, and WordPress keep Composer-owned application dependencies in the downstream checkout. The plugin create metadata mirrors that ownership so `compose up` and `deploy` rebuild the correct layer. Mixing a bundled application tree with a second Composer-owned copy is unsupported because neither layer would have unambiguous ownership.
+
+Tracked dependency services use `tag@sha256:digest` references. Local `sitectl image` overrides may intentionally test another tag, image, or build argument, but production updates should move the tracked tag and digest together and pass the application's backup and migration gate.
+
 For common MariaDB-backed web apps, plugins can use the shared healthcheck runner
 instead of repeating route, MariaDB, and Compose dependency checks. App-specific
 checks still belong in the plugin, such as Solr core checks or optional Islandora

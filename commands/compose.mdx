@@ -22,7 +22,7 @@ See [Managed applications](/apps) for the application template Compose contract.
 
 ## Reconcile
 
-For local plugin-owned contexts, `sitectl compose up` can perform a reconcile before handing off to Docker Compose. It reads the plugin's default create definition, checks init artifacts, declared volumes, and local image metadata, then runs the plugin's init and build commands when they are still needed.
+For local plugin-owned contexts, a plain full-stack `sitectl compose up` can perform a reconcile before handing off to Docker Compose. It reads the plugin's default create definition, checks init artifacts, declared volumes, and local image metadata, then runs the plugin's init and build commands when they are still needed.
 
 This lets a setup-only checkout start cleanly:
 
@@ -37,6 +37,13 @@ You can also run reconcile explicitly:
 sitectl compose reconcile
 sitectl compose reconcile --force
 sitectl compose reconcile --reset-init
+```
+
+An `up` with additional behavior flags, profiles, or selected services passes through unchanged so sitectl does not replace the requested operation with a plugin's full-stack start. Run reconcile explicitly first in workflows such as:
+
+```bash
+sitectl compose reconcile
+sitectl compose up --wait drupal
 ```
 
 The reconcile cache is local to the workstation and expires after 7 days. `--force` ignores the cache and reruns build/up. `--reset-init` removes plugin-declared init artifacts and init volumes, clears the cache entry, then reconciles again.

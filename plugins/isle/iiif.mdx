@@ -12,7 +12,7 @@ The ISLE plugin manages IIIF with two related components:
 
 | Component | Dispositions | Default | Managed changes |
 |---|---|---|---|
-| `iiif` | `cantaloupe`, `triplet` | `cantaloupe` | Compose services and volumes, `conf/traefik/cantaloupe.yml`, `conf/traefik/triplet.yml`, `conf/triplet/config.yaml`, Drupal's Cantaloupe URL, and `robots.txt` IIIF route hints. |
+| `iiif` | `cantaloupe`, `triplet` | `triplet` | Compose services and volumes, `conf/traefik/cantaloupe.yml`, `conf/traefik/triplet.yml`, `conf/triplet/config.yaml`, Drupal's Cantaloupe URL, and `robots.txt` IIIF route hints. |
 | `iiif-topology` | `disabled`, `distributed` | `disabled` | Base Compose service placement, Drupal's Cantaloupe URL, Traefik `IIIF_UPSTREAM_URL`, and `docker-compose.dev.yml` local override settings. |
 
 ## Use Triplet Locally

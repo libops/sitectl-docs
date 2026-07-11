@@ -5,7 +5,7 @@ description: Pull updates and restart services for the active context.
 
 import DeployCmd from "/snippets/commands/sitectl-deploy.mdx";
 
-Use `deploy` to apply a full update cycle to a running site: update the checkout when the active branch has a git upstream, update images, and restart services. It handles the down/pull/up sequence in the correct order, including any plugin-registered hooks.
+Use `deploy` to apply a full update cycle to a running site: update the checkout when the active branch has a git upstream, update images, rebuild the downstream application image, run supported schema migrations, and restart services. It uses the active plugin's declared rollout when available and otherwise falls back to the generic pull/down/up sequence.
 
 ## Reference
 
@@ -13,12 +13,25 @@ Use `deploy` to apply a full update cycle to a running site: update the checkout
 
 ## Deploy sequence
 
-1. Plugin pre-down hooks (if the context plugin registers a deploy runner)
-2. `docker compose down`
-3. `git pull --ff-only` on the current upstream branch (skipped with `--skip-git`; `--branch` checks out a branch first)
-4. `docker compose pull` (skipped with `--no-pull`)
-5. `docker compose up -d --remove-orphans`
+1. `git pull --ff-only` on the current upstream branch (skipped with `--skip-git`; `--branch` checks out a branch first). This runs while the existing site is still online, so a checkout or network failure does not stop a healthy site.
+2. Resolve plugin rollout metadata, then run the generic pull or the plugin rollout's leading Compose pull while the current site is still online. Registry, authentication, or missing-image failures therefore leave the healthy stack running.
+3. Plugin pre-down hooks (if the context plugin registers a deploy runner)
+4. `docker compose down --remove-orphans`, using the updated Compose definition
+5. The plugin's remaining ordered rollout commands, which can rebuild the application, initialize missing artifacts, start services, run bounded automatic migration/health gates, or emit an explicit manual migration gate. Any failing command stops the deploy. A plugin without rollout metadata runs `docker compose up -d --remove-orphans` here.
 6. Plugin post-up hooks
+
+`--no-pull` skips explicit `docker compose pull` commands in either path. It does not remove `--pull` from an application build or prevent `compose up --pull missing` from obtaining an image that is absent locally.
+
+## Migration Gates
+
+The rollout is application-owned after the shared Git/pull/build boundary:
+
+- Drupal and ISLE wait for the Drupal service, then run `drush updb -y` and `drush cr`. Either failure fails the deploy, and a bounded final health wait must pass.
+- WordPress waits for installation and runs `wp core update-db`; a database-update failure fails the deploy, and a bounded final health wait must pass.
+- OJS waits for installation and runs `php tools/upgrade.php upgrade`; a migration failure fails the deploy, and a bounded final health wait must pass.
+- Omeka S and Omeka Classic do not expose a supported noninteractive migration command. Their rollouts print an action-required message; sign in to `/admin` and complete the web migration before considering the deployment complete.
+
+Back up the database and every application-owned file/upload volume before changing an application version. A green container healthcheck proves the declared services are running or completed successfully; it does not replace an application schema migration or a restore test.
 
 ## Common workflows
 

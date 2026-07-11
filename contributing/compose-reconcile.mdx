@@ -5,7 +5,7 @@ description: The local sitectl compose up reconcile contract for plugin-owned Co
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Core `sitectl compose up` performs a command-scoped reconcile for local contexts owned by an installed plugin. The contract belongs to core `sitectl`, not to an individual app template.
+Core performs a command-scoped reconcile before a plain full-stack `sitectl compose up` for local contexts owned by an installed plugin. The contract belongs to core `sitectl`, not to an individual app template. An `up` command with additional behavior flags, profiles, or selected services passes through unchanged; run `sitectl compose reconcile` explicitly first when that specialized start also needs lifecycle repair.
 
 The goal is a smooth first start for setup-only checkouts:
 
@@ -14,14 +14,14 @@ sitectl create app/default --setup-only --path ./app --type local --checkout-sou
 sitectl compose up
 ```
 
-The first `compose up` can initialize missing files, build missing local images, and start the stack. A fresh `sitectl create --setup-only` may already run clone-time init; reconcile checks artifacts before deciding what is still needed. Later calls use a local cache unless the plugin create metadata or image override file changes. Cache entries expire after 7 days so long-lived local checkouts are rechecked periodically.
+The first `compose up` can initialize missing files, build missing local images, and start the stack. A fresh `sitectl create --setup-only` may already run clone-time init; reconcile checks artifacts before deciding what is still needed. Later calls use a local cache unless the plugin create metadata or image override file changes. A spec containing `BuildPolicyAlways` bypasses that cache so downstream Dockerfile, plugin, theme, or module edits are rebuilt immediately. Other cache entries expire after 7 days.
 
 ## Flow
 
-For local plugin-owned contexts, core `sitectl compose up`:
+For local plugin-owned contexts, a plain full-stack `sitectl compose up`:
 
 1. Loads the active context and the plugin's default create definition, or the first create definition when none is marked default.
-2. Checks the local reconcile cache. The cache key includes host, user, plugin, canonical project directory, `docker-compose.override.yml` fingerprint, and create spec fingerprint. Entries older than 7 days are ignored.
+2. Checks the local reconcile cache unless any declared image uses `BuildPolicyAlways`. The cache key includes host, user, plugin, canonical project directory, `docker-compose.override.yml` fingerprint, and create spec fingerprint. Entries older than 7 days are ignored.
 3. If there is no cache hit, inspects desired state:
    - missing or empty `InitArtifacts` make `Initialized=False`
    - missing `InitVolumes` make `Initialized=False`
@@ -29,10 +29,14 @@ For local plugin-owned contexts, core `sitectl compose up`:
    - when explicit metadata is absent, core falls back to `docker compose config --format json` and checks file-backed secrets, named service volumes, and buildable services
 4. Runs `DockerComposeInit` when init is needed.
 5. Runs `DockerComposeBuild` when images are needed.
-6. Runs `DockerComposeUp`.
+6. Runs `DockerComposeUp`. Application plugins use bounded Compose `--wait --wait-timeout 600` metadata so reconcile reports success only after services are running or healthy.
 7. Marks the current host, user, project, override fingerprint, and create-spec fingerprint as checked after the commands succeed.
 
 The cache is marked only after the selected commands complete successfully. If a command fails, the next `sitectl compose up` inspects and retries instead of assuming the project is reconciled.
+
+Commands such as `sitectl compose up --wait`, `sitectl compose up --profile assistant`, and `sitectl compose up drupal` retain their exact Compose semantics and do not get replaced by plugin lifecycle metadata. Use `sitectl compose reconcile` before them when init or rebuilding is required.
+
+Runtime health has one narrow completed-service exception. Core accepts a container that is exactly `exited (0)` only when `docker compose config --format json` shows it is a defined, required dependency of another service with `condition: service_completed_successfully`. This supports tracked one-shot services such as `database-init` without treating arbitrary or optional exited jobs as healthy. A missing/nonzero/dead container or an unreadable effective Compose model fails the check.
 
 ## Operator Commands
 
@@ -82,16 +86,18 @@ That boundary is important for plugin authors. Lifecycle commands must be safe t
 
 Create definitions that participate in reconcile should follow these rules:
 
-1. Keep `DockerComposeInit`, `DockerComposeBuild`, and `DockerComposeUp` idempotent enough to rerun after partial failure.
+1. Keep `DockerComposeInit`, `DockerComposeBuild`, and `DockerComposeUp` idempotent enough to rerun after partial failure. `DockerComposeUp` must include a bounded health wait before the plugin's ready message can be truthful.
 2. Make `InitArtifacts` explicit and deterministic. Prefer generated secret or marker files over probing container state.
 3. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` when a generated marker file must match the local host user.
 4. List named Compose volumes that prove first-start state in `InitVolumes`. Core resolves the actual Docker volume name through `docker compose config`.
 5. List locally built images in `Images` with the Compose service name, image reference, and build policy.
-6. Use `BuildPolicyIfNotPresent` for normal local images, `BuildPolicyAlways` only when every `compose up` should rebuild, and `BuildPolicyNever` for images that should not trigger the build phase.
+6. Use `BuildPolicyIfNotPresent` when Compose declares a distinct explicit output `image:` that core can inspect. Use `BuildPolicyAlways` for a buildable app service with no distinct output image name; it bypasses the reconcile cache and relies on BuildKit's incremental cache so downstream source edits are not missed. Use `BuildPolicyNever` for images that should not trigger the build phase.
 7. Avoid global mutable state in lifecycle commands. The same project path, create spec, and override file should produce the same result.
 8. Do not make init destructive. Existing application data must survive a repeated init command.
 9. Declare app services that require MariaDB with `depends_on: {mariadb: {condition: service_healthy}}` so startup and healthcheck behavior match the template contract.
-10. Keep plugin namespace commands app-specific. Shared lifecycle belongs to core `sitectl compose`.
+10. Put database root credentials only on a required one-shot initializer. Give the long-running application a scoped account and declare the initializer with `condition: service_completed_successfully`.
+11. Pin directly consumed Compose images with a readable tag and immutable digest; keep buildable application base selection in `BASE_IMAGE`.
+12. Keep plugin namespace commands app-specific. Shared lifecycle belongs to core `sitectl compose`.
 
 ## Image Overrides
 
@@ -99,16 +105,15 @@ Core `sitectl image set` writes `docker-compose.override.yml` for local contexts
 
 ```bash
 sitectl image set --tag wp=nginx-1.30.3-php84
-sitectl image set --image app=ghcr.io/example/app:pr-123
 sitectl image set --build-arg app.BASE_IMAGE=libops/app:php84
 ```
 
 Image overrides affect reconcile:
 
-- an explicit image override for a service means core does not require the plugin's default image to exist locally
+- an explicit image override for a non-buildable service means core does not require the plugin's default image to exist locally
 - a build-arg override triggers the build phase so the new arguments are applied
 - the override file fingerprint is part of the reconcile cache key
 
-Use `--image` or `--build-arg` for app-specific services that are not known to the shared `--tag` map.
+Known buildable application services reject `--image`; use `--tag` or `--build-arg SERVICE.BASE_IMAGE=...`. Reserve `--image` for non-buildable dependency services.
 
 Use `sitectl image clear [SERVICE...]` to remove image/build-arg override keys while preserving unrelated local override content such as dev-mode bind mounts or port remaps.

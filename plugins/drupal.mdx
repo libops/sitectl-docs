@@ -64,10 +64,15 @@ Use the core component workflow to enable local Drupal development mounts:
 
 ```bash
 sitectl set dev-mode enabled
-sitectl converge
 ```
 
 Use ordinary git and Composer workflows inside the project checkout for extension branches, patches, and upstream source changes.
+
+## Deploy and Database Updates
+
+The downstream checkout owns Drupal through its Composer manifests and lockfile. `sitectl deploy` pulls dependencies, rebuilds the local image, waits for Drupal, then runs `drush updb -y` and `drush cr` before a final bounded health wait. Database-update and cache-rebuild failures stop the deploy.
+
+Back up the database and the public/private files volumes before changing Drupal core or contributed dependencies. Commit Composer and component-generated changes in the same update branch so another checkout can reproduce the image and configuration.
 
 ## Assigning the Drupal plugin to a context
 

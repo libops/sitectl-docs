@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Create a Task Agent task
+
+```bash
+sitectl libops task create <message>
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--agent-model` | `glm-5.2:cloud` | Coding agent model (glm-5.2:cloud, kimi-k2.6) |
+| `--harness` | `codex` | Coding harness (codex, claude, pi, opencode, gemini) |
+| `--no-wait` | `false` | Return after queueing the task |
+| `--organization-id` |   | Organization ID |
+| `--poll-interval` | `3s` | Task polling interval while attached |
+| `--project-id` |   | Project ID |
+| `--site-id` |   | Site ID |

@@ -1,0 +1,23 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Edit a site
+
+```bash
+sitectl libops edit site <site-id>
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--application-type` |   | Type of application |
+| `--compose-file` |   | Docker compose file name |
+| `--compose-path` |   | Path to docker-compose directory |
+| `--github-ref` |   | GitHub reference (e.g., heads/main, tags/v1.0) |
+| `--github-repository` |   | GitHub repository URL |
+| `--init-cmd` | `[]` | Commands to run on initial setup |
+| `--is-production` | `false` | Mark this site as production |
+| `--name` |   | Site name |
+| `--os` |   | Site OS image |
+| `--overlay-volumes` | `[]` | Overlay volume paths |
+| `--port` | `0` | Port the application listens on |
+| `--rollout-cmd` | `[]` | Commands to run during rollout |
+| `--up-cmd` | `[]` | Commands to start containers |

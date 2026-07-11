@@ -3,20 +3,21 @@
 Deploy the active context by orchestrating a full update cycle.
 
 The deploy sequence runs:
-  1. Plugin pre-down hooks (if the context plugin registers a deploy runner)
-  2. docker compose down
-  3. git pull `--ff-only` for the current upstream branch (unless `--skip-git` is set)
-  4. docker compose pull (unless `--no-pull` is set)
-  5. docker compose up -d `--remove-orphans`
+  1. git pull `--ff-only` for the current upstream branch (unless `--skip-git` is set)
+  2. Pull images while the current site is still running (unless `--no-pull` is set)
+  3. Plugin pre-down hooks (if the context plugin registers a deploy runner)
+  4. docker compose down `--remove-orphans`
+  5. The plugin's remaining application-aware rollout commands when declared;
+     otherwise docker compose up -d `--remove-orphans`
   6. Plugin post-up hooks (if the context plugin registers a deploy runner)
 
 The `--branch` flag checks out a branch before the git pull step.
 If omitted, sitectl updates the current branch when it has a git upstream.
 
 Examples:
-  sitectl deploy                         # Deploy current branch on active context
+  sitectl deploy                         # Deploy the current upstream branch
   sitectl deploy `--branch` main           # Switch to main and deploy
- sitectl deploy `--skip-git`              # Restart services without pulling git changes
+  sitectl deploy `--skip-git`              # Restart services without pulling git changes
   sitectl deploy `--context` prod          # Deploy on a specific context
 
 ```bash
@@ -26,5 +27,5 @@ sitectl deploy
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--branch` |   | Git branch to check out during the deploy (default: current branch) |
-| `--no-pull` | `false` | Skip docker compose pull before bringing services up |
+| `--no-pull` | `false` | Skip explicit docker compose pull steps (build `--pull` is unaffected) |
 | `--skip-git` | `false` | Skip the git fetch/checkout step |

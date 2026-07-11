@@ -45,6 +45,22 @@ Core `sitectl create` uses that metadata to scaffold a context. Core `sitectl co
 
 See [Compose reconcile contract](/contributing/compose-reconcile) for the detailed authoring contract and the boundary around Kubernetes-style terminology.
 
+## Application and Image Ownership
+
+Each application tree has one source owner. Buildkit owns verified upstream releases for OJS, Omeka, and ArchivesSpace and publishes application-versioned images; their downstream templates extend those images with tracked customizations. Drupal, ISLE, and WordPress keep Composer manifests, lockfiles, and application code in the downstream checkout; their Buildkit images own the runtime rather than a competing application tree.
+
+Tracked Compose dependencies use readable tags plus immutable digests. Buildable application services keep `BASE_IMAGE` as an overrideable build argument so a local context can test another version without replacing the downstream `build` contract. App plugins mirror that choice in `CreateSpec.Images` and rebuild policies.
+
+Inside the published images, s6-overlay owns process/setup ordering and confd turns environment and secret inputs into dependent-service configuration. Templates should expose supported settings through tracked Compose environment values and components instead of copying generated nginx, PHP-FPM, or application config into another owner layer.
+
+The boundary also controls development mounts. A plugin registers `dev-mode` only for downstream-owned trees or explicitly named extension paths. It must not mount an empty broad directory over plugins, modules, themes, locales, or stylesheets bundled in a versioned application image.
+
+## One-shot Dependency Health
+
+Database root credentials belong to a dedicated `database-init` service, not the long-running app. The app receives a scoped account and requires the initializer through Compose's `service_completed_successfully` condition.
+
+Core healthcheck reads the effective Compose model before accepting a stopped container. Only a defined, required dependency that is exactly `exited (0)` qualifies; optional/arbitrary jobs and failed, dead, or missing containers remain unhealthy. This makes one-shot success part of the tracked application contract instead of a name-based exception.
+
 ## Service component ownership
 
 Reusable infrastructure services that are self-contained and cross-cutting belong in sitectl core, not in one plugin per service and not copied into every application plugin. Traefik, MariaDB, Solr, Valkey, and Memcached are core service command namespaces because many application stacks use them and the operational behavior is generic.

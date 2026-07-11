@@ -3,12 +3,22 @@ title: LibOps plugin
 description: LibOps platform workflows for authentication, organizations, projects, Sites, access controls, domains, runtime operations, and Task Agent tasks.
 ---
 
-The LibOps plugin adds platform management commands to `sitectl`. The plugin binary is `sitectl-libops`; when installed through sitectl, commands run under the `libops` namespace.
+The LibOps plugin adds platform management commands to `sitectl`. The plugin binary is `sitectl-libops`; when it is present on `$PATH`, commands run under the `libops` namespace.
 
 ```bash
 sitectl libops login
 sitectl libops whoami
 ```
+
+Install the plugin from the same release channels as core:
+
+```bash
+brew install libops/homebrew/sitectl-libops
+# or, after configuring packages.libops.io
+sudo apt install sitectl-libops
+```
+
+Native packages require core `sitectl` 0.37.0 or newer. Manual binary installs must keep both binaries current; verify with `sitectl --version`, `sitectl-libops --version`, and `sitectl libops --help`.
 
 Use `--api-url` when you need to point at a non-default LibOps API endpoint.
 

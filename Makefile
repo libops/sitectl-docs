@@ -1,6 +1,7 @@
-.PHONY: docs docs-host docs-snippets
+.PHONY: docs docs-host docs-snippets docs-snippets-check docs-check
 
 DOCS_PORT ?= 3000
+MINT_VERSION ?= 4.2.687
 
 docs:
 	docker run --rm -it \
@@ -8,14 +9,26 @@ docs:
 		-v "$(CURDIR):/work" \
 		-w /work \
 		node:22-bookworm \
-		sh -lc "npx mint dev --port $(DOCS_PORT) --host 0.0.0.0"
+		sh -lc "npx --yes mint@$(MINT_VERSION) dev --port $(DOCS_PORT) --host 0.0.0.0"
 docs-host:
-	npx mint dev
+	npx --yes mint@$(MINT_VERSION) dev
 
 # Regenerate command-reference snippets from the local sitectl + plugin
 # checkouts. The generator is a self-contained Go module that resolves the
-# sibling repos through the replace directives in
+# workspace repos under ../../cli through the replace directives in
 # scripts/gen-docs-snippets/go.mod, so no go.work file is needed. It runs from
 # inside its module dir and is passed the docs root as the output base.
 docs-snippets:
 	cd scripts/gen-docs-snippets && go run . "$(CURDIR)"
+
+docs-snippets-check: docs-snippets
+	git diff --exit-code -- snippets/commands
+	@test -z "$$(git ls-files --others --exclude-standard -- snippets/commands)" || { \
+		git status --short -- snippets/commands; \
+		echo "generated command snippets are not committed" >&2; \
+		exit 1; \
+	}
+
+docs-check:
+	npx --yes mint@$(MINT_VERSION) validate
+	npx --yes mint@$(MINT_VERSION) broken-links --check-anchors --check-redirects --check-snippets

@@ -15,19 +15,54 @@ Local-only changes belong in `docker-compose.override.yml`. That file is intenti
 
 When an application service requires MariaDB during startup, declare that relationship in the tracked Compose file with `depends_on` and `condition: service_healthy`. The application plugins' standard healthcheck runner verifies that policy for MariaDB-backed web apps.
 
+Database provisioning is a separate one-shot boundary. The tracked `database-init` service receives the MariaDB root secret, creates the application database and scoped account, and exits. The application receives only its scoped database password and declares `database-init` with `condition: service_completed_successfully`. Core healthchecks accept an exited container only when the effective Compose model proves that another service requires it with that condition and it exited with status `0`. An arbitrary, optional, failed, or dead job is still unhealthy.
+
 ## Local Image Builds
 
-Every application template includes a Dockerfile for the local application image. The Dockerfile starts from the matching LibOps base image, copies lockfiles and downloaded dependencies before copying local modules, plugins, themes, config, or other customization points, and leaves runtime configuration to the Compose environment where possible.
+Every application template includes a Dockerfile for the downstream application image, but the application source has two ownership models:
+
+| Application family | Published LibOps image owns | Downstream checkout owns |
+|---|---|---|
+| OJS, Omeka S, Omeka Classic, ArchivesSpace | The matching upstream application release and runtime | Tracked configuration and explicitly added extensions or customizations |
+| Drupal, ISLE, WordPress | The shared runtime and image-side setup behavior | Composer manifests, lockfiles, application dependencies, and custom code |
+
+For the first family, the application version is part of the Buildkit image tag and the downstream Dockerfile extends that versioned image. For Composer-owned stacks, do not copy a second application tree into the runtime image: update the checked-in Composer files and rebuild the downstream image. Runtime configuration stays in the Compose environment where possible.
 
 This keeps local builds fast:
 
-- Docker can reuse package-manager and download cache layers when only local custom code changed.
+- Docker can reuse the published application/base layer and package-manager cache layers when only local custom code changed.
 - The build uses the platform selected by the Docker CLI on the host.
 - Local builds do not push images. Publishing images belongs in CI or another explicit release workflow.
 
-The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image.
+The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image. The shared ingress component follows this rule and propagates `--upload-timeout` through Traefik, nginx client/FastCGI handling, PHP input/execution limits, and PHP-FPM request termination so no downstream layer silently retains a shorter default.
+
+## Runtime Configuration Boundary
+
+LibOps images use s6-overlay to order long-running services and one-time setup, while confd renders nginx, PHP-FPM, application, and other dependent-service configuration from the container environment and mounted secrets. The tracked Compose environment is the source of truth. Do not edit rendered files inside a container or bind-mount a broad replacement over them; the next start can regenerate them.
+
+Change supported settings through template environment values or a sitectl component. This includes upload limits, request/read timeouts, app URLs, proxy trust, and service endpoints. Keep passwords and keys in Compose secrets and use the image's documented secret-file variables rather than putting secret values directly in environment fields.
 
 Use [`sitectl image set`](/commands/image) when you need a local context to run a different image, tag, or build argument without editing the tracked template files.
+
+## Image Versions and Digests
+
+Tracked Compose files pin directly consumed images with both a readable tag and an immutable digest, for example `libops/mariadb:11@sha256:...`. Keep both. The tag communicates the intended release line; the digest makes a checkout reproducible and prevents an unrelated registry update from changing the deployed bytes.
+
+The downstream Dockerfile's `BASE_IMAGE` is intentionally selected by a versioned application or runtime tag so `sitectl image set --tag` can switch it locally. `sitectl deploy` builds with `--pull`, so a downstream operator who needs immutable base bytes should set `SERVICE.BASE_IMAGE` to a `tag@sha256:digest` reference. Local `--tag` and unpinned `--image` overrides are experiments and should not silently become the production contract.
+
+Use [`sitectl bump`](/commands/bump) or a reviewed Renovate pull request to update tracked tags and digests together. Application-version changes also require the application's backup and migration procedure; an image update being available is not evidence that its schema migration succeeded.
+
+## Updating a Downstream Fork
+
+Treat template updates like application changes, not generated files to overwrite:
+
+1. Create an update branch with a clean working tree and current database/file-volume backups.
+2. Merge or rebase the upstream template change using normal Git workflows. Resolve changes in files your fork owns before running sitectl.
+3. Run `sitectl validate`, then `sitectl converge --report`. Converge derives state from the checkout and repairs only drifted component-owned paths; it does not replace a separate desired-state store or discard a healthy enabled/disabled component choice.
+4. Apply `sitectl converge` or an explicit `sitectl set` when needed, inspect the Git diff, and commit the resulting component files with the upstream update.
+5. Build and test the branch, then use `sitectl deploy`. Complete every automatic or manual application migration gate before declaring the update finished.
+
+Keep app-specific customizations outside component-owned blocks when possible. When a feature must extend a managed component, update the plugin/component contract as well as the template so a later converge can preserve that customization deliberately.
 
 ## Development Ports
 
@@ -59,7 +94,6 @@ If production runs HTTPS and a developer wants the local site to behave the same
 
 ```bash
 sitectl set ingress enabled --mode https-mkcert --domain app.localhost
-sitectl converge
 sitectl compose up --remove-orphans -d
 ```
 
@@ -67,13 +101,15 @@ See [Components](/components) for ingress settings and [Compose commands](/comma
 
 ## Assistant Dev Mode
 
-`sitectl set dev-mode --assistant` enables the normal development bind mounts and adds a profiled `cli-sandbox` service to `docker-compose.override.yml`.
+Plugins register `dev-mode` only when the downstream checkout owns the mounted dependency tree or can declare narrow bind mounts that do not hide application code from the image. Drupal, WordPress, and ISLE currently provide that contract. OJS, Omeka, and ArchivesSpace intentionally do not expose broad bundled-extension directory mounts.
+
+For a plugin that supports it, `sitectl set dev-mode --assistant` enables the development bind mounts and adds a profiled `cli-sandbox` service to `docker-compose.override.yml`.
 
 ```bash
 sitectl set dev-mode --assistant --harness codex
 docker compose --profile assistant run --rm cli-sandbox
 ```
 
-The application plugin owns the editable code mount list. For example, Drupal and ISLE mount custom modules, themes, config, and assets; WordPress mounts plugins and themes; OJS and Omeka mount their plugin, module, and theme directories.
+The application plugin owns the editable code mount list. Drupal and WordPress mount Composer-owned downstream trees; WordPress includes all three Bedrock installer destinations (`mu-plugins`, `plugins`, and `themes`). ISLE mounts explicit custom-code and configuration paths. For applications whose versioned base image bundles core plugins, modules, or themes, downstream customization should be added through the tracked build context or an explicit per-extension mount and rebuilt instead of masking the whole bundled directory at runtime.
 
 Use `--compose-access` only when the coding agent should reach the Compose network and host Docker daemon. That adds the Docker socket mount and socket group to the `cli-sandbox` service. By default, the sandbox keeps its egress firewall enabled and receives `NET_ADMIN`/`NET_RAW`; `--skip-egress-firewall` sets `SKIP_EGRESS_FIREWALL=true` and omits those capabilities.

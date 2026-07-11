@@ -19,7 +19,20 @@ sitectl compose down          # stop the stack
 sitectl deploy                # pull updates and restart (rollout)
 ```
 
-`sitectl omeka-s ...` is reserved for Omeka S-specific operations. The
+The downstream Dockerfile builds from `libops/omeka-s:4.2.1-php84`; that published image already contains the matching Omeka S release. Before changing that app version, back up MariaDB and the user-owned `omeka-s-files` named volume:
+
+```bash
+mkdir -p backups
+sitectl mariadb backup --all-databases --gzip --output backups/omeka-s-pre-upgrade.sql.gz
+```
+
+Archive and test restoration of the files volume with your Docker-volume backup procedure; the database dump does not contain uploaded files.
+
+Omeka S provides its supported database migration through the web administration flow, not a supported CLI command. `sitectl deploy` rebuilds and restarts the stack, then prints a reminder. Sign in at `/admin` and complete any migration prompt before returning the site to normal use. The deploy is not operationally complete until that migration succeeds.
+
+The Omeka S plugin does not register the generic `dev-mode` component. A whole-directory modules or themes mount would hide extensions bundled in the versioned base image. Put custom extensions in the tracked downstream build context, or mount only an explicitly named custom module/theme directory in a local override.
+
+`sitectl omeka-s ...` is reserved for Omeka S-specific operations, including the
 [API helpers](/plugins/omeka-s/api) and [resource shortcuts](/plugins/omeka-s/resources).
 General <Compose /> lifecycle stays in the core CLI so the same operational contract
 applies to every stack.

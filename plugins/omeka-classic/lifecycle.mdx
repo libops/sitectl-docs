@@ -19,7 +19,20 @@ sitectl compose down           # stop the stack
 sitectl deploy                 # pull updates and restart (rollout)
 ```
 
-`sitectl omeka-classic ...` is reserved for Omeka Classic-specific operations. The
+The downstream Dockerfile builds from `libops/omeka-classic:3.2.1-php84`; that published image already contains the matching Omeka Classic release. Before changing that app version, back up MariaDB and the user-owned `omeka-classic-files` named volume:
+
+```bash
+mkdir -p backups
+sitectl mariadb backup --all-databases --gzip --output backups/omeka-classic-pre-upgrade.sql.gz
+```
+
+Archive and test restoration of the files volume with your Docker-volume backup procedure; the database dump does not contain uploaded files.
+
+Omeka Classic provides its supported database upgrade through the web administration flow, not a supported CLI command. `sitectl deploy` rebuilds and restarts the stack, then prints a reminder. Sign in at `/admin` and complete any upgrade prompt before returning the site to normal use. The deploy is not operationally complete until that upgrade succeeds.
+
+The Omeka Classic plugin does not register the generic `dev-mode` component. A whole-directory plugins or themes mount would hide extensions bundled in the versioned base image. Put custom extensions in the tracked downstream build context, or mount only an explicitly named custom plugin/theme directory in a local override.
+
+`sitectl omeka-classic ...` is reserved for Omeka Classic-specific operations, including the
 [API helpers](/plugins/omeka-classic/api) and [resource shortcuts](/plugins/omeka-classic/resources).
 General <Compose /> lifecycle stays in the core CLI so the same operational contract
 applies to every stack.

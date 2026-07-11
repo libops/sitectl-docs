@@ -19,7 +19,13 @@ sitectl compose down           # stop the stack
 sitectl deploy                 # pull updates and restart (rollout)
 ```
 
-`sitectl archivesspace ...` is reserved for ArchivesSpace-specific operations. The
+The downstream Dockerfile builds from `libops/archivesspace:4.2.0`. The companion Solr image uses the same ArchivesSpace release tag (`libops/archivesspace-solr:4.2.0`) so application and search configuration stay aligned. `sitectl deploy` pulls dependencies, rebuilds the downstream application layer, and requires a bounded 10-minute service health wait after restart.
+
+Before changing either release tag, back up MariaDB and the user-owned `archivesspace-data` volume, and verify a restore. Update the application and companion Solr tags together; a mixed release can start while still carrying incompatible search configuration.
+
+The ArchivesSpace plugin does not register the generic `dev-mode` component because broad plugin, locale, or stylesheet mounts can hide content bundled in the base image. Add customizations through the tracked downstream build context or narrowly target one customization path in a local override.
+
+`sitectl archivesspace ...` is reserved for ArchivesSpace-specific operations, including the
 [API helpers](/plugins/archivesspace/api), [resource shortcuts](/plugins/archivesspace/resources),
 and [container scripts](/plugins/archivesspace/scripts). General <Compose /> lifecycle
 stays in the core CLI so the same operational contract applies to every stack.

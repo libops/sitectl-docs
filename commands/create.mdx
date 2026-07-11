@@ -85,7 +85,7 @@ sitectl create ojs/default --path ./ojs --type local --checkout-source template 
 sitectl compose up
 ```
 
-That handoff uses the plugin create definition as desired lifecycle metadata. See [Compose reconcile contract](/contributing/compose-reconcile) for contributor details.
+That handoff uses the plugin create definition as desired lifecycle metadata. Standard application plugins wait up to 10 minutes for Compose services to become running or healthy before reporting the site ready; a timeout is a failed create/start, not a successful background startup. See [Compose reconcile contract](/contributing/compose-reconcile) for contributor details.
 
 ## Image and Build Overrides
 
@@ -93,7 +93,7 @@ Compose template create runners can accept image override flags:
 
 ```bash
 sitectl create wp/default --path ./wp --type local --tag wp=nginx-1.30.3-php84
-sitectl create ojs/default --path ./ojs --type local --image ojs=ghcr.io/example/ojs:pr-123
+sitectl create ojs/default --path ./ojs --type local --tag ojs=3.5.0-5-php84
 sitectl create drupal/default --path ./drupal --type local --build-arg drupal.BASE_IMAGE=libops/drupal:php84
 ```
 

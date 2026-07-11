@@ -177,7 +177,7 @@ Add the service to core when most of these are true:
 
 Keep behavior in an application plugin when the operation is app-specific. For example, Drush belongs in the Drupal plugin, WP-CLI belongs in the WordPress plugin, and ISLE migration workflows belong in the ISLE plugin.
 
-Triplet is an application-scale project rather than a small shared dependency, so it can keep its own plugin/workflow surface.
+Triplet is application-scale behavior inside ISLE. The ISLE plugin owns its `iiif` and `iiif-topology` component wiring, while core Compose commands own runtime inspection; there is no separate thin Triplet lifecycle plugin.
 
 ## Application plugin composition
 

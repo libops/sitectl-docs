@@ -19,7 +19,20 @@ sitectl compose down          # stop the stack
 sitectl deploy                # pull updates and restart (rollout)
 ```
 
-`sitectl ojs ...` is reserved for OJS-specific operations. The PHP
+The downstream Dockerfile builds from `libops/ojs:3.5.0-5-php84`; that published image already contains the matching OJS release. `sitectl deploy` pulls dependency images, rebuilds the downstream customization layer, starts the stack, and runs the supported `php tools/upgrade.php upgrade` migration. A migration failure fails the deploy, and deployment finishes only after a bounded 10-minute service health wait passes.
+
+Before changing the OJS base version, back up MariaDB and the user-owned `ojs-files` and `ojs-public` named volumes. Core sitectl can create the database backup:
+
+```bash
+mkdir -p backups
+sitectl mariadb backup --all-databases --gzip --output backups/ojs-pre-upgrade.sql.gz
+```
+
+Archive and test restoration of both OJS named volumes with your Docker-volume backup procedure; a database dump alone does not contain uploaded or public files.
+
+The OJS plugin does not register the generic `dev-mode` component. Mounting a whole OJS plugin category from a mostly empty checkout would hide plugins bundled in the versioned base image. Add custom plugins through the tracked downstream build context, or create an explicit override that mounts only one named custom plugin directory.
+
+`sitectl ojs ...` is reserved for OJS-specific operations, including the PHP
 [tools](/plugins/ojs/tools), [PKP tools](/plugins/ojs/pkp-tools), and related
 helpers. General <Compose /> lifecycle stays in the core CLI so the same operational
 contract applies to every stack.

@@ -5,7 +5,7 @@ description: Enable, disable, or reconfigure a component.
 
 import SetCmd from "/snippets/commands/sitectl-set.mdx";
 
-Use `set` to change a component's state or disposition. After running `set`, run `sitectl converge` to apply the change to the project files.
+Use `set` to change a component's state or disposition. A successful command updates the component-owned project files immediately; review and commit those changes in your template fork.
 
 ## Reference
 
@@ -45,7 +45,7 @@ sitectl set dev-mode --assistant --harness codex
 sitectl set dev-mode enabled --assistant --harness claude --compose-access
 ```
 
-Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`. Run `sitectl converge` after changing them.
+Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`.
 
 `dev-mode --assistant` writes a `cli-sandbox` service into `docker-compose.override.yml` with the plugin's editable code mounts. The service is on the `assistant` profile, so start it explicitly with Docker Compose when you want an interactive coding agent.
 
@@ -55,4 +55,4 @@ The component argument may include a plugin prefix (`plugin/component`). This is
 
 ## After setting
 
-Running `set` records the desired state but does not immediately modify project files. Follow up with `sitectl converge` to apply the change, or `sitectl validate` to confirm the current state.
+Running `set` modifies the relevant project files after any required confirmation. Use `sitectl validate` to confirm the result. Use `sitectl converge` only when later manual edits or upstream changes have caused drift.

@@ -13,6 +13,7 @@ import (
 	archivesspacecmd "github.com/libops/sitectl-archivesspace/cmd"
 	drupalcmd "github.com/libops/sitectl-drupal/cmd"
 	islecmd "github.com/libops/sitectl-isle/cmd"
+	libopscmd "github.com/libops/sitectl-libops/cmd"
 	ojscmd "github.com/libops/sitectl-ojs/cmd"
 	omekaclassiccmd "github.com/libops/sitectl-omeka-classic/cmd"
 	omekascmd "github.com/libops/sitectl-omeka-s/cmd"
@@ -101,11 +102,10 @@ func main() {
 			wpcmd.RegisterCommands(s)
 			return nil
 		}),
-		// NOTE: sitectl-libops is intentionally not wired in here. The local
-		// checkout imports github.com/libops/sitectl/pkg/format, which the
-		// pinned/local sitectl module does not provide, so it cannot compile
-		// against this workspace. Its docs under plugins/libops/ remain
-		// hand-maintained until the two modules are realigned.
+		pluginGen("libops", "LibOps platform helpers", func(s *plugin.SDK) error {
+			libopscmd.RegisterCommands(s)
+			return nil
+		}),
 	}
 
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
@@ -113,16 +113,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	generated := make(map[string]struct{})
 	var total int
 	for _, gen := range append([]*generator{core}, plugins...) {
 		gen.root.DisableAutoGenTag = true
-		count := gen.run()
+		count := gen.run(generated)
 		total += count
+	}
+	if err := removeStaleGeneratedSnippets(outputDir, generated); err != nil {
+		fmt.Fprintf(os.Stderr, "remove stale snippets: %v\n", err)
+		os.Exit(1)
 	}
 	fmt.Printf("generated %d snippets\n", total)
 }
 
-func (g *generator) run() int {
+func (g *generator) run(generated map[string]struct{}) int {
 	var count int
 	g.walkCommands(g.root, func(cmd *cobra.Command) {
 		slug := g.commandSlug(cmd)
@@ -131,10 +136,39 @@ func (g *generator) run() int {
 			fmt.Fprintf(os.Stderr, "write %s: %v\n", path, err)
 			os.Exit(1)
 		}
+		generated[path] = struct{}{}
 		fmt.Println(path)
 		count++
 	})
 	return count
+}
+
+func removeStaleGeneratedSnippets(dir string, generated map[string]struct{}) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".mdx" {
+			continue
+		}
+		path := filepath.Join(dir, entry.Name())
+		if _, ok := generated[path]; ok {
+			continue
+		}
+		contents, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(string(contents), autoGenHeader) {
+			continue
+		}
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		fmt.Printf("removed stale %s\n", path)
+	}
+	return nil
 }
 
 func (g *generator) walkCommands(cmd *cobra.Command, fn func(*cobra.Command)) {

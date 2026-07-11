@@ -1,0 +1,27 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Deploy a site through the LibOps API, then run the same post-deploy
+checks used by CI.
+
+The command always runs sitectl healthcheck unless `--skip-healthcheck` is set.
+For non-production sites it also runs sitectl verify. Production sites only run
+the basic healthcheck unless `--verify` is explicitly set.
+
+```bash
+sitectl libops deploy site <site-id>
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--deployment-interval` | `15s` | Delay between LibOps deployment status checks |
+| `--deployment-timeout` | `20m0s` | Maximum time to wait for LibOps deployment status |
+| `--environment` | `auto` | Deployment environment: auto, production, staging, development, preview, or another non-production label |
+| `--git-ref` |   | Branch, tag, PR ref, or commit to deploy |
+| `--healthcheck-interval` | `15s` | Delay between persistent healthcheck attempts |
+| `--healthcheck-timeout` | `10m0s` | Maximum time to wait for sitectl healthcheck |
+| `--skip-deployment-wait` | `false` | Do not wait for LibOps deployment status before post-deploy checks |
+| `--skip-healthcheck` | `false` | Skip post-deploy sitectl healthcheck |
+| `--skip-verify` | `false` | Skip sitectl verify for non-production deployments |
+| `--verify` | `false` | Run sitectl verify even for production deployments |
+| `--verify-arg` | `[]` | Additional argument passed to sitectl verify; repeat for multiple arguments |
+| `--working-dir` |   | Directory where sitectl healthcheck and verify should run |

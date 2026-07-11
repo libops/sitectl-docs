@@ -1,6 +1,11 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Run Renovate for targeted dependency bumps
+Run Renovate in Docker for the selected repository.
+
+With `--context`, sitectl uses that local context's project directory. Without
+`--context`, sitectl uses the current working directory. Dry runs analyze the
+local checkout and print Renovate's candidate updates. Non-dry runs infer the
+GitHub repository from origin and create or update Renovate branches and PRs.
 
 ```bash
 sitectl bump (--patch|--minor|--major)

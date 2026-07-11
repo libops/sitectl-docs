@@ -1,0 +1,21 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Authenticate with the libops API.
+
+This command opens a browser window where you can choose to authenticate with:
+- Google OAuth
+- Email and password
+
+After successful authentication, your credentials will be stored locally in ~/.sitectl/oauth.json.
+
+Examples:
+  sitectl login                                    # Open browser to login page
+  sitectl login `--api-url` https://api.libops.io   # Use a custom API URL
+
+```bash
+sitectl libops login
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--timeout` | `5m0s` | Timeout for authentication flow |

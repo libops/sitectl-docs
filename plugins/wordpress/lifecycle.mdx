@@ -19,6 +19,10 @@ sitectl compose down          # stop the stack
 sitectl deploy                # pull updates and restart (rollout)
 ```
 
+The WordPress application tree is Composer-owned by the downstream checkout. Commit `composer.json`, `composer.lock`, and any intentional custom code together; the published `libops/wp` image supplies the runtime rather than a second authoritative WordPress checkout. `sitectl deploy` rebuilds from that lockfile, waits for WordPress, and runs `wp core update-db`. A database-update failure fails the deploy, and deployment finishes only after a bounded 10-minute service health wait passes.
+
+Before changing WordPress core, plugins, or themes, back up MariaDB and the `wordpress-uploads` volume and test their restore. A successful image build does not prove that the database update or site behavior succeeded.
+
 `sitectl wp ...` is reserved for WordPress-specific operations. Use [WP-CLI](/plugins/wordpress/wp-cli),
 [Composer](/plugins/wordpress/composer), [plugin and theme](/plugins/wordpress/plugins-themes)
 maintenance, and [core, cache, and database](/plugins/wordpress/core-cache-db) helpers.

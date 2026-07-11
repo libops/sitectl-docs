@@ -8,6 +8,8 @@ import BumpCmd from "/snippets/commands/sitectl-bump.mdx";
 
 The `bump` command runs Renovate in Docker for a `sitectl` project. Use it to update <Compose /> image tags, GitHub Actions, and application dependencies without editing dependency files by hand.
 
+Compose templates pin direct images as `tag@sha256:digest`. Renovate keeps that human-readable version and immutable digest together; do not remove the digest to make an update easier. A Dockerfile base-tag change can also change the upstream application release for OJS, Omeka, or ArchivesSpace, while Composer changes control Drupal, ISLE, and WordPress application code. Review those updates as application releases, including backups, smoke tests, and migration gates.
+
 Pick exactly one update level. Levels are cumulative: `--minor` includes patch updates, and `--major` includes minor and patch updates.
 
 ```bash
