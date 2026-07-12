@@ -28,7 +28,7 @@ sitectl set ingress enabled --mode https-mkcert --domain app.localhost
 sitectl set ingress enabled --trusted-ip 203.0.113.10/32 --max-upload-size 2G --upload-timeout 10m
 ```
 
-The ingress component updates the Compose Traefik service, dynamic router files, app URL/HTTPS environment values, trusted proxy settings, and upload/read timeout settings together. `--upload-timeout` is end-to-end: it configures Traefik read timeouts, nginx client-body and FastCGI timeouts, and PHP input, execution, and FPM request-termination timeouts. PHP accepts whole seconds, so subsecond values are rounded up. Application plugins provide the app-specific service names and route files that need to move with those choices.
+The ingress component updates the Compose Traefik service and dynamic router files together with the application settings mapped by the active plugin. On PHP/nginx application services, `--upload-timeout` configures Traefik read timeouts, nginx client-body and FastCGI timeouts, and PHP input, execution, and FPM request-termination timeouts. PHP accepts whole seconds, so subsecond values are rounded up. For another application runtime, the Traefik limit still changes, but the setting is end to end only when that plugin also maps the runtime's supported backend timeout and proxy controls. ArchivesSpace deliberately opts out of the shared PHP/nginx application environment while retaining generic Traefik ingress changes.
 
 ## TLS Modes
 

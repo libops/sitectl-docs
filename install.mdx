@@ -6,7 +6,7 @@ description: Install or upgrade sitectl with Homebrew, native Linux packages, or
 Select a tab for the core `sitectl` command or one of its plugins to see install and upgrade instructions.
 When you install a `sitectl` plugin with Homebrew or Linux packages, the package manager also installs the core `sitectl` command.
 
-Core and plugins are separately built executables. Current application-plugin releases use the v0.37 SDK and require `sitectl` 0.37.0 or newer. Debian, RPM, and APK packages encode that minimum dependency; Homebrew installs the current core formula first. If you install release binaries manually, upgrade core and every plugin you use as one tested set:
+Core and plugins are separately built executables. Current application-plugin releases use the v0.38 SDK and require `sitectl` 0.38.0 or newer. Debian, RPM, and APK packages encode that minimum dependency; Homebrew installs the current core formula first. If you install release binaries manually, upgrade core and every plugin you use as one tested set:
 
 ```bash
 sitectl --version
@@ -180,7 +180,7 @@ sudo dnf upgrade sitectl-drupal
 
 You can install `sitectl-drupal` by either downloading or building the `sitectl-drupal` binary.
 
-You also need the base `sitectl` binary on your system.
+You also need core `sitectl` 0.38.0 or newer on your system. A manual binary install does not resolve that dependency for you.
 
 <AccordionGroup>
   <Accordion title="Download" icon="download">
@@ -219,7 +219,7 @@ brew install libops/homebrew/sitectl-isle
 
 Homebrew will also install `sitectl` and `sitectl-drupal` as dependencies.
 
-The current ISLE release line requires core `sitectl` 0.37.0 or newer and `sitectl-drupal` 0.10.0 or newer. Homebrew satisfies this by publishing core, then Drupal, then ISLE formulas.
+The current ISLE release line requires core `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer. Homebrew formulas are published in dependency order: core, Drupal, then ISLE.
 
 To upgrade later:
 
@@ -258,7 +258,7 @@ sudo dnf install sitectl-isle
 
 </CodeGroup>
 
-The package manager will also install `sitectl` 0.37.0 or newer and `sitectl-drupal` 0.10.0 or newer as dependencies.
+The package manager will also install `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer as dependencies. Repository publication follows the same core, Drupal, then ISLE order so every dependency is available before the dependent package.
 
 To upgrade later:
 
@@ -279,12 +279,12 @@ sudo dnf upgrade sitectl-isle
 
 You can install `sitectl-isle` by either downloading or building the `sitectl-isle` binary.
 
-You also need the base `sitectl` binary on your system.
+You also need core `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer on your system. A manual binary install does not resolve those dependencies for you.
 
 <AccordionGroup>
   <Accordion title="Download" icon="download">
 
-You can download binaries for your system from [the latest release of sitectl](https://github.com/libops/sitectl/releases/latest) and [the latest release of sitectl-isle](https://github.com/libops/sitectl-isle/releases/latest).
+Download binaries for your system from the latest releases of [sitectl](https://github.com/libops/sitectl/releases/latest), [sitectl-drupal](https://github.com/libops/sitectl-drupal/releases/latest), and [sitectl-isle](https://github.com/libops/sitectl-isle/releases/latest). Put all three binaries on the same `$PATH`.
   </Accordion>
 
   <Accordion title="Build" icon="screwdriver-wrench">
@@ -300,9 +300,16 @@ make build
   </Accordion>
 </AccordionGroup>
 
-To upgrade a binary install, download the newest release or rebuild from the latest source, then replace the existing binary in your `$PATH`.
+To upgrade a binary install, update core first, then Drupal, then ISLE. Replace all three binaries in your `$PATH` before running `sitectl create list`; do not leave a partially upgraded set active.
 
-Once `sitectl-isle` is on your system, put the binary in a directory that is in your `$PATH`.
+Verify the complete set after installation:
+
+```bash
+sitectl --version
+sitectl-drupal --version
+sitectl-isle --version
+sitectl create list
+```
   </Tab>
 
   <Tab title="Application plugins">

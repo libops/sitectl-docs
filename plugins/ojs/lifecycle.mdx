@@ -19,13 +19,13 @@ sitectl compose down          # stop the stack
 sitectl deploy                # pull updates and restart (rollout)
 ```
 
-The downstream Dockerfile builds from `libops/ojs:3.5.0-5-php84`; that published image already contains the matching OJS release. `sitectl deploy` pulls dependency images, rebuilds the downstream customization layer, starts the stack, and runs the supported `php tools/upgrade.php upgrade` migration. A migration failure fails the deploy, and deployment finishes only after a bounded 10-minute service health wait passes.
+The downstream Dockerfile builds from `libops/ojs:3.5.0-5-php84`; that published image already contains the matching OJS release. `sitectl deploy` pulls dependency images and rebuilds the downstream customization layer while the current stack is still online. After stopping it, deploy starts only OJS and its required Compose dependencies, waits up to 5 minutes for the installation marker, and runs the supported `php tools/upgrade.php upgrade` migration. A migration failure fails the deploy; only a successful migration is followed by the full-stack start and bounded 10-minute health wait.
 
 Before changing the OJS base version, back up MariaDB and the user-owned `ojs-files` and `ojs-public` named volumes. Core sitectl can create the database backup:
 
 ```bash
 mkdir -p backups
-sitectl mariadb backup --all-databases --gzip --output backups/ojs-pre-upgrade.sql.gz
+sitectl mariadb backup ojs --gzip --output backups/ojs-pre-upgrade.sql.gz
 ```
 
 Archive and test restoration of both OJS named volumes with your Docker-volume backup procedure; a database dump alone does not contain uploaded or public files.

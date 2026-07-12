@@ -5,7 +5,7 @@ description: The local sitectl compose up reconcile contract for plugin-owned Co
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Core performs a command-scoped reconcile before a plain full-stack `sitectl compose up` for local contexts owned by an installed plugin. The contract belongs to core `sitectl`, not to an individual app template. An `up` command with additional behavior flags, profiles, or selected services passes through unchanged; run `sitectl compose reconcile` explicitly first when that specialized start also needs lifecycle repair.
+Core performs a command-scoped reconcile before a plain full-stack `sitectl compose up` for local contexts owned by an installed plugin. The contract belongs to core `sitectl`, not to an individual app template. An `up` command with a profile, selected services, or behavior-changing flags such as `--wait` or `--build` passes through unchanged; run `sitectl compose reconcile` explicitly first when that specialized start also needs lifecycle repair. Normalized defaults such as `-d`, `--remove-orphans`, and sitectl's local-daemon `--no-build` still qualify for automatic reconcile.
 
 The goal is a smooth first start for setup-only checkouts:
 

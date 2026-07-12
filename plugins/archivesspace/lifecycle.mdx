@@ -19,11 +19,13 @@ sitectl compose down           # stop the stack
 sitectl deploy                 # pull updates and restart (rollout)
 ```
 
-The downstream Dockerfile builds from `libops/archivesspace:4.2.0`. The companion Solr image uses the same ArchivesSpace release tag (`libops/archivesspace-solr:4.2.0`) so application and search configuration stay aligned. `sitectl deploy` pulls dependencies, rebuilds the downstream application layer, and requires a bounded 10-minute service health wait after restart.
+The downstream Dockerfile builds from `libops/archivesspace:4.2.0`. The companion Solr image uses the same ArchivesSpace release tag (`libops/archivesspace-solr:4.2.0`) so application and search configuration stay aligned. With the template default `ASPACE_DB_MIGRATE=true`, container startup runs ArchivesSpace's `scripts/setup-database.sh` before launching the application. `sitectl deploy` pulls dependencies, rebuilds the downstream application layer, and requires a bounded 10-minute service health wait after restart, so a startup migration that prevents ArchivesSpace from becoming healthy fails the deploy.
 
-Before changing either release tag, back up MariaDB and the user-owned `archivesspace-data` volume, and verify a restore. Update the application and companion Solr tags together; a mixed release can start while still carrying incompatible search configuration.
+Before changing either release tag, back up MariaDB and the user-owned `archivesspace-data` volume, and verify a restore. Update the application and companion Solr tags together; a mixed release can start while still carrying incompatible search configuration. Do not disable `ASPACE_DB_MIGRATE` during a version change unless the release's documented migration procedure explicitly replaces the automatic setup step.
 
 The ArchivesSpace plugin does not register the generic `dev-mode` component because broad plugin, locale, or stylesheet mounts can hide content bundled in the base image. Add customizations through the tracked downstream build context or narrowly target one customization path in a local override.
+
+ArchivesSpace is not a PHP/nginx application runtime. Its ingress component retains generic Traefik router, hostname, scheme, trusted-forwarder, and entrypoint timeout changes, but opts the application service out of shared `PHP_*` and `NGINX_*` environment values and removes stale `PUBLIC_URL`. An upload or timeout setting is end to end only when the ArchivesSpace backend itself has a separately documented matching control.
 
 `sitectl archivesspace ...` is reserved for ArchivesSpace-specific operations, including the
 [API helpers](/plugins/archivesspace/api), [resource shortcuts](/plugins/archivesspace/resources),

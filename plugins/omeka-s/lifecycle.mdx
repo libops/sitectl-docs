@@ -23,12 +23,12 @@ The downstream Dockerfile builds from `libops/omeka-s:4.2.1-php84`; that publish
 
 ```bash
 mkdir -p backups
-sitectl mariadb backup --all-databases --gzip --output backups/omeka-s-pre-upgrade.sql.gz
+sitectl mariadb backup omeka_s --gzip --output backups/omeka-s-pre-upgrade.sql.gz
 ```
 
 Archive and test restoration of the files volume with your Docker-volume backup procedure; the database dump does not contain uploaded files.
 
-Omeka S provides its supported database migration through the web administration flow, not a supported CLI command. `sitectl deploy` rebuilds and restarts the stack, then prints a reminder. Sign in at `/admin` and complete any migration prompt before returning the site to normal use. The deploy is not operationally complete until that migration succeeds.
+Omeka S provides its supported database migration through the web administration flow, not a supported CLI command. `sitectl deploy` rebuilds and starts the stack in detached mode, then prints a reminder; that message is not an interactive block and the command cannot attest that the web migration succeeded. Use a maintenance window or otherwise restrict public traffic because the rollout does not hold Traefik at this gate. Sign in at `/admin`, complete any migration prompt, then run `sitectl healthcheck` and an application smoke test before returning the site to normal use.
 
 The Omeka S plugin does not register the generic `dev-mode` component. A whole-directory modules or themes mount would hide extensions bundled in the versioned base image. Put custom extensions in the tracked downstream build context, or mount only an explicitly named custom module/theme directory in a local override.
 

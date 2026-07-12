@@ -39,7 +39,7 @@ sitectl compose reconcile --force
 sitectl compose reconcile --reset-init
 ```
 
-An `up` with additional behavior flags, profiles, or selected services passes through unchanged so sitectl does not replace the requested operation with a plugin's full-stack start. Run reconcile explicitly first in workflows such as:
+An `up` with a profile, selected services, or behavior-changing flags such as `--wait` or `--build` passes through unchanged so sitectl does not replace the requested operation with a plugin's full-stack start. Normalized defaults such as `-d`, `--remove-orphans`, and sitectl's local-daemon `--no-build` still qualify for automatic reconcile. Run reconcile explicitly first in specialized workflows such as:
 
 ```bash
 sitectl compose reconcile

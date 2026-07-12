@@ -39,7 +39,7 @@ With no service arguments, `clear` removes image/build-arg overrides for every s
 
 `--tag` works for services known to sitectl's shared LibOps image map, including the supported application services. A known buildable application service rejects `--image`, because leaving its Compose `build` definition in place would make the runtime image ambiguous. Use `--tag` or `--build-arg SERVICE.BASE_IMAGE=...` for those services. Use `--image` for dependency services that do not build locally.
 
-These are local overrides, not lockfile updates. A tag-only override deliberately stops using the tracked Compose digest for that service. For a reproducible test, pass a full `tag@sha256:digest` reference with `--image` for a non-buildable service or with `--build-arg SERVICE.BASE_IMAGE=...` for a buildable application. Update the tracked tag and digest through a reviewed dependency bump before promoting the result to production.
+These are local overrides, not lockfile updates. A tag-only override deliberately stops using the tracked Compose digest for that service. For a reproducible test, pass a full `tag@sha256:digest` reference with `--image` for a non-buildable service or with `--build-arg SERVICE.BASE_IMAGE=...` for a buildable application. Before promotion, update a direct dependency's tracked tag and digest through a reviewed dependency bump, or commit the tested `BASE_IMAGE=tag@sha256:digest` default in the downstream Dockerfile/main Compose file. The ignored override file is not a production lock.
 
 ## Compose Reconcile
 

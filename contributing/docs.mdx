@@ -45,6 +45,8 @@ make docs-snippets
 
 Pull requests run `make docs-snippets-check`, which regenerates these files from current core and plugin checkouts and fails when the result differs from the committed snippets. The same required workflow runs the pinned Mintlify CLI through `make docs-check` to validate the strict documentation build and internal links.
 
+When one command change spans repositories, publish core first, then any plugin dependency, then the dependent plugins, and open or refresh the docs pull request last. Hosted docs CI checks the plugin repositories' current default branches rather than unreleased sibling branches. Do not hand-edit generated snippets to make documentation run ahead of the command binaries they describe.
+
 This runs `scripts/gen-docs-snippets/main.go`, which imports the core sitectl command
 tree plus every locally checked-out plugin: `sitectl-isle`, `sitectl-drupal`,
 `sitectl-archivesspace`, `sitectl-ojs`, `sitectl-omeka-classic`, `sitectl-omeka-s`,

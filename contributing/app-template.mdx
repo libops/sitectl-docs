@@ -119,9 +119,13 @@ Do not combine the two models for one application tree. A bundled tree plus a do
 
 `DockerComposeInit` should be idempotent. It may run an `init` service and write deterministic secret files. It must not destroy existing application data when run again.
 
-Use a dedicated `database-init` service when an application database or scoped user must be created. Only that one-shot service should receive `DB_ROOT_PASSWORD`; the application receives the scoped password. The application must require `database-init` with `condition: service_completed_successfully` and MariaDB with `condition: service_healthy`. Keep the initializer script generic and idempotent so retries do not rotate or destroy data.
+Use a dedicated `database-init` service when an application database or scoped user must be created. Among non-database workloads, only that one-shot service should receive `DB_ROOT_PASSWORD`; the application receives the scoped password. The application must require `database-init` with `condition: service_completed_successfully` and MariaDB with `condition: service_healthy`. Keep the initializer script generic and idempotent so retries do not rotate or destroy data.
 
 `DockerComposeRollout` should keep rollout commands in plugin metadata, not in a template `scripts/rollout.sh` or Makefile target. Core rollout/deploy handles git sync from the checkout's configured upstream branch when one exists, then runs the plugin's Compose rollout commands.
+
+Put standalone Compose pull/build commands at the beginning of `DockerComposeRollout`. Core v0.38 runs that contiguous preparation prefix while the current stack is still online and stops before the first non-pull/build command. Keep each preparation operation in its own metadata entry; a compound build-and-up command remains inside the outage window because it is not safe to classify as preparation.
+
+For an application with an automatic schema migration, the first post-down `compose up` should target only the application service in detached mode. Its required database and one-shot dependencies start through the tracked Compose graph, while ingress and unrelated workers remain stopped. Follow it with a bounded application-readiness check, the fail-hard migration, and a bounded full-stack `compose up --wait`. Applications without a supported noninteractive migration must instead make the manual operator gate explicit and document that deploy cannot attest to its completion.
 
 `InitArtifacts` should list files that prove init has completed. Prefer explicit files over probing container state. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` for a UID marker file when generated files need to match the local host user.
 
@@ -166,7 +170,7 @@ After creating a repository from `sitectl-app-tmpl`:
 8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
 9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run `sitectl healthcheck`.
 10. Add a plugin page to `sitectl-docs` for app-specific operations.
-11. Test a clean create and an upgrade rollout. Migration commands must fail hard, waits must be bounded, and applications without a supported CLI migration must print an explicit operator gate.
+11. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must print an explicit operator gate.
 
 ## Local Verification
 

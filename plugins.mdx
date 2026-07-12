@@ -11,7 +11,7 @@ General Docker operations stay in the core CLI. Use [`sitectl compose`](/command
 
 sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-<plugin>`. When you run a direct plugin command such as `sitectl drupal drush`, sitectl finds `sitectl-drupal` on your path and delegates the subcommand to it, passing through flags and context automatically.
 
-This means installing a plugin is as simple as putting its binary on your path. No configuration needed.
+This means installing a compatible plugin is as simple as putting its binary on your path. No registration file is needed. Core and plugin binaries are released separately, so keep the minimum versions described in [Install and Upgrade](/install) aligned.
 
 ## Command routing
 

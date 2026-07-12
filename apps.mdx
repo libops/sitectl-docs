@@ -5,7 +5,7 @@ description: How sitectl-managed application templates use Docker Compose, local
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-`sitectl` application templates are normal <Compose /> projects with documented project rules. The repository owns the application workload, and `sitectl` supplies context-aware lifecycle commands, component updates, health checks, image overrides, and service helpers.
+`sitectl` application templates are normal <Compose /> projects with documented project rules. The repository owns the application workload, and `sitectl` supplies context-aware lifecycle commands, component updates, health checks, image overrides, and service helpers. These template and core/plugin workflows are standalone: they do not require a LibOps platform account or the optional `sitectl-libops` plugin.
 
 ## Compose Files
 
@@ -26,7 +26,7 @@ Every application template includes a Dockerfile for the downstream application 
 | OJS, Omeka S, Omeka Classic, ArchivesSpace | The matching upstream application release and runtime | Tracked configuration and explicitly added extensions or customizations |
 | Drupal, ISLE, WordPress | The shared runtime and image-side setup behavior | Composer manifests, lockfiles, application dependencies, and custom code |
 
-For the first family, the application version is part of the Buildkit image tag and the downstream Dockerfile extends that versioned image. For Composer-owned stacks, do not copy a second application tree into the runtime image: update the checked-in Composer files and rebuild the downstream image. Runtime configuration stays in the Compose environment where possible.
+For the first family, the upstream application version is part of the Buildkit image tag (with a runtime suffix where applicable) and the downstream Dockerfile extends that versioned image. For Composer-owned stacks, the Buildkit tag selects the runtime rather than the application dependency set; do not copy a second application tree into that image. Update the checked-in Composer files and rebuild the downstream image. Runtime configuration stays in the Compose environment where possible.
 
 This keeps local builds fast:
 
@@ -34,7 +34,7 @@ This keeps local builds fast:
 - The build uses the platform selected by the Docker CLI on the host.
 - Local builds do not push images. Publishing images belongs in CI or another explicit release workflow.
 
-The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image. The shared ingress component follows this rule and propagates `--upload-timeout` through Traefik, nginx client/FastCGI handling, PHP input/execution limits, and PHP-FPM request termination so no downstream layer silently retains a shorter default.
+The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image. For PHP/nginx application services, the shared ingress component follows this rule and propagates `--upload-timeout` through Traefik, nginx client/FastCGI handling, PHP input/execution limits, and PHP-FPM request termination. A plugin for another runtime must map the same component value to that application's supported backend setting before describing the timeout as end to end.
 
 ## Runtime Configuration Boundary
 
@@ -46,9 +46,9 @@ Use [`sitectl image set`](/commands/image) when you need a local context to run 
 
 ## Image Versions and Digests
 
-Tracked Compose files pin directly consumed images with both a readable tag and an immutable digest, for example `libops/mariadb:11@sha256:...`. Keep both. The tag communicates the intended release line; the digest makes a checkout reproducible and prevents an unrelated registry update from changing the deployed bytes.
+Tracked Compose files pin directly consumed images with both a readable tag and an immutable digest, for example `libops/mariadb:11@sha256:...`. Keep both. The tag communicates the intended release line; the digest makes a checkout reproducible and prevents an unrelated registry update from changing the deployed bytes. Prefer a semantic release tag when the publisher provides one. A moving label such as `main` is still byte-stable only when the digest remains present, but it communicates less release intent to reviewers.
 
-The downstream Dockerfile's `BASE_IMAGE` is intentionally selected by a versioned application or runtime tag so `sitectl image set --tag` can switch it locally. `sitectl deploy` builds with `--pull`, so a downstream operator who needs immutable base bytes should set `SERVICE.BASE_IMAGE` to a `tag@sha256:digest` reference. Local `--tag` and unpinned `--image` overrides are experiments and should not silently become the production contract.
+The downstream Dockerfile's `BASE_IMAGE` is intentionally selected by a versioned application or runtime tag so `sitectl image set --tag` can switch it locally. For a reproducible local test, use `sitectl image set --build-arg SERVICE.BASE_IMAGE=tag@sha256:digest`. To promote those exact base bytes, put the `tag@sha256:digest` default in the tracked Dockerfile or main Compose build arguments and commit it; the ignored local override is not a production lock. `sitectl deploy` builds with `--pull`, so an unpinned base tag can otherwise resolve to newer bytes.
 
 Use [`sitectl bump`](/commands/bump) or a reviewed Renovate pull request to update tracked tags and digests together. Application-version changes also require the application's backup and migration procedure; an image update being available is not evidence that its schema migration succeeded.
 

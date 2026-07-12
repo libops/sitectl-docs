@@ -28,7 +28,7 @@ While [Docker's native context feature](https://docs.docker.com/engine/manage-re
 Plugins extend sitectl without requiring changes to the core binary. The core binary discovers plugins by name convention (`sitectl-<plugin>` on `$PATH`) and delegates commands to them. This means:
 
 - Stack-specific logic stays in the plugin, not in core
-- Plugins can be installed and upgraded independently
+- Plugins can be installed and upgraded independently within their advertised core SDK/protocol compatibility range
 - Plugins can include other plugins. ISLE includes Drupal, so operators of ISLE sites get Drupal commands automatically
 
 See [Plugin hierarchy](/contributing/plugin-hierarchy) for how dispatch works at the code level.
@@ -47,11 +47,13 @@ See [Compose reconcile contract](/contributing/compose-reconcile) for the detail
 
 ## Application and Image Ownership
 
-Each application tree has one source owner. Buildkit owns verified upstream releases for OJS, Omeka, and ArchivesSpace and publishes application-versioned images; their downstream templates extend those images with tracked customizations. Drupal, ISLE, and WordPress keep Composer manifests, lockfiles, and application code in the downstream checkout; their Buildkit images own the runtime rather than a competing application tree.
+Each application tree has one source owner. Buildkit owns verified upstream releases for OJS, Omeka, and ArchivesSpace and publishes images whose tags identify the bundled upstream application version; their downstream templates extend those images with tracked customizations. Drupal, ISLE, and WordPress keep Composer manifests, lockfiles, and application code in the downstream checkout; their Buildkit image tags identify the runtime line, while the downstream Composer lockfile identifies the application dependency set. A published runtime image must not introduce a competing application tree.
 
 Tracked Compose dependencies use readable tags plus immutable digests. Buildable application services keep `BASE_IMAGE` as an overrideable build argument so a local context can test another version without replacing the downstream `build` contract. App plugins mirror that choice in `CreateSpec.Images` and rebuild policies.
 
 Inside the published images, s6-overlay owns process/setup ordering and confd turns environment and secret inputs into dependent-service configuration. Templates should expose supported settings through tracked Compose environment values and components instead of copying generated nginx, PHP-FPM, or application config into another owner layer.
+
+Ingress components must also describe the application runtime they configure. PHP/nginx applications may use the shared upload, timeout, and trusted-proxy environment mapping. A non-PHP runtime opts out of those defaults and supplies only mappings its backend understands, while retaining generic Traefik router and entrypoint changes. ArchivesSpace follows this non-PHP contract and removes stale PHP/nginx and `PUBLIC_URL` values from its application service.
 
 The boundary also controls development mounts. A plugin registers `dev-mode` only for downstream-owned trees or explicitly named extension paths. It must not mount an empty broad directory over plugins, modules, themes, locales, or stylesheets bundled in a versioned application image.
 

@@ -140,13 +140,13 @@ Rebuilding `sitectl` locally without reinstalling the plugin binaries means core
 
 ## Core and Plugin Release Order
 
-Plugin executables embed the sitectl SDK version selected by their `go.mod`; installing a newer core binary does not update SDK behavior inside an already-built plugin. Releases that depend on the current rollout and service-component fixes therefore use `v0.37.0` as their first compatible core version.
+Plugin executables embed the sitectl SDK version selected by their `go.mod`; installing a newer core binary does not update SDK behavior inside an already-built plugin. Releases that depend on the pull/build preparation boundary, app-only migration start, or non-PHP ingress runtime contract therefore use `v0.38.0` as their first compatible core version.
 
 Use this order for any release that raises the minimum core SDK version:
 
-1. Tag and publish core `sitectl` `v0.37.0`.
-2. In each plugin, run `go get github.com/libops/sitectl@v0.37.0` followed by `go mod tidy`, ensure integration tests install stable core v0.37.0 or newer, then run the full plugin tests without a local `go.work` override.
-3. Release `sitectl-drupal` before `sitectl-isle`, then release the application plugins. The v0.37 compatibility release makes ISLE packages require `sitectl-drupal >= 0.10.0` as well as `sitectl >= 0.37.0`.
+1. Tag and publish core `sitectl` `v0.38.0`.
+2. In each plugin, run `go get github.com/libops/sitectl@v0.38.0` followed by `go mod tidy`, ensure integration tests install stable core v0.38.0 or newer, then run the full plugin tests without a local `go.work` override.
+3. Release `sitectl-drupal` before `sitectl-isle`, then release the other application plugins. ISLE packages require `sitectl-drupal >= 0.10.0` as well as `sitectl >= 0.38.0`, so the publish and install dependency order is core, Drupal, then ISLE.
 4. Publish or update the Homebrew core formula before plugin formulas. Homebrew dependencies cannot express the same minimum version reliably, so ordering is the compatibility gate there.
 
-Plugin GoReleaser configurations run `scripts/check-sitectl-core-version.sh` and refuse a release built with an older or prerelease SDK. Debian, RPM, and APK packages also declare their format-specific `sitectl >= 0.37.0` dependency. Renovate can propose later module upgrades after tags exist, but the initial core-first bump is an intentional release step.
+Plugin GoReleaser configurations run `scripts/check-sitectl-core-version.sh` and refuse a release built with an older or prerelease SDK. Debian, RPM, and APK packages also declare their format-specific `sitectl >= 0.38.0` dependency. Renovate can propose later module upgrades after tags exist, but the initial core-first bump is an intentional release step.

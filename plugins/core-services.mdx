@@ -23,7 +23,7 @@ This keeps common operations consistent across Drupal, Islandora, WordPress, OJS
 
 ## Ingress is a component
 
-TLS mode selection, domain publication, Cloudflare Origin CA, Let's Encrypt settings, custom certificates, mkcert development certificates, trusted upstream proxies, and upload/read timeout tuning belong to the `ingress` component. App plugins supply app-specific router names, route files, and service environment values so a single component update can keep Traefik and the application aligned.
+TLS mode selection, domain publication, Cloudflare Origin CA, Let's Encrypt settings, custom certificates, mkcert development certificates, trusted upstream proxies, and upload/read timeout tuning belong to the `ingress` component. App plugins supply app-specific router names, route files, and every supported backend environment mapping needed to keep Traefik and the application aligned. When a runtime has no app-specific mapping for a setting, the component changes the Traefik edge only; operators should not assume the backend limit also changed.
 
 ## Service areas
 

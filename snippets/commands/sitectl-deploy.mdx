@@ -4,7 +4,8 @@ Deploy the active context by orchestrating a full update cycle.
 
 The deploy sequence runs:
   1. git pull `--ff-only` for the current upstream branch (unless `--skip-git` is set)
-  2. Pull images while the current site is still running (unless `--no-pull` is set)
+  2. Pull images and build application images while the current site is still
+     running (explicit pulls are skipped when `--no-pull` is set)
   3. Plugin pre-down hooks (if the context plugin registers a deploy runner)
   4. docker compose down `--remove-orphans`
   5. The plugin's remaining application-aware rollout commands when declared;
