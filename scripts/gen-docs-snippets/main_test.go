@@ -6,6 +6,25 @@ import (
 	"testing"
 )
 
+func TestPortableText(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		t.Skip("user home is unavailable")
+	}
+
+	tests := map[string]string{
+		home:                                  "~",
+		filepath.Join(home, ".ssh", "id_rsa"): "~/.ssh/id_rsa",
+		"Example: " + filepath.Join(home, ".ssh", "id_ed25519"): "Example: ~/.ssh/id_ed25519",
+		"/var/lib/libops/config":                                "/var/lib/libops/config",
+	}
+	for input, want := range tests {
+		if got := portableText(input); got != want {
+			t.Errorf("portableText(%q) = %q, want %q", input, got, want)
+		}
+	}
+}
+
 func TestRemoveStaleGeneratedSnippets(t *testing.T) {
 	t.Parallel()
 

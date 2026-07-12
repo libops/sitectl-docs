@@ -237,6 +237,7 @@ var (
 )
 
 func processDescription(s string) string {
+	s = portableText(s)
 	s = reSingleQuoted.ReplaceAllString(s, "`${1}`")
 	s = reAngleArg.ReplaceAllString(s, "${1}`${2}`")
 	s = reFlagName.ReplaceAllString(s, "${1}`${2}`")
@@ -251,6 +252,18 @@ func collectLocalFlags(cmd *cobra.Command) []*pflag.Flag {
 		}
 	})
 	return flags
+}
+
+func portableText(value string) string {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return value
+	}
+	if value == home {
+		return "~"
+	}
+	prefix := home + string(os.PathSeparator)
+	return strings.ReplaceAll(value, prefix, "~/")
 }
 
 func (g *generator) renderSnippet(cmd *cobra.Command) string {
@@ -283,7 +296,7 @@ func (g *generator) renderSnippet(cmd *cobra.Command) string {
 				if f.Shorthand != "" {
 					flagStr = "-" + f.Shorthand + ", " + flagStr
 				}
-				defVal := f.DefValue
+				defVal := portableText(f.DefValue)
 				if defVal == "" {
 					defVal = " "
 				} else {
