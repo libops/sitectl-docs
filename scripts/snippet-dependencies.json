@@ -1,0 +1,65 @@
+{
+  "sitectl": {
+    "directory": "sitectl",
+    "module": "github.com/libops/sitectl",
+    "repository": "libops/sitectl",
+    "version": "v0.39.0",
+    "ref": "90c341271b38c998261efff6d81dc33217c747f7"
+  },
+  "sitectl_archivesspace": {
+    "directory": "sitectl-archivesspace",
+    "module": "github.com/libops/sitectl-archivesspace",
+    "repository": "libops/sitectl-archivesspace",
+    "version": "v0.6.0",
+    "ref": "b4f1423b295583e332a7478944708a2e588ad0d6"
+  },
+  "sitectl_drupal": {
+    "directory": "sitectl-drupal",
+    "module": "github.com/libops/sitectl-drupal",
+    "repository": "libops/sitectl-drupal",
+    "version": "v0.11.0",
+    "ref": "18241650ff0ffab255a9a3fed4c2a4d1850f3704"
+  },
+  "sitectl_isle": {
+    "directory": "sitectl-isle",
+    "module": "github.com/libops/sitectl-isle",
+    "repository": "libops/sitectl-isle",
+    "version": "v0.18.0",
+    "ref": "4dcbc7818dbea0bfb70d1e06f5f289547110e694"
+  },
+  "sitectl_libops": {
+    "directory": "sitectl-libops",
+    "module": "github.com/libops/sitectl-libops",
+    "repository": "libops/sitectl-libops",
+    "version": "v1.2.0",
+    "ref": "c2f5d1a3a7f34710b9b2ce8226daa973542f8f11"
+  },
+  "sitectl_ojs": {
+    "directory": "sitectl-ojs",
+    "module": "github.com/libops/sitectl-ojs",
+    "repository": "libops/sitectl-ojs",
+    "version": "v0.6.0",
+    "ref": "e8c979442293ca6e6b8b6d00c55f63596e831ee5"
+  },
+  "sitectl_omeka_classic": {
+    "directory": "sitectl-omeka-classic",
+    "module": "github.com/libops/sitectl-omeka-classic",
+    "repository": "libops/sitectl-omeka-classic",
+    "version": "v0.6.0",
+    "ref": "aaf701c05282bb9787519c207a2de5f4b34c66a2"
+  },
+  "sitectl_omeka_s": {
+    "directory": "sitectl-omeka-s",
+    "module": "github.com/libops/sitectl-omeka-s",
+    "repository": "libops/sitectl-omeka-s",
+    "version": "v0.6.0",
+    "ref": "1c885922c58f1ca6e0d3feb5fbce2840474796ad"
+  },
+  "sitectl_wp": {
+    "directory": "sitectl-wp",
+    "module": "github.com/libops/sitectl-wp",
+    "repository": "libops/sitectl-wp",
+    "version": "v0.5.0",
+    "ref": "b793264a8ad1b69dd899313ae6df23f781779b15"
+  }
+}

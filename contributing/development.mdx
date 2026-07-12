@@ -22,9 +22,9 @@ cd ../sitectl-drupal && make install
 
 ## Application plugin template
 
-Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when starting a new application plugin for a Compose-backed app that uses shared services such as Traefik, MariaDB, or Solr. The template includes the standard SDK entrypoint, Compose create metadata, project discovery, an app `exec` helper, debug/validate/healthcheck runners, GitHub Actions workflows, GoReleaser config, Makefile targets, and a local `go.work` helper.
+Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when starting a new application plugin for a Compose-backed app that uses shared services such as Traefik, MariaDB, or Solr. The template includes the standard SDK entrypoint, Compose create and rollout metadata, project discovery, ingress wiring, an explicit dev-mode opt-out, an app `exec` helper, debug/validate/healthcheck runners, a warning-only verification scaffold, GitHub Actions workflows, GoReleaser config, Makefile targets, and a local `go.work` helper.
 
-After creating a repo from the template, replace the app constants, module path, binary name, Compose template repository, project discovery rules, and app-specific commands. Core `sitectl compose` owns build, init, up, down, logs, status, and rollout behavior; core service commands own shared MariaDB, Solr, Traefik, Valkey, and Memcached operations. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
+After creating a repo from the template, replace the app constants, module path, binary name, Compose template repository, project discovery rules, migration placeholder, warning-only verification runner, and app-specific commands. Core `sitectl compose` owns build, init, up, down, logs, status, and rollout behavior; core service commands own shared MariaDB, Solr, Traefik, Valkey, and Memcached operations. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
 
 See [Application plugin template](/contributing/app-template) for the template checklist.
 
@@ -144,9 +144,10 @@ Plugin executables embed the sitectl SDK version selected by their `go.mod`; ins
 
 Use this order for any release that raises the minimum core SDK version:
 
-1. Tag and publish core `sitectl` `v0.38.0`.
-2. In each plugin, run `go get github.com/libops/sitectl@v0.38.0` followed by `go mod tidy`, ensure integration tests install stable core v0.38.0 or newer, then run the full plugin tests without a local `go.work` override.
-3. Release `sitectl-drupal` before `sitectl-isle`, then release the other application plugins. ISLE packages require `sitectl-drupal >= 0.10.0` as well as `sitectl >= 0.38.0`, so the publish and install dependency order is core, Drupal, then ISLE.
-4. Publish or update the Homebrew core formula before plugin formulas. Homebrew dependencies cannot express the same minimum version reliably, so ordering is the compatibility gate there.
+1. Tag and publish core `sitectl`. Wait for its complete release workflow, native package publication, and Homebrew formula update to pass before releasing a plugin that requires it.
+2. In each affected plugin, update `github.com/libops/sitectl` to the published stable version, run `go mod tidy`, ensure integration tests install that core version or newer, and run the full plugin tests without a local `go.work` override.
+3. Release `sitectl-drupal` and wait for all publication jobs before releasing `sitectl-isle`; then release the other application plugins. ISLE packages require `sitectl-drupal >= 0.10.0` as well as `sitectl >= 0.38.0`, so the publish and install dependency order is core, Drupal, then ISLE. Homebrew cannot express the same minimum versions reliably, making this ordering the compatibility gate there.
+4. Update and release `sitectl-app-tmpl` after the core SDK it demonstrates is published. Its warning-only verification and migration placeholders are scaffold instructions, not finished behavior for a derived application plugin.
+5. Update `sitectl-docs` last. Record each published version and exact tag commit in `scripts/snippet-dependencies.json`, regenerate the snippets from those commits, and merge only after the manifest checker proves every tag resolves to its recorded SHA.
 
 Plugin GoReleaser configurations run `scripts/check-sitectl-core-version.sh` and refuse a release built with an older or prerelease SDK. Debian, RPM, and APK packages also declare their format-specific `sitectl >= 0.38.0` dependency. Renovate can propose later module upgrades after tags exist, but the initial core-first bump is an intentional release step.

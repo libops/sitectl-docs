@@ -5,7 +5,7 @@ description: How sitectl plugins extend the core CLI with stack-specific workflo
 
 Plugins extend `sitectl` with commands and workflows specific to the technology stack your site runs on.
 
-General Docker operations stay in the core CLI. Use [`sitectl compose`](/commands/compose) for context-aware Docker Compose commands and [`sitectl port-forward`](/commands/port-forward) for remote service tunnels. Plugins add stack-specific value on top of that foundation: create definitions, application CLIs, API helpers, sync workflows, migrations, diagnostics, and other project-specific operations.
+General Docker operations stay in the core CLI. Use [`sitectl compose`](/commands/compose) for context-aware Docker Compose commands and [`sitectl port-forward`](/commands/port-forward) for loopback-only access to internal services on local or remote contexts. Plugins add stack-specific value on top of that foundation: create definitions, application CLIs, API helpers, sync workflows, migrations, diagnostics, and other project-specific operations.
 
 ## How discovery works
 
@@ -103,7 +103,7 @@ First-class application plugins follow these composition rules:
 |---|---|---|---|
 | `archivesspace` | `./archivesspace` | ArchivesSpace, Traefik, MariaDB, Solr | none |
 | `drupal` | `./drupal` | Drupal, Traefik, MariaDB, Solr | none |
-| `isle` | Chosen during create | Islandora Drupal stack with MariaDB, Solr, Traefik, Fedora, Blazegraph, IIIF services | `drupal` |
+| `isle` | Chosen during create | Islandora Drupal stack with MariaDB, Solr, Traefik, git-root codebase, and local Triplet; Fedora and Blazegraph are selectable and default to superseded/disabled | `drupal` |
 | `ojs` | `./ojs` | OJS, Traefik, MariaDB | none |
 | `omeka-classic` | `./omeka-classic` | Omeka Classic, Traefik, MariaDB | none |
 | `omeka-s` | `./omeka-s` | Omeka S, Traefik, MariaDB | none |

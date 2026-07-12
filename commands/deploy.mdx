@@ -9,20 +9,24 @@ Use `deploy` to apply a full update cycle to a running site: update the checkout
 
 `sitectl deploy` is not a zero-downtime rollout. After Git and the rollout's contiguous leading pull/build preparation prefix succeed, it stops the current Compose project before restart and migration gates. Schedule application-version and schema changes in a maintenance window, and keep a tested database/file-volume restore available until post-deploy checks pass.
 
+Git updates require a clean checkout, including no untracked files. This prevents a branch or exact-ref deployment from overwriting local work. Commit or move intended changes first, or use `--skip-git` only when the current checkout is already the exact source you intend to deploy.
+
 ## Reference
 
 <DeployCmd />
 
 ## Deploy sequence
 
-1. `git pull --ff-only` on the current upstream branch (skipped with `--skip-git`; `--branch` checks out a branch first). This runs while the existing site is still online, so a checkout or network failure does not stop a healthy site.
-2. Resolve plugin rollout metadata, then run its contiguous leading Compose `pull` and `build` commands while the current site is still online. Preparation stops at the first command that is not a standalone pull/build operation. A plugin without rollout metadata gets a generic pull preflight. Registry, authentication, missing-image, and build failures therefore leave the healthy stack running.
+1. Update Git unless `--skip-git` is set. With no selector, sitectl fast-forwards the current upstream branch. `--branch NAME` fetches that branch from the checkout's selected remote, creates or switches the local tracking branch, and fast-forwards it. `--ref REF` fetches an advertised remote ref or commit into a dedicated local ref and checks out its resolved commit detached; it does not rewrite a local branch. This runs while the existing site is still online, so a checkout or network failure does not stop a healthy site.
+2. Resolve plugin rollout metadata, then run its contiguous leading Compose `pull` and `build` commands while the current site is still online. Preparation stops at the first command that is not a standalone pull/build operation. A plugin without rollout metadata gets a generic pull preflight. Registry, authentication, missing-image, and build failures therefore leave the healthy stack running. Context `compose-file` and `env-file` selections are applied to these commands as well as the post-down rollout.
 3. Plugin pre-down hooks (if the context plugin registers a deploy runner)
 4. `docker compose down --remove-orphans`, using the updated Compose definition
 5. The plugin's remaining ordered rollout commands, which can rebuild the application, initialize missing artifacts, start services, run bounded automatic migration/health gates, or emit an explicit manual migration gate. Any failing command stops the deploy. A plugin without rollout metadata runs `docker compose up -d --remove-orphans` here.
 6. Plugin post-up hooks
 
 `--no-pull` skips explicit `docker compose pull` commands in either path. It does not remove `--pull` from an application build or prevent `compose up --pull missing` from obtaining an image that is absent locally.
+
+`--branch` and `--ref` are mutually exclusive. An exact commit works only when the selected remote advertises it or accepts it in a fetch request. An exact-ref deployment leaves the checkout detached; use a later `sitectl deploy --branch NAME` to return it to a tracked branch.
 
 ## Migration Gates
 
@@ -31,7 +35,22 @@ The rollout is application-owned after the shared Git/pull/build boundary. Plugi
 - Drupal and ISLE start only the Drupal service, wait for its installation marker, then run `drush updb -y` and `drush cr`. Either failure fails the deploy, and a bounded final full-stack health wait must pass.
 - WordPress starts only the WordPress service, waits for installation, and runs `wp core update-db`; a database-update failure fails the deploy, and a bounded final full-stack health wait must pass.
 - OJS starts only the OJS service, waits for installation, and runs `php tools/upgrade.php upgrade`; a migration failure fails the deploy, and a bounded final full-stack health wait must pass.
-- Omeka S and Omeka Classic do not expose a supported noninteractive migration command. Their rollouts start Compose in detached mode and print an action-required message; the message is not an interactive block or proof of migration, and Traefik is not held while the action is pending. Use a maintenance window or restrict public traffic, complete the web migration at `/admin`, then run `sitectl healthcheck` and an application smoke test before considering the deployment complete.
+- Omeka S and Omeka Classic do not expose a supported noninteractive migration command. Their rollouts start only the application and required dependencies, wait up to ten minutes for bounded migration inspection, and leave public Traefik stopped. If the database is current, deploy starts the full stack and performs its bounded health wait. If a browser migration is required, deploy prints `ACTION REQUIRED` and exits nonzero before public ingress starts.
+
+For an Omeka manual gate, leave the application container running and open a loopback-only path in another terminal:
+
+```bash
+# Use omeka-classic instead of omeka-s for an Omeka Classic site.
+sitectl port-forward 8080:omeka-s:80
+```
+
+Open `http://localhost:8080/admin`, complete the supported migration, stop the forward with `Ctrl+C`, and resume the already-reviewed checkout and images:
+
+```bash
+sitectl deploy --skip-git --no-pull
+```
+
+If the original deploy named a non-active context, pass the same `--context NAME` to both commands. A timeout, inspection error, cancellation, or required migration never falls through to the final full-stack start. After the resumed deploy succeeds, run `sitectl healthcheck`, exercise application routes, and verify application plugins/modules/themes that may have their own upgrade work.
 
 Back up the database and every application-owned file/upload volume before changing an application version. A green container healthcheck proves the declared services are running or completed successfully; it does not replace an application schema migration or a restore test.
 
@@ -42,6 +61,12 @@ Back up the database and every application-owned file/upload volume before chang
 sitectl deploy
 
 # Check out and deploy a specific branch
+sitectl deploy --branch main
+
+# Test an exact pull-request ref without moving a local branch
+sitectl deploy --ref refs/pull/123/head
+
+# Return a detached exact-ref checkout to main
 sitectl deploy --branch main
 
 # Restart services without pulling git changes (e.g. after a config change)

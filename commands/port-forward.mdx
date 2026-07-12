@@ -1,21 +1,29 @@
 ---
 title: port-forward
-description: Access Docker service ports on remote contexts that aren't exposed on the host.
+description: Access internal Docker Compose service ports without publishing them on the host.
 ---
 
 import PortForwardCmd from "/snippets/commands/sitectl-port-forward.mdx";
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Remote services often do not expose ports directly on the VM. Solr, Traefik's dashboard, ActiveMQ, and similar admin interfaces are typically internal only. `port-forward` opens an SSH tunnel and maps those ports to localhost so you can reach them from your browser or local tools.
+Solr, Traefik's dashboard, migration-only application routes, and similar interfaces are often available only inside a <Compose /> network. `port-forward` maps one or more of those service ports to loopback ports on your workstation without adding a public `ports:` entry to the project.
 
-`port-forward` is a core `sitectl` command. It works from the active context and is not provided by an application plugin.
+`port-forward` is a core `sitectl` command. It works for local and remote contexts and is not provided by an application plugin. At least one `LOCAL-PORT:SERVICE:REMOTE-PORT` mapping is required.
 
 ## Reference
 
 <PortForwardCmd />
 
-## How it works
+## Transport and exposure
 
-sitectl opens an SSH connection to the remote context's host and forwards each `LOCAL-PORT:SERVICE:REMOTE-PORT` mapping through that tunnel. The tunnel stays open until you press `Ctrl+C`.
+Every local listener binds to `127.0.0.1`, so the forward is reachable from the same workstation but is not published to its LAN interfaces.
 
-Services are identified by their <Compose /> service name. sitectl resolves the container and port automatically.
+| Context | Transport |
+|---|---|
+| Remote | Resolves the running service container on the remote Docker host and carries the connection through SSH |
+| Local Linux | Connects directly to the service container on its <Compose /> network |
+| Local Docker Desktop | Streams through `busybox nc` inside the selected service container |
+
+Services are identified by their <Compose /> service name and must already have a running container. Docker Desktop forwarding also requires the service image to provide BusyBox `nc`; LibOps application images include it. The command fails if a requested local port is already occupied.
+
+Leave the command running while you use the forwarded endpoints. Press `Ctrl+C` to close every listener and active connection.

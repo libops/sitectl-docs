@@ -43,6 +43,8 @@ Plugin create definitions are the shared contract between `sitectl create` and l
 
 Core `sitectl create` uses that metadata to scaffold a context. Core `sitectl compose up` uses the same metadata for command-scoped first-run reconcile on local plugin-owned contexts. The reconcile step can run missing init and build work before starting Compose, but it remains a synchronous CLI workflow, not a background controller.
 
+Core v0.39 keeps the context boundary intact during deploy as well: context-selected Compose and environment files are injected into recognized plugin rollout commands for local and remote contexts. `sitectl deploy --ref` can fetch an exact advertised remote ref into a detached checkout without moving a downstream branch, while ordinary branch updates remain clean-tree, fast-forward-only operations.
+
 See [Compose reconcile contract](/contributing/compose-reconcile) for the detailed authoring contract and the boundary around Kubernetes-style terminology.
 
 ## Application and Image Ownership

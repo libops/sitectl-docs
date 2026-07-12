@@ -12,12 +12,16 @@ The deploy sequence runs:
      otherwise docker compose up -d `--remove-orphans`
   6. Plugin post-up hooks (if the context plugin registers a deploy runner)
 
-The `--branch` flag checks out a branch before the git pull step.
-If omitted, sitectl updates the current branch when it has a git upstream.
+The `--branch` flag fetches and checks out a named remote branch before a
+fast-forward merge. The `--ref` flag fetches an exact remote ref (including a
+pull-request ref or advertised commit) and checks it out detached without
+rewriting a local branch. If both are omitted, sitectl updates the current
+branch when it has a git upstream.
 
 Examples:
   sitectl deploy                         # Deploy the current upstream branch
   sitectl deploy `--branch` main           # Switch to main and deploy
+  sitectl deploy `--ref` refs/pull/123/head # Deploy an exact pull-request ref
   sitectl deploy `--skip-git`              # Restart services without pulling git changes
   sitectl deploy `--context` prod          # Deploy on a specific context
 
@@ -29,4 +33,5 @@ sitectl deploy
 |------|---------|-------------|
 | `--branch` |   | Git branch to check out during the deploy (default: current branch) |
 | `--no-pull` | `false` | Skip explicit docker compose pull steps (build `--pull` is unaffected) |
+| `--ref` |   | Exact remote Git ref or advertised commit to fetch and deploy detached |
 | `--skip-git` | `false` | Skip the git fetch/checkout step |

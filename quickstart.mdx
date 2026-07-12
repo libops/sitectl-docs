@@ -104,8 +104,8 @@ sitectl drupal drush cr
 # Collect a diagnostic bundle when something is wrong
 sitectl debug
 
-# Forward a remote service port to your local machine
-sitectl port-forward
+# Forward an internal service port to loopback
+sitectl port-forward 8983:solr:8983 --context museum-staging
 ```
 
 ## Targeting a specific environment

@@ -17,9 +17,9 @@ The template is intentionally thin. The application repository owns the Compose 
 | Create flow metadata | App plugin | `CreateSpec`, template repo, init artifacts, image specs |
 | App-specific commands | App plugin | `sitectl <app> exec ...`, API wrappers, application maintenance helpers |
 | Shared service operations | Core `sitectl` | `sitectl mariadb backup`, `sitectl solr info`, `sitectl traefik status` |
-| Cross-cutting reports | Core command plus plugin runner | `sitectl debug`, `sitectl validate`, `sitectl healthcheck` |
+| Cross-cutting reports | Core command plus plugin runner | `sitectl debug`, `sitectl validate`, `sitectl healthcheck`, `sitectl verify` |
 
-New app plugins should usually call `RegisterStandardComposeAppPlugin`. That helper registers the common compose-backed plugin shape in one place: project discovery, create metadata, ingress component wiring, dev-mode wiring, healthcheck registration, and public route discovery.
+New app plugins should usually call `RegisterStandardComposeAppPlugin`. That helper registers the common compose-backed plugin shape in one place: project discovery, create metadata, ingress component wiring, optional dev-mode wiring, healthcheck registration, and public route discovery.
 
 Use the lower-level `RegisterComposeTemplateCreateRunner` only when an app plugin needs custom registration behavior. Avoid `RegisterStandardComposeTemplate` for first-class app plugins unless the plugin deliberately wants direct namespace lifecycle commands; core `sitectl compose` should provide the shared lifecycle surface.
 
@@ -62,11 +62,17 @@ func createDefinition() plugin.CreateSpec {
         DockerComposeRollout: []string{
             "docker compose pull --ignore-buildable --quiet || docker compose pull --ignore-buildable",
             "docker compose build --pull",
+            "docker compose run --rm init",
+            "docker compose up --remove-orphans --pull missing --quiet-pull -d app",
+            "docker compose exec -T app sh -c 'attempt=0; until test -f /installed; do attempt=$((attempt + 1)); if [ \"$attempt\" -ge 150 ]; then exit 1; fi; sleep 2; done'",
+            "printf '%s\\n' 'ACTION REQUIRED: replace this fail-closed placeholder with the supported migration command before release.' >&2; exit 1",
             "docker compose up --remove-orphans --wait --wait-timeout 600 --pull missing --quiet-pull -d",
         },
     }
 }
 ```
+
+The migration command in this scaffold is deliberately fail-closed guidance for the plugin author: it exits nonzero, so the final Compose health wait cannot run and deploy cannot claim success. Replace it before releasing a derived plugin. A final Compose health wait proves container health only; it cannot prove that an application schema migration happened.
 
 ## Standard App Registration
 
@@ -79,11 +85,16 @@ sdk := plugin.NewSDK(plugin.Metadata{
 })
 
 sdk.MustRegisterStandardComposeAppPlugin(plugin.StandardComposeAppPluginOptions{
+    PluginName:   "example",
     DisplayName:  "Example",
     AppService:   "example",
     Router:       "example",
     DefaultPath:  "./example",
     ReadyMessage: "Example is ready.",
+    Discovery: plugin.ComposeProjectDiscovery{
+        RequiredServices: []string{"example", "mariadb", "traefik"},
+        Reason:           "example application stack",
+    },
     CreateSpec:   createDefinition(),
     CreateOptions: plugin.ComposeTemplateCreateOptions{
         DefaultDatabaseService:        "mariadb",
@@ -106,9 +117,12 @@ sdk.MustRegisterStandardComposeAppPlugin(plugin.StandardComposeAppPluginOptions{
         DatabaseService: "mariadb",
     }),
 })
+
+// Verification is application-specific and is registered separately.
+sdk.RegisterVerifyRunner(exampleVerifyRunner{})
 ```
 
-The helper is intentionally a registration helper, not a new runtime abstraction. App behavior still lives in the template repository, buildkit image, or app-specific plugin command where it belongs.
+The helper is intentionally a registration helper, not a new runtime abstraction. App behavior still lives in the template repository, buildkit image, or app-specific plugin command where it belongs. It registers discovery, create, ingress, optional dev-mode, route, and healthcheck behavior; it does not invent application-specific verification or migration logic.
 
 Choose the application-source owner before defining image metadata:
 
@@ -123,9 +137,13 @@ Use a dedicated `database-init` service when an application database or scoped u
 
 `DockerComposeRollout` should keep rollout commands in plugin metadata, not in a template `scripts/rollout.sh` or Makefile target. Core rollout/deploy handles git sync from the checkout's configured upstream branch when one exists, then runs the plugin's Compose rollout commands.
 
-Put standalone Compose pull/build commands at the beginning of `DockerComposeRollout`. Core v0.38 runs that contiguous preparation prefix while the current stack is still online and stops before the first non-pull/build command. Keep each preparation operation in its own metadata entry; a compound build-and-up command remains inside the outage window because it is not safe to classify as preparation.
+Put standalone Compose pull/build commands at the beginning of `DockerComposeRollout`. Core v0.39 runs that contiguous preparation prefix while the current stack is still online and stops before the first non-pull/build command. Keep each preparation operation in its own metadata entry; a compound build-and-up command remains inside the outage window because it is not safe to classify as preparation.
 
-For an application with an automatic schema migration, the first post-down `compose up` should target only the application service in detached mode. Its required database and one-shot dependencies start through the tracked Compose graph, while ingress and unrelated workers remain stopped. Follow it with a bounded application-readiness check, the fail-hard migration, and a bounded full-stack `compose up --wait`. Applications without a supported noninteractive migration must instead make the manual operator gate explicit and document that deploy cannot attest to its completion.
+Keep rollout entries as simple top-level `docker compose` commands or shell lists of those commands. Core v0.39 applies the context's selected Compose files and environment files to every recognized branch, including remote rollouts, and preserves the fallback pull pattern shown above. Ambiguous shell grammar such as redirections, subshells, functions, and background commands is deliberately left unchanged; do not hide lifecycle behavior behind it.
+
+For an application with an automatic schema migration, the first post-down `compose up` should target only the application service in detached mode. Its required database and one-shot dependencies start through the tracked Compose graph, while ingress and unrelated workers remain stopped. Follow it with a bounded application-readiness check, the fail-hard migration, and a bounded full-stack `compose up --wait`.
+
+Applications without a supported noninteractive migration must instead fail at an unambiguous `ACTION REQUIRED` gate, leave public ingress stopped, and document that deploy cannot attest to completion. A printed notice by itself is not a gate. The runbook must tell the operator how to complete the supported web migration, start the full stack, and then run health and application verification before restoring traffic.
 
 `InitArtifacts` should list files that prove init has completed. Prefer explicit files over probing container state. Use `ValueFrom: plugin.InitArtifactValueFromHostUID` for a UID marker file when generated files need to match the local host user.
 
@@ -135,7 +153,7 @@ For an application with an automatic schema migration, the first post-down `comp
 
 Pin every directly consumed Compose image as `tag@sha256:digest`. Keep a versioned tag for reviewability and the digest for reproducibility. A buildable application's `BASE_IMAGE` remains a build argument so local `--tag` and explicit `tag@digest` testing work without deleting the Compose `build` contract.
 
-Register `dev-mode` only when the downstream checkout owns every mounted tree, or when each mount targets one explicitly named custom extension. Never mount a broad plugins, modules, themes, locales, or stylesheets directory over content bundled in a versioned base image. Omitting `dev-mode` is the correct contract when a safe editable mount list cannot be declared.
+Register `dev-mode` only when the downstream checkout owns every mounted tree, or when each mount targets one explicitly named custom extension. Never mount a broad plugins, modules, themes, locales, or stylesheets directory over content bundled in a versioned base image. The v0.39 scaffold sets `DisableDevMode: true`; keep that default until a derived plugin can replace it with a safe, explicit `DevModeOptions` mount list.
 
 The standard core healthcheck accepts a stopped service only when the effective Compose model proves it is a required `service_completed_successfully` dependency and its container is exactly `exited (0)`. Do not rely on that exception for optional jobs or ad hoc `docker compose run` containers.
 
@@ -162,15 +180,15 @@ After creating a repository from `sitectl-app-tmpl`:
 
 1. Rename the Go module, binary, plugin name, display name, and release workflow outputs.
 2. Set `TemplateRepo`, `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants.
-3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, `InitVolumes`, and `Images` to match the real template repository.
-4. Prefer `RegisterStandardComposeAppPlugin`; tune its `Discovery` option only when service-name detection is not enough.
+3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, `InitVolumes`, and `Images` to match the real template repository. Replace the migration placeholder with supported fail-hard automation or a documented fail-closed manual-migration gate before release.
+4. Prefer `RegisterStandardComposeAppPlugin`; tune its `Discovery` option only when service-name detection is not enough. Keep the scaffold's `DisableDevMode: true` default unless the derived plugin can declare downstream-owned paths or explicitly named custom extensions.
 5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
 6. Use core service commands for shared operations. For example, document `sitectl mariadb backup app` rather than adding a thin app plugin alias.
-7. Implement debug, validate, and healthcheck runners through the SDK. Results should be structured; progress and diagnostics should go to stderr.
+7. Implement debug, validate, healthcheck, and verify runners through the SDK. The template's verify runner deliberately returns an unimplemented warning; replace it with behavioral checks before releasing a derived plugin. Results should be structured; progress and diagnostics should go to stderr.
 8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
-9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run `sitectl healthcheck`.
+9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run both `sitectl healthcheck` and `sitectl verify`.
 10. Add a plugin page to `sitectl-docs` for app-specific operations.
-11. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must print an explicit operator gate.
+11. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must fail at an `ACTION REQUIRED` gate, keep ingress stopped, and document the manual migration, full-stack start, and post-migration checks.
 
 ## Local Verification
 
@@ -188,5 +206,6 @@ Then verify the installed plugin can be discovered and used through core command
 sitectl create app-tmpl/default --path ./app --type local --checkout-source template --setup-only
 sitectl compose up
 sitectl healthcheck
+sitectl verify
 sitectl app-tmpl exec -- printenv
 ```

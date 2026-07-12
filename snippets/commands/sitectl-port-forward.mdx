@@ -1,9 +1,11 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Access remote context docker service ports.
+Access a Docker Compose service without publishing its port on the host.
 
-For docker services running in remote contexts that do not have ports exposed on the host VM, accessing those services can be tricky.
-The sitectl port-forward command can help in these situations.
+Every listener is bound to 127.0.0.1. Remote contexts forward over SSH,
+local Linux contexts use the container network directly, and local Docker
+Desktop contexts stream through BusyBox nc inside the selected service
+container.
 
 As an example, from a local machine, accessing your stage context's traefik dashboard and solr admin UI
 could be done by running this command in the terminal:

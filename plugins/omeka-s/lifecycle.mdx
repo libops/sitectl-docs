@@ -28,7 +28,22 @@ sitectl mariadb backup omeka_s --gzip --output backups/omeka-s-pre-upgrade.sql.g
 
 Archive and test restoration of the files volume with your Docker-volume backup procedure; the database dump does not contain uploaded files.
 
-Omeka S provides its supported database migration through the web administration flow, not a supported CLI command. `sitectl deploy` rebuilds and starts the stack in detached mode, then prints a reminder; that message is not an interactive block and the command cannot attest that the web migration succeeded. Use a maintenance window or otherwise restrict public traffic because the rollout does not hold Traefik at this gate. Sign in at `/admin`, complete any migration prompt, then run `sitectl healthcheck` and an application smoke test before returning the site to normal use.
+Omeka S provides its supported database migration through the web administration flow, not a supported CLI command. `sitectl deploy` starts only `omeka-s` and its required dependencies, waits with bounded probes, and inspects `/admin` without starting public Traefik. A current database proceeds to the final bounded full-stack start. A required migration prints `ACTION REQUIRED` and exits nonzero while the internal application remains available and public ingress remains stopped.
+
+In another terminal, create a loopback-only forward, open `http://localhost:8080/admin`, and complete the migration:
+
+```bash
+sitectl port-forward 8080:omeka-s:80
+```
+
+Stop the forward with `Ctrl+C`, then resume without changing the reviewed checkout or pulling different images:
+
+```bash
+sitectl deploy --skip-git --no-pull
+sitectl healthcheck
+```
+
+Reuse the same `--context NAME` on both commands when the original deploy selected a non-active context. Finish with an application smoke test and verify custom modules and themes; the core schema gate cannot attest to extension-specific upgrade work.
 
 The Omeka S plugin does not register the generic `dev-mode` component. A whole-directory modules or themes mount would hide extensions bundled in the versioned base image. Put custom extensions in the tracked downstream build context, or mount only an explicitly named custom module/theme directory in a local override.
 

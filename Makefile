@@ -1,4 +1,4 @@
-.PHONY: docs docs-host docs-snippets docs-snippets-check docs-check
+.PHONY: docs docs-host snippet-dependencies-check docs-snippets docs-snippets-check docs-check
 
 DOCS_PORT ?= 3000
 MINT_VERSION ?= 4.2.687
@@ -13,15 +13,19 @@ docs:
 docs-host:
 	npx --yes mint@$(MINT_VERSION) dev
 
+snippet-dependencies-check:
+	bash scripts/check-snippet-dependencies.sh
+
 # Regenerate command-reference snippets from the local sitectl + plugin
 # checkouts. The generator is a self-contained Go module that resolves the
 # workspace repos under ../../cli through the replace directives in
-# scripts/gen-docs-snippets/go.mod, so no go.work file is needed. It runs from
-# inside its module dir and is passed the docs root as the output base.
+# scripts/gen-docs-snippets/go.mod. GOWORK=off prevents an ambient workspace
+# from replacing that graph. The generator runs from inside its module dir and
+# is passed the docs root as the output base.
 docs-snippets:
-	cd scripts/gen-docs-snippets && go run . "$(CURDIR)"
+	cd scripts/gen-docs-snippets && GOWORK=off go run . "$(CURDIR)"
 
-docs-snippets-check: docs-snippets
+docs-snippets-check: snippet-dependencies-check docs-snippets
 	git diff --exit-code -- snippets/commands
 	@test -z "$$(git ls-files --others --exclude-standard -- snippets/commands)" || { \
 		git status --short -- snippets/commands; \

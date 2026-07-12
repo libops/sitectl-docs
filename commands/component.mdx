@@ -24,7 +24,7 @@ See the [components concept page](/components) for an explanation of what compon
 
 <ComponentReconcile />
 
-A component shows as `drifted` when its project files no longer match its last recorded state, for example if someone manually edited a Compose file. Run `reconcile` to bring the project back into alignment.
+A component shows as `drifted` when its project files do not match one complete supported disposition, for example after a partial manual Compose edit. Sitectl derives this from the current files and has no historical component-state record. Run `reconcile` to review the detected drift and bring the project back into alignment.
 
 ## set
 

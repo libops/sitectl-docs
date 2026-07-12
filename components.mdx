@@ -13,7 +13,7 @@ When a plugin defines a component, sitectl can:
 
 - **Ask about it during site creation**, prompting you to enable or disable it before the first launch.
 - **Report its current state.** `sitectl component describe` lists all components registered by the active context's plugin and shows whether each one is on, off, or out of alignment with the project files.
-- **Apply state changes safely.** `sitectl set <name> <on|off>` previews the transition, confirms destructive changes, and updates the component-owned files immediately. `sitectl converge` is for later drift repair.
+- **Apply state changes safely.** `sitectl set <name> <disposition>` previews the transition, confirms destructive changes, and updates the component-owned files immediately. Simple components accept `on`/`off` aliases; topology components expose named dispositions such as `triplet` or `distributed`. `sitectl converge` is for later drift repair.
 
 ## Component states
 
@@ -24,7 +24,7 @@ A component can be in one of two states:
 | `on` | The component is active and its services, configuration, and Drupal modules are in place |
 | `off` | The component is inactive; its services and configuration are removed or suppressed |
 
-Within a state, a component also carries a **disposition** that records more detail about *how* it ended up there:
+Within a state, a component also has a **disposition** that describes the selected implementation or topology. It is derived from the current project files, not retained as historical state:
 
 | Disposition | Meaning |
 |---|---|
@@ -32,6 +32,10 @@ Within a state, a component also carries a **disposition** that records more det
 | `disabled` | Explicitly turned off by an operator |
 | `superceded` | Replaced by a different component or approach. This is the current CLI spelling. |
 | `distributed` | Plugin-specific distributed topology, such as routing ISLE IIIF traffic to an external upstream |
+| `cantaloupe` | Use Cantaloupe as the selected ISLE IIIF implementation |
+| `triplet` | Use Triplet as the selected ISLE IIIF implementation |
+| `nested` | Keep the ISLE Drupal codebase in the template's nested web root |
+| `git-root` | Treat the downstream repository root as the Drupal Composer codebase |
 
 ## Checking component state
 
@@ -43,7 +47,7 @@ sitectl component describe
 sitectl component describe --path /path/to/project
 ```
 
-This reports every registered component: its name, current state, and whether the live project files match what sitectl expects. A `drifted` status means the project files no longer match the last applied component state, usually because something changed outside of sitectl.
+This reports every registered component: its name, current disposition, and whether the live project files match what sitectl expects. A `drifted` status means the project does not match one complete supported disposition. Sitectl derives that result from the current files; it does not compare them with historical component state.
 
 Use `--verbose` to show the failed checks behind a drifted component:
 
@@ -104,6 +108,9 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
   </Accordion>
   <Accordion title="iiif-topology">
     Controls whether the selected IIIF implementation runs in the local Compose stack or behind an external upstream. The default `disabled` disposition means local. Use `distributed` with `--iiif-upstream-url` when Drupal should point to an external Cantaloupe or Triplet service and the base stack should remove the selected local IIIF service. See [IIIF components](/plugins/isle/iiif).
+  </Accordion>
+  <Accordion title="codebase">
+    Controls the Composer-owned Drupal source layout. The LibOps default is `git-root`, where the downstream repository root is the codebase. Use `nested` only for a template that intentionally keeps Drupal under its nested web-root layout; review the resulting Dockerfile, Compose build context, and bind mounts together.
   </Accordion>
   <Accordion title="Derivative microservices">
     Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
