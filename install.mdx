@@ -17,6 +17,14 @@ sitectl create list
 
 Installing a new core binary does not change the SDK and lifecycle metadata embedded in an older plugin binary. A protocol error or missing lifecycle behavior after an upgrade is an installation/version problem, not a project migration; update the plugin before changing project files.
 
+<Info>
+The APT repository authenticates signed Release metadata. The RPM repository currently authenticates signed `repomd.xml` metadata with `repo_gpgcheck=1`; package payload hashes come from that signed metadata, while individual RPM signatures are not published, so `gpgcheck=0` is intentional. Do not change it to `gpgcheck=1` until the packages themselves are signed.
+</Info>
+
+<Warning>
+The Linux package repository is rebuilt from current release artifacts and does not preserve every older package version. A version pin is a durable rollback only while the artifact remains available. For long-lived production rollback, retain a package-repository snapshot or archive the matching GitHub release packages and `checksums.txt` in controlled storage.
+</Warning>
+
 <Tabs>
   <Tab title="sitectl">
 
@@ -88,7 +96,7 @@ You can install `sitectl` by either downloading or building the `sitectl` binary
 <AccordionGroup>
   <Accordion title="Download" icon="download">
 
-You can download a binary for your system from [the latest release of sitectl](https://github.com/libops/sitectl/releases/latest).
+Select an explicit tag from the [sitectl releases](https://github.com/libops/sitectl/releases), then follow [Verify a manual binary install](/manual-binary-install) to download that version's archive and `checksums.txt` and verify the archive before extraction.
   </Accordion>
 
   <Accordion title="Build" icon="screwdriver-wrench">
@@ -98,13 +106,14 @@ Requires `go` and `make`
 ```bash
 git clone https://github.com/libops/sitectl
 cd sitectl
+git checkout v0.39.0
 make build
 ./sitectl --help
 ```
   </Accordion>
 </AccordionGroup>
 
-To upgrade a binary install, download the newest release or rebuild from the latest source, then replace the existing binary in your `$PATH`.
+To upgrade a binary install, select an explicit target release and verify its archive, or rebuild from an explicit reviewed tag or full commit. Keep the previous binary until the complete core/plugin set passes the checks below.
 
 Once `sitectl` is on your system, put the binary in a directory that is in your `$PATH`.
   </Tab>
@@ -185,7 +194,7 @@ You also need core `sitectl` 0.38.0 or newer on your system. A manual binary ins
 <AccordionGroup>
   <Accordion title="Download" icon="download">
 
-You can download binaries for your system from [the latest release of sitectl](https://github.com/libops/sitectl/releases/latest) and [the latest release of sitectl-drupal](https://github.com/libops/sitectl-drupal/releases/latest).
+Select explicit tags from the [sitectl releases](https://github.com/libops/sitectl/releases) and [sitectl-drupal releases](https://github.com/libops/sitectl-drupal/releases). Follow [Verify a manual binary install](/manual-binary-install) separately for both repositories; each release has its own archive and `checksums.txt`.
   </Accordion>
 
   <Accordion title="Build" icon="screwdriver-wrench">
@@ -195,13 +204,14 @@ Requires `go` and `make`
 ```bash
 git clone https://github.com/libops/sitectl-drupal
 cd sitectl-drupal
+git checkout v0.11.0
 make build
 ./sitectl-drupal --help
 ```
   </Accordion>
 </AccordionGroup>
 
-To upgrade a binary install, download the newest release or rebuild from the latest source, then replace the existing binary in your `$PATH`.
+To upgrade a binary install, select and verify an explicit core/plugin release set or rebuild from reviewed tags or full commits. Replace both binaries before validation and keep the previous set available for rollback.
 
 Once `sitectl-drupal` is on your system, put the binary in a directory that is in your `$PATH`.
   </Tab>
@@ -284,7 +294,7 @@ You also need core `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newe
 <AccordionGroup>
   <Accordion title="Download" icon="download">
 
-Download binaries for your system from the latest releases of [sitectl](https://github.com/libops/sitectl/releases/latest), [sitectl-drupal](https://github.com/libops/sitectl-drupal/releases/latest), and [sitectl-isle](https://github.com/libops/sitectl-isle/releases/latest). Put all three binaries on the same `$PATH`.
+Select explicit tags from the release lists for [sitectl](https://github.com/libops/sitectl/releases), [sitectl-drupal](https://github.com/libops/sitectl-drupal/releases), and [sitectl-isle](https://github.com/libops/sitectl-isle/releases). Follow [Verify a manual binary install](/manual-binary-install) for each repository, then put all three verified binaries on the same `$PATH`.
   </Accordion>
 
   <Accordion title="Build" icon="screwdriver-wrench">
@@ -294,6 +304,7 @@ Requires `go` and `make`
 ```bash
 git clone https://github.com/libops/sitectl-isle
 cd sitectl-isle
+git checkout v0.18.0
 make build
 ./sitectl-isle --help
 ```
@@ -318,11 +329,11 @@ Install the plugin for each application template you operate. Package names and 
 
 | Application | Package | Releases |
 |---|---|---|
-| ArchivesSpace | `sitectl-archivesspace` | [GitHub releases](https://github.com/libops/sitectl-archivesspace/releases/latest) |
-| OJS | `sitectl-ojs` | [GitHub releases](https://github.com/libops/sitectl-ojs/releases/latest) |
-| Omeka Classic | `sitectl-omeka-classic` | [GitHub releases](https://github.com/libops/sitectl-omeka-classic/releases/latest) |
-| Omeka S | `sitectl-omeka-s` | [GitHub releases](https://github.com/libops/sitectl-omeka-s/releases/latest) |
-| WordPress | `sitectl-wp` | [GitHub releases](https://github.com/libops/sitectl-wp/releases/latest) |
+| ArchivesSpace | `sitectl-archivesspace` | [GitHub releases](https://github.com/libops/sitectl-archivesspace/releases) |
+| OJS | `sitectl-ojs` | [GitHub releases](https://github.com/libops/sitectl-ojs/releases) |
+| Omeka Classic | `sitectl-omeka-classic` | [GitHub releases](https://github.com/libops/sitectl-omeka-classic/releases) |
+| Omeka S | `sitectl-omeka-s` | [GitHub releases](https://github.com/libops/sitectl-omeka-s/releases) |
+| WordPress | `sitectl-wp` | [GitHub releases](https://github.com/libops/sitectl-wp/releases) |
 
 ## Homebrew
 
@@ -354,7 +365,7 @@ The package manager installs core `sitectl` as a dependency. Use the same packag
 
 ## Binary Install
 
-Download the plugin from its release link in the table, place `sitectl-<app>` in the same `$PATH` as core `sitectl`, and verify discovery:
+Select an explicit plugin tag from its release link, then follow [Verify a manual binary install](/manual-binary-install) for the plugin repository. Place the verified `sitectl-<app>` binary in the same `$PATH` as a compatible, independently verified core `sitectl`, and verify discovery:
 
 ```bash
 sitectl create list

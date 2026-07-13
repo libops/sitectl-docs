@@ -128,4 +128,26 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
 
 Shared ingress behavior is owned by the `ingress` component. Application plugins supply the app-specific services, routers, and environment values that must change when the ingress mode or domain changes. Healthchecks use the resulting Traefik router config to decide which scheme, host, path, and local published port to check.
 
+## Ingress runtime tuning
+
+The ingress component validates upload tuning before it changes the tracked Compose project:
+
+| Option | Accepted values | Default when omitted |
+|---|---|---|
+| `--max-upload-size` | Digits with an optional case-insensitive `K`, `M`, or `G` suffix. Examples: `1048576`, `128M`, `2G`. Decimals and `T` are rejected. | `128M` |
+| `--upload-timeout` | One integer followed by `ms`, `s`, `m`, or `h`. Examples: `500ms`, `300s`, `10m`, `1h`. Unitless and compound durations are rejected. | `300s` |
+
+For PHP/nginx applications, the component writes this complete tracked mapping:
+
+| Input | Compose application environment | Effect |
+|---|---|---|
+| `--max-upload-size` | `PHP_UPLOAD_MAX_FILESIZE`, `PHP_POST_MAX_SIZE`, `NGINX_CLIENT_MAX_BODY_SIZE` | PHP upload/POST limits and nginx request-body limit use the supplied value. |
+| `--upload-timeout` | `NGINX_CLIENT_BODY_TIMEOUT`, `NGINX_FASTCGI_READ_TIMEOUT`, `NGINX_FASTCGI_SEND_TIMEOUT` | nginx receives the supplied duration unchanged. |
+| `--upload-timeout` | `PHP_MAX_INPUT_TIME`, `PHP_MAX_EXECUTION_TIME`, `PHP_REQUEST_TERMINATE_TIMEOUT` | PHP and PHP-FPM receive whole seconds; a subsecond remainder rounds up. |
+| `--upload-timeout` | Traefik entrypoint `respondingTimeouts.readTimeout` | Each configured HTTP/HTTPS entrypoint receives the supplied duration unchanged. |
+
+This full mapping applies to Drupal, Islandora, OJS, Omeka Classic, Omeka S, and WordPress. ArchivesSpace deliberately disables the shared PHP/nginx application environment because its JVM image does not consume it. For ArchivesSpace, `--upload-timeout` changes Traefik only and `--max-upload-size` does not create a backend limit. Do not describe either value as end to end for another runtime until its plugin maps the application layer explicitly.
+
+These are component defaults, not every image's raw Dockerfile defaults. After `sitectl set`, container environment values override image `ENV` values and confd renders the supported nginx and PHP configuration at startup. The component owns the resulting Compose fields, so manual edits can appear as drift and a later set or reconciliation can replace them. Review and commit the generated diff.
+
 See the [developer component guide](/contributing/components) for how components are defined and what each field in the definition struct means.

@@ -18,6 +18,7 @@
             "pages": [
               "index",
               "install",
+              "manual-binary-install",
               "quickstart"
             ]
           },

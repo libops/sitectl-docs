@@ -45,7 +45,7 @@ sitectl set dev-mode --assistant --harness codex
 sitectl set dev-mode enabled --assistant --harness claude --compose-access
 ```
 
-Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`.
+Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`. See [Ingress runtime tuning](/components#ingress-runtime-tuning) before applying upload values; backend coverage differs for PHP/nginx applications and ArchivesSpace.
 
 `dev-mode --assistant` writes a `cli-sandbox` service into `docker-compose.override.yml` with the plugin's editable code mounts. The service is on the `assistant` profile, so start it explicitly with Docker Compose when you want an interactive coding agent.
 
