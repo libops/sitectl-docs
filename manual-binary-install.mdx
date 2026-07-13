@@ -1,0 +1,100 @@
+---
+title: Verify a manual binary install
+description: Download a versioned sitectl release archive and verify it against the release checksum before installation.
+---
+
+Use this procedure for core `sitectl` and every plugin you install without Homebrew or a native Linux package. Manual installation does not resolve dependencies: select a compatible core and plugin set from the [installation guide](/install), then repeat the verification for each repository.
+
+<Warning>
+Select an explicit release tag. Do not use a moving `/latest/download` URL in deployment automation. Download the archive and `checksums.txt` from the same version-specific GitHub release, and do not extract or execute the archive until verification succeeds.
+</Warning>
+
+## Linux and macOS
+
+Set the repository, release, operating system, and architecture to the exact asset you selected. GoReleaser asset names use `Linux`, `Darwin`, or `Windows` and architectures such as `x86_64` or `arm64`.
+
+```bash
+set -euo pipefail
+
+REPOSITORY=sitectl
+VERSION=v0.39.0
+OS=Linux
+ARCH=x86_64
+
+ARCHIVE="${REPOSITORY}_${OS}_${ARCH}.tar.gz"
+BASE_URL="https://github.com/libops/${REPOSITORY}/releases/download/${VERSION}"
+
+curl --fail --location --remote-name "${BASE_URL}/${ARCHIVE}"
+curl --fail --location --remote-name "${BASE_URL}/checksums.txt"
+
+awk -v asset="${ARCHIVE}" '$2 == asset { print; found = 1 } END { if (!found) exit 1 }' \
+  checksums.txt > "${ARCHIVE}.sha256"
+
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum --check "${ARCHIVE}.sha256"
+else
+  shasum --algorithm 256 --check "${ARCHIVE}.sha256"
+fi
+```
+
+Stop if the asset is absent from `checksums.txt` or the checksum command fails. After a successful verification, extract and install the binary:
+
+```bash
+tar --extract --gzip --file "${ARCHIVE}"
+mkdir -p "${HOME}/.local/bin"
+install -m 0755 "${REPOSITORY}" "${HOME}/.local/bin/${REPOSITORY}"
+```
+
+Use `OS=Darwin` on macOS. Replace `REPOSITORY` and `VERSION` for a plugin, for example `sitectl-ojs` and its independently selected tag. Ensure `${HOME}/.local/bin` is on `PATH`, or install into another user-owned directory already on `PATH`.
+
+## Windows PowerShell
+
+```powershell
+$ErrorActionPreference = "Stop"
+
+$Repository = "sitectl"
+$Version = "v0.39.0"
+$OS = "Windows"
+$Arch = "x86_64"
+
+$Archive = "${Repository}_${OS}_${Arch}.zip"
+$BaseUrl = "https://github.com/libops/${Repository}/releases/download/${Version}"
+
+Invoke-WebRequest -Uri "${BaseUrl}/${Archive}" -OutFile $Archive
+Invoke-WebRequest -Uri "${BaseUrl}/checksums.txt" -OutFile "checksums.txt"
+
+$Lines = @(
+  Get-Content "checksums.txt" |
+    Where-Object { ($_ -split '\s+', 2)[1] -eq $Archive }
+)
+if ($Lines.Count -ne 1) {
+  throw "Expected exactly one checksum entry for ${Archive}"
+}
+
+$Expected = ($Lines[0] -split '\s+')[0].ToLowerInvariant()
+$Actual = (Get-FileHash -Algorithm SHA256 $Archive).Hash.ToLowerInvariant()
+if ($Actual -ne $Expected) {
+  throw "Checksum verification failed for ${Archive}"
+}
+
+Expand-Archive -Path $Archive -DestinationPath . -Force
+```
+
+After verification, move the extracted `.exe` into a user-owned directory on `PATH`. Repeat the procedure for each plugin.
+
+## Verify the installed set
+
+Keep core and every selected plugin from one reviewed compatibility record. Verify the binaries only after all replacements are complete:
+
+```bash
+sitectl --version
+sitectl-drupal --version
+sitectl-isle --version
+sitectl create list
+```
+
+Also run `sitectl validate` and the relevant plugin help or verification command against a non-production project before removing the previous binaries.
+
+<Info>
+The published checksum detects corruption or substitution relative to the selected GitHub release metadata. Because the archive and checksum are attached to the same release, a checksum alone does not prove who controlled the publisher. Keep the repository and explicit tag in the deployment record, apply your organization's GitHub release trust policy, and verify a repository/workflow signing identity when a release publishes one.
+</Info>

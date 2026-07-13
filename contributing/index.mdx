@@ -150,8 +150,9 @@ This repo publishes Debian and RPM repositories through the shared libops packag
 
 GitHub Actions workflows:
 
-- [publish-apt-repo.yaml](https://github.com/libops/sitectl/blob/main/.github/workflows/publish-apt-repo.yaml)
-- shared publishing script: [publish-package-repo.sh](https://github.com/libops/terraform-linux-packages/blob/main/scripts/publish-package-repo.sh)
+- caller workflow: [sitectl `goreleaser.yaml` at the documented v0.39.0 commit](https://github.com/libops/sitectl/blob/90c341271b38c998261efff6d81dc33217c747f7/.github/workflows/goreleaser.yaml)
+- pinned reusable workflow: [`reusable-goreleaser.yaml` at `481df511`](https://github.com/libops/terraform-linux-packages/blob/481df51116aed2efd1c002ef1ef6a287699828a0/.github/workflows/reusable-goreleaser.yaml)
+- pinned package publisher used by that workflow: [`publish-package-repo.sh` at `72d2f0c3`](https://github.com/libops/terraform-linux-packages/blob/72d2f0c3b01e5e396d6db074108b95e95eedf4d4/scripts/publish-package-repo.sh)
 
 Required GitHub secrets:
 
@@ -179,4 +180,6 @@ Optional GitHub variables:
 - `APTLY_PUBLIC_KEY_NAME` default: `sitectl-archive-keyring`
 - `RPM_REPOSITORY_PATH` default: `rpm`
 
-The workflow rebuilds Debian and RPM repository metadata from the current release artifacts only. That is sufficient for fresh installs and upgrades, but does not preserve older package versions for pinning or rollback.
+The publisher signs the APT Release metadata. For RPM, it signs `repodata/repomd.xml`; the repository metadata authenticates package checksums, but the individual RPM payloads are not separately signed. Client configuration therefore uses `repo_gpgcheck=1` and `gpgcheck=0`. Do not advertise per-RPM signatures or enable `gpgcheck=1` until package signing is implemented.
+
+The workflow rebuilds Debian and RPM repository metadata from the current release artifacts only. That is sufficient for fresh installs and upgrades, but does not preserve older package versions for pinning or rollback. A version in cloud-compose or another package manifest is durable only while the artifact remains available. Production operators that need rollback must retain a repository snapshot or archive the matching GitHub release package assets and `checksums.txt` in controlled storage.

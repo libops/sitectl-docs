@@ -34,7 +34,7 @@ This keeps local builds fast:
 - The build uses the platform selected by the Docker CLI on the host.
 - Local builds do not push images. Publishing images belongs in CI or another explicit release workflow.
 
-The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image. For PHP/nginx application services, the shared ingress component follows this rule and propagates `--upload-timeout` through Traefik, nginx client/FastCGI handling, PHP input/execution limits, and PHP-FPM request termination. A plugin for another runtime must map the same component value to that application's supported backend setting before describing the timeout as end to end.
+The LibOps base images provide the default PHP and nginx configuration. When a template needs to tune upload size, timeouts, trusted proxy handling, or similar runtime behavior, prefer environment values in the Compose service over rebuilding nginx or PHP config into the downstream template image. For PHP/nginx application services, the shared ingress component propagates the reviewed values through Traefik, nginx, PHP, and PHP-FPM. See the exact [ingress runtime tuning matrix](/components#ingress-runtime-tuning), including accepted units, defaults, and the ArchivesSpace exception. A plugin for another runtime must map the component value to that application's supported backend setting before describing it as end to end.
 
 ## Runtime Configuration Boundary
 
