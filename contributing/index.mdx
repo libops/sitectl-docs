@@ -137,6 +137,13 @@ GoReleaser builds the release artifacts, including Linux packages via `nfpms`.
 
 - GitHub release publishing: [goreleaser.yaml](https://github.com/libops/sitectl/blob/main/.github/workflows/goreleaser.yaml)
 
+Release publishing uses two independent credentials:
+
+- The caller's repository-scoped `GITHUB_TOKEN` creates the GitHub release and uploads its artifacts.
+- The `HOMEBREW_REPO` secret is exposed to GoReleaser only as `HOMEBREW_REPO_TOKEN` and may update the separate `libops/homebrew` tap. Do not replace `GITHUB_TOKEN` with this cross-repository token.
+
+The application plugin template leaves package-repository publication disabled with `publish-package-repo: false`. A derived plugin should enable it only after its repository has a trusted package publisher and the required cloud identity and variables. Leaving it disabled still publishes GitHub release artifacts and the native package files attached to the release. Homebrew publication is independent and runs only when the derived repository points at a tap it controls and provides `HOMEBREW_REPO`.
+
 ### Linux package publishing
 
 This repo publishes Debian and RPM repositories through the shared libops packaging infrastructure.
@@ -148,7 +155,7 @@ GitHub Actions workflows:
 
 Required GitHub secrets:
 
-- `HOMEBREW_REPO`: token used by GoReleaser for release publishing
+- `HOMEBREW_REPO`: cross-repository token used only to update the Homebrew tap
 
 Required GitHub variables:
 
