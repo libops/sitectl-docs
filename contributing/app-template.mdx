@@ -187,8 +187,9 @@ After creating a repository from `sitectl-app-tmpl`:
 7. Implement debug, validate, healthcheck, and verify runners through the SDK. The template's verify runner deliberately returns an unimplemented warning; replace it with behavioral checks before releasing a derived plugin. Results should be structured; progress and diagnostics should go to stderr.
 8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
 9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run both `sitectl healthcheck` and `sitectl verify`.
-10. Add a plugin page to `sitectl-docs` for app-specific operations.
-11. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must fail at an `ACTION REQUIRED` gate, keep ingress stopped, and document the manual migration, full-stack start, and post-migration checks.
+10. Point GoReleaser at a Homebrew tap the derived repository controls and provide its `HOMEBREW_REPO` secret, or remove that publisher. Keep the release workflow's repository-scoped `GITHUB_TOKEN` separate from this tap token. Leave `publish-package-repo: false` unless the repository also has its own trusted package publisher, cloud identity, and required variables.
+11. Add a plugin page to `sitectl-docs` for app-specific operations.
+12. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must fail at an `ACTION REQUIRED` gate, keep ingress stopped, and document the manual migration, full-stack start, and post-migration checks.
 
 ## Local Verification
 
