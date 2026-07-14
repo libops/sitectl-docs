@@ -71,6 +71,15 @@ type YAMLRule struct {
 
 For more complex changes that YAML rules can't express, `ComponentSpec` supports lifecycle hooks (`BeforeEnable`, `AfterEnable`, `BeforeDisable`, `AfterDisable`) that run Go functions with access to the Docker client and context config.
 
+### Field ownership contract
+
+Treat every component as the owner of a small, explicit part of the downstream project. Record the contract next to the definition and enforce it in tests:
+
+- List every project-relative file and smallest semantic YAML unit the component may change for each allowed disposition: for example, a scalar key, identified mapping or sequence entry, or generated block. Components may share a containing map or list when they own disjoint units and preserve one another's entries. They must not own the same unit.
+- Preserve unknown keys, adjacent fields, unrelated sequence entries, and downstream policy outside those units. Enabling, disabling, or repairing drift may change owned fields, but must not normalize or reconstruct neighboring configuration.
+- Replace an entire file only when the component is its exclusive owner and the contract says so. An explicit base-owner/nested-augmenter relationship is the exception: document the parent and child units, make the convergence pipeline reconcile the base owner's selected disposition before every augmenter and reapply each augmenter's selected disposition after any base repair, and state that downstream edits inside the base-owned file are not guaranteed to survive base repair. Do not depend on incidental registration, lexical, or rule order.
+- Test every allowed disposition, an enable-disable-enable cycle, repeated application for idempotence, deliberate drift followed by repair, and sentinel unrelated fields that must survive every transition. For disjoint units in a shared container, apply the components in both orders and prove that their writes commute. For a declared base-owner/nested-augmenter relationship, cover every enabled/disabled combination in the documented order and reconverge after repairing either owner.
+
 ### Gates
 
 `Gates` controls safety checks before a state change is applied:
