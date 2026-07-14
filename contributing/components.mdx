@@ -80,6 +80,13 @@ Treat every component as the owner of a small, explicit part of the downstream p
 - Replace an entire file only when the component is its exclusive owner and the contract says so. An explicit base-owner/nested-augmenter relationship is the exception: document the parent and child units, make the convergence pipeline reconcile the base owner's selected disposition before every augmenter and reapply each augmenter's selected disposition after any base repair, and state that downstream edits inside the base-owned file are not guaranteed to survive base repair. Do not depend on incidental registration, lexical, or rule order.
 - Test every allowed disposition, an enable-disable-enable cycle, repeated application for idempotence, deliberate drift followed by repair, and sentinel unrelated fields that must survive every transition. For disjoint units in a shared container, apply the components in both orders and prove that their writes commute. For a declared base-owner/nested-augmenter relationship, cover every enabled/disabled combination in the documented order and reconverge after repairing either owner.
 
+For example, the ISLE `fcrepo` and `blazegraph` components share three Drupal
+context files but own different named entries under each reaction's `actions`
+mapping. Their apply path seeds a missing context once, then reconciles only
+those exact entries. It tests every Fedora/Blazegraph state transition while
+sentinel keys and existing action bodies prove that downstream configuration
+survives.
+
 ### Gates
 
 `Gates` controls safety checks before a state change is applied:

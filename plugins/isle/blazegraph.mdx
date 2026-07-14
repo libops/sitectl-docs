@@ -28,7 +28,17 @@ The output shows whether `blazegraph` is on, off, or drifted.
 sitectl set blazegraph enabled
 ```
 
-This adds the Blazegraph service and `blazegraph-data` volume back to `docker-compose.yml`, enables `ALPACA_TRIPLESTORE_INDEXER_ENABLED`, restores Drupal's default triplestore namespace, and restores the managed Drupal triplestore action config.
+This adds the Blazegraph service and `blazegraph-data` volume back to
+`docker-compose.yml`, enables `ALPACA_TRIPLESTORE_INDEXER_ENABLED`, restores
+Drupal's default triplestore namespace, and seeds any missing managed Drupal
+triplestore action files. Existing action bodies remain downstream-owned and
+are not replaced.
+
+The Islandora plugin changes only Blazegraph's named reaction entries inside
+the shared media, repository-content, and taxonomy context files. Unknown keys,
+adjacent actions, and downstream policy in those files are preserved. Fedora's
+reaction entries are owned independently by the `fcrepo` component, so all four
+Fedora/Blazegraph enabled and disabled combinations are supported.
 
 ## Disable Blazegraph
 
@@ -36,7 +46,12 @@ This adds the Blazegraph service and `blazegraph-data` volume back to `docker-co
 sitectl set blazegraph disabled
 ```
 
-This removes the Blazegraph service and volume from `docker-compose.yml`, disables Alpaca triplestore indexing, clears Drupal's default triplestore namespace, and removes managed Drupal triplestore action config. A future `docker compose up` will not start Blazegraph.
+This removes the Blazegraph service and volume from `docker-compose.yml`,
+disables Alpaca triplestore indexing, clears Drupal's default triplestore
+namespace, removes the managed triplestore action files, and deletes only
+Blazegraph's named reactions from the shared context files. Fedora reactions
+and unrelated downstream configuration remain intact. A future
+`docker compose up` will not start Blazegraph.
 
 <Warning>
   Disabling Blazegraph removes the service from the Compose project definition. Any RDF data stored in Blazegraph is not deleted from disk immediately, but it will not be preserved through volume lifecycle commands. Back up your Blazegraph data before disabling on a site with content.
