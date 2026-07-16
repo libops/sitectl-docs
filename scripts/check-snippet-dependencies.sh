@@ -4,6 +4,7 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$repo_root/scripts/snippet-dependencies.json"
+legacy_manifest="$repo_root/scripts/legacy-snippet-dependencies.json"
 generator="$repo_root/scripts/gen-docs-snippets"
 mode="${1:-}"
 
@@ -19,7 +20,6 @@ expected_keys=(
   sitectl
   sitectl_archivesspace
   sitectl_drupal
-  sitectl_isle
   sitectl_libops
   sitectl_ojs
   sitectl_omeka_classic
@@ -27,8 +27,13 @@ expected_keys=(
   sitectl_wp
 )
 expected_keys_json="$(printf '%s\n' "${expected_keys[@]}" | jq -R . | jq -cs 'sort')"
+legacy_expected_keys_json="$(
+  printf '%s\n' sitectl sitectl_drupal sitectl_isle | jq -R . | jq -cs 'sort'
+)"
 
-jq -e --argjson expected_keys "$expected_keys_json" '
+validate_manifest() {
+  local path="$1" expected="$2" description="$3"
+  jq -e --argjson expected_keys "$expected" '
   type == "object" and
   (keys == $expected_keys) and
   all(to_entries[];
@@ -41,13 +46,17 @@ jq -e --argjson expected_keys "$expected_keys_json" '
     (.value.version | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")) and
     (.value.ref | test("^[0-9a-f]{40}$"))
   )
-' "$manifest" >/dev/null || {
-  echo "snippet dependency manifest does not match the exact supported repository schema" >&2
-  exit 1
+' "$path" >/dev/null || {
+    echo "$description does not match the exact supported repository schema" >&2
+    exit 1
+  }
 }
 
+validate_manifest "$manifest" "$expected_keys_json" "active snippet dependency manifest"
+validate_manifest "$legacy_manifest" "$legacy_expected_keys_json" "legacy ISLE dependency manifest"
+
 if [[ "$mode" == "--manifest-only" ]]; then
-  echo "Snippet dependency manifest schema is valid"
+  echo "Active and legacy snippet dependency manifest schemas are valid"
   exit 0
 fi
 
@@ -117,10 +126,17 @@ while IFS=$'\t' read -r repository version expected_ref; do
     echo "snippet dependency $repository tag $version resolves to $resolved_ref, expected $expected_ref" >&2
     tag_errors=1
   fi
-done < <(jq -r 'to_entries[] | [.value.repository, .value.version, .value.ref] | @tsv' "$manifest")
+done < <(
+  jq -sr '
+    .[]
+    | to_entries[]
+    | [.value.repository, .value.version, .value.ref]
+    | @tsv
+  ' "$manifest" "$legacy_manifest"
+)
 
 if ((tag_errors != 0)); then
   exit 1
 fi
 
-echo "Snippet dependency manifest, module graph, and release tags are valid"
+echo "Active snippet manifest, legacy ISLE manifest, module graph, and release tags are valid"

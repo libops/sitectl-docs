@@ -35,7 +35,7 @@ make docs-host
 
 ## Command reference snippets
 
-Command reference blocks (the auto-generated usage and flags tables) live in `snippets/commands/` and are generated from the Go source. Do not edit them by hand because they will be overwritten on the next run. Regeneration removes obsolete `.mdx` files that carry the auto-generated header while preserving manually maintained files.
+Command reference blocks (the auto-generated usage and flags tables) live in `snippets/commands/` and are generated from the Go source. Do not edit active generated snippets by hand because they will be overwritten on the next run. Regeneration removes obsolete `.mdx` files that carry the active auto-generated header while preserving manually maintained files and explicitly labeled legacy snapshots.
 
 To regenerate after changing a command's flags or description:
 
@@ -43,15 +43,17 @@ To regenerate after changing a command's flags or description:
 make docs-snippets
 ```
 
-Pull requests run `make docs-snippets-check`, which regenerates these files from the exact core and plugin commits recorded in `scripts/snippet-dependencies.json` and fails when the result differs from the committed snippets. The dependency check requires an exact manifest/module/replace set and verifies that every recorded stable release tag resolves to its recorded commit. The same required workflow runs the pinned Mintlify CLI through `make docs-check` to validate the strict documentation build and internal links.
+Pull requests run `make docs-snippets-check`, which regenerates the active files from the exact core and plugin commits recorded in `scripts/snippet-dependencies.json` and fails when the result differs from the committed snippets. The dependency check requires an exact manifest/module/replace set and verifies that every active and legacy stable release tag resolves to its recorded commit. The same required workflow runs the pinned Mintlify CLI through `make docs-check` to validate the strict documentation build and internal links.
 
 When one command change spans repositories, publish core first, then any plugin dependency, then the dependent plugins, and open or refresh the docs pull request last. Update each manifest `version` and `ref` only after the stable tag exists and resolves to that exact commit. Hosted docs CI checks those immutable commits rather than moving default branches. Do not hand-edit generated snippets to make documentation run ahead of the command binaries they describe.
 
 This runs `scripts/gen-docs-snippets/main.go`, which imports the core sitectl command
-tree plus every locally checked-out plugin: `sitectl-isle`, `sitectl-drupal`,
+tree plus every plugin in the active v1 compatibility set: `sitectl-drupal`,
 `sitectl-archivesspace`, `sitectl-ojs`, `sitectl-omeka-classic`, `sitectl-omeka-s`,
 `sitectl-wp`, and `sitectl-libops`. It renders each command to an `.mdx` snippet
-file.
+file. `sitectl-isle` remains on its legacy v0 line, so it is recorded in
+`scripts/legacy-snippet-dependencies.json` and its four direct-command snippets are
+explicitly labeled legacy snapshots rather than being compiled against the v1 SDK.
 
 The generator is a self-contained Go module: it resolves sibling plugin repos through
 the `require`/`replace` directives in `scripts/gen-docs-snippets/go.mod`.
@@ -69,6 +71,12 @@ To add a plugin to the generated reference, update all of these contracts togeth
 The checker rejects missing or extra sitectl modules, indirect requirements, mismatched
 local replace paths, unpublished tags, and tags that do not resolve to the recorded
 commit.
+
+When a plugin is temporarily outside the active compatibility set, do not leave its
+module in the active generator and rely on Go's minimum-version selection to make it
+compile. Move its reviewed release record to a separately validated legacy manifest,
+remove it from the active module and hosted checkout graph, and label any retained
+reference snippets with the exact legacy release.
 
 The generator skips hidden commands (those starting with `__`) and thin
 plugin-passthrough wrappers (commands that disable flag parsing and only forward

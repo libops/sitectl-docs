@@ -13,6 +13,10 @@ sitectl discovers plugins by searching your `$PATH` for binaries named `sitectl-
 
 This means installing a compatible plugin is as simple as putting its binary on your path. No registration file is needed. Core and plugin binaries are released separately, so keep the minimum versions described in [Install and Upgrade](/install) aligned.
 
+<Warning>
+The released v1 compatibility set does not yet include `sitectl-isle`. Its latest published `v0.19.0` plugin remains on the legacy core v0 line while the remaining ISLE v1 components are completed.
+</Warning>
+
 ## Command routing
 
 Plugins expose two kinds of behavior:
@@ -61,7 +65,7 @@ Self-contained services may still run as standalone Compose projects, but their 
     Drupal-oriented workflows: drush execution, user login links, database and config sync between environments.
   </Card>
   <Card title="Islandora" icon="layer-group" href="/plugins/isle">
-    Islandora workflows from the `sitectl-isle` plugin: guided site creation, component management, Fedora and Blazegraph sync, and migration utilities. Includes the Drupal plugin.
+    Legacy v0 Islandora workflows from `sitectl-isle v0.19.0`. This plugin includes Drupal but is not yet compatible with core v1.
   </Card>
   <Card title="LibOps plugin" icon="cloud" href="/plugins/libops">
     LibOps platform workflows from the `sitectl-libops` plugin: authentication, organizations, projects, sites, access controls, domains, hosted templates, and Task Agent tasks.

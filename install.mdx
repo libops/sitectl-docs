@@ -4,18 +4,35 @@ description: Install or upgrade sitectl with Homebrew, native Linux packages, or
 ---
 
 Select a tab for the core `sitectl` command or one of its plugins to see install and upgrade instructions.
-When you install a `sitectl` plugin with Homebrew or Linux packages, the package manager also installs the core `sitectl` command.
+When you install a current v1 `sitectl` plugin with Homebrew or Linux packages, the package manager also installs the core `sitectl` command.
 
-These docs track core `sitectl` v0.39.0. Core and plugins are separately built executables, and the releases pinned here span the v0.38 and v0.39 SDK baselines. Debian, RPM, and APK packages encode each plugin's minimum core dependency; Homebrew installs the current core formula first. If you install release binaries manually, upgrade core and every plugin you use as one tested set:
+These docs track the released sitectl v1 compatibility set. Core and plugins are separately built executables, but the versions below share the v1 SDK and RPC schema:
+
+| Executable | Reviewed release |
+|---|---|
+| `sitectl` | `v1.0.0` |
+| `sitectl-archivesspace` | `v1.0.0` |
+| `sitectl-drupal` | `v1.0.0` |
+| `sitectl-libops` | `v1.3.0` |
+| `sitectl-ojs` | `v1.0.0` |
+| `sitectl-omeka-classic` | `v1.0.0` |
+| `sitectl-omeka-s` | `v1.0.0` |
+| `sitectl-wp` | `v1.0.0` |
+
+The documentation generator records each tag's exact commit in `scripts/snippet-dependencies.json` in the documentation repository. Debian, RPM, and APK packages encode each plugin's core dependency; Homebrew installs the current core formula first. If you install release binaries manually, upgrade core and every v1 plugin you use as one tested set:
 
 ```bash
 sitectl --version
 sitectl-drupal --version
-sitectl-isle --version
+sitectl-ojs --version
 sitectl create list
 ```
 
 Installing a new core binary does not change the SDK and lifecycle metadata embedded in an older plugin binary. A protocol error or missing lifecycle behavior after an upgrade is an installation/version problem, not a project migration; update the plugin before changing project files.
+
+<Warning>
+`sitectl-isle` is not part of the v1 compatibility set. Its latest published release is the legacy `v0.19.0` line, which uses core `sitectl v0.40.0` and predates the remaining ISLE v1 component work. Do not combine that plugin with core v1. The ISLE tab preserves the explicit legacy installation record for existing operators.
+</Warning>
 
 <Info>
 The APT repository authenticates signed Release metadata. The RPM repository currently authenticates signed `repomd.xml` metadata with `repo_gpgcheck=1`; package payload hashes come from that signed metadata, while individual RPM signatures are not published, so `gpgcheck=0` is intentional. Do not change it to `gpgcheck=1` until the packages themselves are signed.
@@ -106,7 +123,7 @@ Requires `go` and `make`
 ```bash
 git clone https://github.com/libops/sitectl
 cd sitectl
-git checkout v0.39.0
+git checkout v1.0.0
 make build
 ./sitectl --help
 ```
@@ -189,7 +206,7 @@ sudo dnf upgrade sitectl-drupal
 
 You can install `sitectl-drupal` by either downloading or building the `sitectl-drupal` binary.
 
-You also need core `sitectl` 0.38.0 or newer on your system. A manual binary install does not resolve that dependency for you.
+Use core `sitectl v1.0.0` with the reviewed Drupal `v1.0.0` release. A manual binary install does not resolve that dependency for you.
 
 <AccordionGroup>
   <Accordion title="Download" icon="download">
@@ -204,7 +221,7 @@ Requires `go` and `make`
 ```bash
 git clone https://github.com/libops/sitectl-drupal
 cd sitectl-drupal
-git checkout v0.11.0
+git checkout v1.0.0
 make build
 ./sitectl-drupal --help
 ```
@@ -218,83 +235,34 @@ Once `sitectl-drupal` is on your system, put the binary in a directory that is i
 
   <Tab title="sitectl-isle">
 
-## Homebrew
+<Warning>
+The latest published ISLE plugin is `sitectl-isle v0.19.0`. It is a legacy release and is not compatible with core `sitectl v1.0.0`. ISLE still needs its remaining v1 component work before it can join the v1 release set.
+</Warning>
 
-You can install `sitectl-isle` using Homebrew:
+## Legacy compatibility record
 
-```bash
-brew tap libops/homebrew https://github.com/libops/homebrew
-brew install libops/homebrew/sitectl-isle
-```
+Keep these three binaries together:
 
-Homebrew will also install `sitectl` and `sitectl-drupal` as dependencies.
+| Executable | Legacy release |
+|---|---|
+| `sitectl` | `v0.40.0` |
+| `sitectl-drupal` | `v0.12.0` |
+| `sitectl-isle` | `v0.19.0` |
 
-The current ISLE release line requires core `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer. Homebrew formulas are published in dependency order: core, Drupal, then ISLE.
+The exact tag commits are recorded separately in `scripts/legacy-snippet-dependencies.json`. The ISLE release declares core `sitectl >= 0.40.0` and `sitectl-drupal >= 0.10.0`; this documentation pins the latest pre-v1 Drupal release, `v0.12.0`, to keep the complete legacy set reproducible.
 
-To upgrade later:
+## Homebrew and Linux package repositories
 
-```bash
-brew update
-brew upgrade libops/homebrew/sitectl-isle
-```
-
-## Linux Packages
-
-Releases publish native Linux packages through the libops package repository.
-
-<CodeGroup>
-
-```bash Debian / Ubuntu
-curl -fsSL https://packages.libops.io/sitectl/sitectl-archive-keyring.asc | sudo gpg --dearmor -o /usr/share/keyrings/sitectl-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/sitectl-archive-keyring.gpg] https://packages.libops.io/sitectl ./" | sudo tee /etc/apt/sources.list.d/sitectl.list >/dev/null
-sudo apt update
-sudo apt install sitectl-isle
-```
-
-```bash Fedora / Rocky / RHEL
-sudo tee /etc/yum.repos.d/sitectl.repo >/dev/null <<'EOF'
-[sitectl]
-name=sitectl
-baseurl=https://packages.libops.io/sitectl/rpm
-enabled=1
-gpgcheck=0
-repo_gpgcheck=1
-gpgkey=https://packages.libops.io/sitectl/sitectl-archive-keyring.asc
-EOF
-
-sudo dnf makecache
-sudo dnf install sitectl-isle
-```
-
-</CodeGroup>
-
-The package manager will also install `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer as dependencies. Repository publication follows the same core, Drupal, then ISLE order so every dependency is available before the dependent package.
-
-To upgrade later:
-
-<CodeGroup>
-
-```bash Debian / Ubuntu
-sudo apt update
-sudo apt install --only-upgrade sitectl-isle
-```
-
-```bash Fedora / Rocky / RHEL
-sudo dnf upgrade sitectl-isle
-```
-
-</CodeGroup>
+Do not install or upgrade the legacy ISLE line from the shared rolling package channels after those channels have moved to core v1. Homebrew cannot keep the ISLE formula on the old core formula, and native dependency ranges can accept a newer, protocol-incompatible major version. Retain an existing known-good installation or use the explicit release archives below.
 
 ## Binary Install
 
-You can install `sitectl-isle` by either downloading or building the `sitectl-isle` binary.
-
-You also need core `sitectl` 0.38.0 or newer and `sitectl-drupal` 0.10.0 or newer on your system. A manual binary install does not resolve those dependencies for you.
+Install all three releases in the legacy compatibility record. A manual binary install does not resolve dependencies for you.
 
 <AccordionGroup>
   <Accordion title="Download" icon="download">
 
-Select explicit tags from the release lists for [sitectl](https://github.com/libops/sitectl/releases), [sitectl-drupal](https://github.com/libops/sitectl-drupal/releases), and [sitectl-isle](https://github.com/libops/sitectl-isle/releases). Follow [Verify a manual binary install](/manual-binary-install) for each repository, then put all three verified binaries on the same `$PATH`.
+Select `sitectl v0.40.0`, `sitectl-drupal v0.12.0`, and `sitectl-isle v0.19.0` from the [core](https://github.com/libops/sitectl/releases), [Drupal](https://github.com/libops/sitectl-drupal/releases), and [ISLE](https://github.com/libops/sitectl-isle/releases) release pages. Follow [Verify a manual binary install](/manual-binary-install) for each repository, then put all three verified binaries on the same `$PATH`.
   </Accordion>
 
   <Accordion title="Build" icon="screwdriver-wrench">
@@ -302,16 +270,28 @@ Select explicit tags from the release lists for [sitectl](https://github.com/lib
 Requires `go` and `make`
 
 ```bash
+git clone https://github.com/libops/sitectl
+cd sitectl
+git checkout v0.40.0
+make build
+cd ..
+
+git clone https://github.com/libops/sitectl-drupal
+cd sitectl-drupal
+git checkout v0.12.0
+make build
+cd ..
+
 git clone https://github.com/libops/sitectl-isle
 cd sitectl-isle
-git checkout v0.18.1
+git checkout v0.19.0
 make build
 ./sitectl-isle --help
 ```
   </Accordion>
 </AccordionGroup>
 
-To upgrade a binary install, update core first, then Drupal, then ISLE. Replace all three binaries in your `$PATH` before running `sitectl create list`; do not leave a partially upgraded set active.
+Do not upgrade only one member of this set. Replace all three binaries in your `$PATH` before running `sitectl create list`, and keep them isolated from a separate v1 installation.
 
 Verify the complete set after installation:
 
@@ -327,13 +307,13 @@ sitectl create list
 
 Install the plugin for each application template you operate. Package names and release repositories are:
 
-| Application | Package | Releases |
-|---|---|---|
-| ArchivesSpace | `sitectl-archivesspace` | [GitHub releases](https://github.com/libops/sitectl-archivesspace/releases) |
-| OJS | `sitectl-ojs` | [GitHub releases](https://github.com/libops/sitectl-ojs/releases) |
-| Omeka Classic | `sitectl-omeka-classic` | [GitHub releases](https://github.com/libops/sitectl-omeka-classic/releases) |
-| Omeka S | `sitectl-omeka-s` | [GitHub releases](https://github.com/libops/sitectl-omeka-s/releases) |
-| WordPress | `sitectl-wp` | [GitHub releases](https://github.com/libops/sitectl-wp/releases) |
+| Application | Package | Reviewed release | Releases |
+|---|---|---|---|
+| ArchivesSpace | `sitectl-archivesspace` | `v1.0.0` | [GitHub releases](https://github.com/libops/sitectl-archivesspace/releases) |
+| OJS | `sitectl-ojs` | `v1.0.0` | [GitHub releases](https://github.com/libops/sitectl-ojs/releases) |
+| Omeka Classic | `sitectl-omeka-classic` | `v1.0.0` | [GitHub releases](https://github.com/libops/sitectl-omeka-classic/releases) |
+| Omeka S | `sitectl-omeka-s` | `v1.0.0` | [GitHub releases](https://github.com/libops/sitectl-omeka-s/releases) |
+| WordPress | `sitectl-wp` | `v1.0.0` | [GitHub releases](https://github.com/libops/sitectl-wp/releases) |
 
 ## Homebrew
 

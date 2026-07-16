@@ -17,7 +17,7 @@ Set the repository, release, operating system, and architecture to the exact ass
 set -euo pipefail
 
 REPOSITORY=sitectl
-VERSION=v0.39.0
+VERSION=v1.0.0
 OS=Linux
 ARCH=x86_64
 
@@ -53,7 +53,7 @@ Use `OS=Darwin` on macOS. Replace `REPOSITORY` and `VERSION` for a plugin, for e
 $ErrorActionPreference = "Stop"
 
 $Repository = "sitectl"
-$Version = "v0.39.0"
+$Version = "v1.0.0"
 $OS = "Windows"
 $Arch = "x86_64"
 
@@ -89,11 +89,15 @@ Keep core and every selected plugin from one reviewed compatibility record. Veri
 ```bash
 sitectl --version
 sitectl-drupal --version
-sitectl-isle --version
+sitectl-ojs --version
 sitectl create list
 ```
 
 Also run `sitectl validate` and the relevant plugin help or verification command against a non-production project before removing the previous binaries.
+
+<Warning>
+Do not add `sitectl-isle v0.19.0` to the v1 verification set above. ISLE remains on the separate legacy core `v0.40.0` and Drupal `v0.12.0` record documented in [Install and Upgrade](/install).
+</Warning>
 
 <Info>
 The published checksum detects corruption or substitution relative to the selected GitHub release metadata. Because the archive and checksum are attached to the same release, a checksum alone does not prove who controlled the publisher. Keep the repository and explicit tag in the deployment record, apply your organization's GitHub release trust policy, and verify a repository/workflow signing identity when a release publishes one.

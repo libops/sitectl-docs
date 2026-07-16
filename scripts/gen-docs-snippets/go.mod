@@ -3,15 +3,14 @@ module github.com/libops/sitectl-docs/gen-docs-snippets
 go 1.26.3
 
 require (
-	github.com/libops/sitectl v0.39.0
-	github.com/libops/sitectl-archivesspace v0.6.0
-	github.com/libops/sitectl-drupal v0.11.0
-	github.com/libops/sitectl-isle v0.18.1
-	github.com/libops/sitectl-libops v1.2.0
-	github.com/libops/sitectl-ojs v0.6.0
-	github.com/libops/sitectl-omeka-classic v0.6.0
-	github.com/libops/sitectl-omeka-s v0.6.0
-	github.com/libops/sitectl-wp v0.5.0
+	github.com/libops/sitectl v1.0.0
+	github.com/libops/sitectl-archivesspace v1.0.0
+	github.com/libops/sitectl-drupal v1.0.0
+	github.com/libops/sitectl-libops v1.3.0
+	github.com/libops/sitectl-ojs v1.0.0
+	github.com/libops/sitectl-omeka-classic v1.0.0
+	github.com/libops/sitectl-omeka-s v1.0.0
+	github.com/libops/sitectl-wp v1.0.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 )
@@ -99,7 +98,6 @@ replace (
 	github.com/libops/sitectl => ../../../../cli/sitectl
 	github.com/libops/sitectl-archivesspace => ../../../../cli/sitectl-archivesspace
 	github.com/libops/sitectl-drupal => ../../../../cli/sitectl-drupal
-	github.com/libops/sitectl-isle => ../../../../cli/sitectl-isle
 	github.com/libops/sitectl-libops => ../../../../cli/sitectl-libops
 	github.com/libops/sitectl-ojs => ../../../../cli/sitectl-ojs
 	github.com/libops/sitectl-omeka-classic => ../../../../cli/sitectl-omeka-classic

@@ -1,0 +1,23 @@
+{
+  "sitectl": {
+    "directory": "sitectl",
+    "module": "github.com/libops/sitectl",
+    "repository": "libops/sitectl",
+    "version": "v0.40.0",
+    "ref": "9bae54578003bfdfab0bb44c13ad4149501a7fc8"
+  },
+  "sitectl_drupal": {
+    "directory": "sitectl-drupal",
+    "module": "github.com/libops/sitectl-drupal",
+    "repository": "libops/sitectl-drupal",
+    "version": "v0.12.0",
+    "ref": "21ed9fa17b1055dbf8c688bf1377935eec587de5"
+  },
+  "sitectl_isle": {
+    "directory": "sitectl-isle",
+    "module": "github.com/libops/sitectl-isle",
+    "repository": "libops/sitectl-isle",
+    "version": "v0.19.0",
+    "ref": "dd848239434308fbbdbc9906e54a789fa2735500"
+  }
+}

@@ -12,7 +12,6 @@ import (
 
 	archivesspacecmd "github.com/libops/sitectl-archivesspace/cmd"
 	drupalcmd "github.com/libops/sitectl-drupal/cmd"
-	islecmd "github.com/libops/sitectl-isle/cmd"
 	libopscmd "github.com/libops/sitectl-libops/cmd"
 	ojscmd "github.com/libops/sitectl-ojs/cmd"
 	omekaclassiccmd "github.com/libops/sitectl-omeka-classic/cmd"
@@ -72,13 +71,11 @@ func main() {
 		root:          sitectlcmd.RootCmd,
 	}
 
-	// Plugins. Keep this list in sync with the repos in scripts/use-go-work.sh
-	// and the require/replace blocks in scripts/gen-docs-snippets/go.mod.
+	// Plugins. Keep this list in sync with the active v1 compatibility set in
+	// scripts/snippet-dependencies.json and the require/replace blocks in
+	// scripts/gen-docs-snippets/go.mod. ISLE remains on its legacy v0 line and
+	// is intentionally excluded until its v1 component work is released.
 	plugins := []*generator{
-		pluginGen("isle", "Islandora (ISLE) utilities and migration tools", func(s *plugin.SDK) error {
-			islecmd.RegisterCommands(s)
-			return nil
-		}),
 		pluginGen("drupal", "Drupal utilities for sitectl", func(s *plugin.SDK) error {
 			return drupalcmd.RegisterCommands(s)
 		}),
