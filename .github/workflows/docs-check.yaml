@@ -56,14 +56,6 @@ jobs:
           path: .dependencies/cli/sitectl-drupal
           persist-credentials: false
 
-      - name: Check out sitectl-isle
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          repository: libops/sitectl-isle
-          ref: ${{ steps.dependency_refs.outputs.sitectl_isle }}
-          path: .dependencies/cli/sitectl-isle
-          persist-credentials: false
-
       - name: Check out sitectl-libops
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
