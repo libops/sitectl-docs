@@ -5,14 +5,14 @@ description: How to enable, disable, and sync the Fedora Commons repository in y
 
 fcrepo (Fedora Commons) is the linked data repository that Islandora uses to store digital objects and their metadata alongside Drupal. In an Islandora stack, fcrepo runs as a Docker service alongside the rest of the application.
 
-The `fcrepo` component controls whether the Fedora service, its volumes, and related Islandora configuration are part of your stack. The LibOps template defaults to `superceded` with Drupal private files; enable Fedora only when the site requires the Fedora-backed repository.
+The `fcrepo` component controls whether the Fedora service, its volumes, and related Islandora configuration are part of your stack. The LibOps template defaults to `superseded` with Drupal private files; enable Fedora only when the site requires the Fedora-backed repository.
 
 Supported dispositions:
 
 | Disposition | Meaning |
 |---|---|
 | `enabled` | Use the standard Fedora-backed Islandora repository stack. |
-| `superceded` | Remove Fedora because binaries are stored through another filesystem or storage backend. |
+| `superseded` | Remove Fedora because binaries are stored through another filesystem or storage backend. |
 
 ## Check current state
 
@@ -35,7 +35,7 @@ It also restores `scripts/init-database.sh` when an older downstream fork does n
 ## Disable fcrepo
 
 ```bash
-sitectl set fcrepo superceded --isle-file-system-uri public
+sitectl set fcrepo superseded --isle-file-system-uri public
 ```
 
 This removes the fcrepo service and volumes from `docker-compose.yml`, disables Fedora indexing in Alpaca, removes Fedora-specific Drupal config sync files, and rewrites managed media field storage to use the requested filesystem URI.

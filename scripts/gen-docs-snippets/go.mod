@@ -3,10 +3,10 @@ module github.com/libops/sitectl-docs/gen-docs-snippets
 go 1.26.3
 
 require (
-	github.com/libops/sitectl v1.0.0
+	github.com/libops/sitectl v1.0.1
 	github.com/libops/sitectl-archivesspace v1.0.0
 	github.com/libops/sitectl-drupal v1.0.0
-	github.com/libops/sitectl-isle v1.0.0
+	github.com/libops/sitectl-isle v1.0.1
 	github.com/libops/sitectl-libops v1.3.0
 	github.com/libops/sitectl-ojs v1.0.0
 	github.com/libops/sitectl-omeka-classic v1.0.0
