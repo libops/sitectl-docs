@@ -3,7 +3,7 @@ title: Component development
 description: How to define a sitectl component, what each field in the Definition struct means, and the workflow for adding a new one.
 ---
 
-Components are defined in Go using the `component.Definition` struct from `pkg/component`. Plugins register their component definitions with a `Registry`, which the `component status` and `component set` commands use to look up what to display and what to change.
+Components are defined in Go using the `component.Definition` struct from `pkg/component`. Plugins publish those definitions through the plugin SDK and register hidden component command handlers for typed RPC dispatch. Core uses the definitions to plan create and render component metadata, then calls the handlers to inspect, mutate, and reconcile project state.
 
 ## The Definition struct
 
@@ -26,7 +26,7 @@ type Definition struct {
 
 ### Core identity
 
-`Name` is the machine-readable identifier used in commands like `sitectl component set fcrepo off`. It must be unique within the plugin.
+`Name` is the machine-readable identifier used in commands like `sitectl set fcrepo off`. It must be unique within the plugin.
 
 `DefaultState` is `on` or `off`, which controls what the component does if the operator never sets it explicitly. Most components default to `on` to match the upstream template.
 
@@ -34,17 +34,30 @@ type Definition struct {
 
 `PromptOnCreate` controls whether `sitectl create isle` asks the operator about this component. Set it to `true` for components that represent a meaningful architectural choice that should be made at install time, such as whether to include fcrepo or Blazegraph.
 
-`FollowUps` is a list of additional questions that appear when a specific state or disposition is chosen. For example, fcrepo asks which file system URI to use when it is enabled. Follow-up specs include:
+`FollowUps` is a list of additional non-secret questions that appear when a specific state or disposition is chosen. For example, fcrepo asks which file system URI to use when it is enabled. Follow-up specs include:
 
 | Field | Meaning |
 |---|---|
 | `Name` | Machine-readable identifier |
+| `Label` | Short human-readable name used in review output |
 | `FlagName` | CLI flag that pre-answers this question (e.g. `--fcrepo-fs-type`) |
+| `FlagUsage` | Help text for the generated flag |
 | `Question` | Text shown to the operator in interactive mode |
 | `Choices` | Valid answers, if the question is a select |
 | `DefaultValue` | Pre-selected answer |
+| `BoolValue` / `MultiValue` | Whether the generated flag is a boolean or repeatable string value |
+| `Required` | Whether the selected disposition requires a value |
 | `PromptOnCreate` | Whether to ask this follow-up during create |
 | `AppliesTo` | Which state this follow-up applies to (`on` or `off`) |
+| `AppliesToDisposition` | More precise disposition filter when `on`/`off` is not enough |
+| `CustomPrompt` | Additional operator guidance rendered before input |
+
+Follow-up flags are forwarded to the plugin as passthrough argv so Cobra can parse
+the plugin-owned flags. They can be visible in process listings, and the typed RPC
+params sensitivity check does not cover passthrough `Args`. Never use a follow-up for
+passwords, tokens, private keys, secret keys, or any other sensitive value. Secret
+material must use a purpose-built stdin, file, environment-reference, or secret-store
+flow whose transport and redaction contract is explicit.
 
 ### Domains: On and Off
 
@@ -54,22 +67,57 @@ type Definition struct {
 type DomainSpec struct {
     Compose YAMLStateSpec
     Drupal  YAMLStateSpec
+    Files   FileStateSpec
 }
 ```
 
-`Compose` rules describe changes to `docker-compose.yml`. `Drupal` rules describe changes to the Drupal config sync directory. Each `YAMLStateSpec` holds a list of `YAMLRule` entries:
+`Compose` rules describe changes to Compose YAML. `Drupal` rules describe changes to the Drupal config sync directory. Each `YAMLStateSpec` holds a list of `YAMLRule` entries:
 
 ```go
 type YAMLRule struct {
     Files       []string   // files to target
+    Exclude     []string   // matching files to skip
+    SourceFiles []string   // canonical source candidates for restore
     Path        string     // YAML path within the file (dot-separated)
-    Op          RuleOp     // set, delete, restore, or replace
+    Op          RuleOp     // set, delete, restore, replace, contains, or not_contains
     Value       any        // value to set (for OpSet)
     Old         any        // value to replace (for OpReplace)
 }
 ```
 
-For more complex changes that YAML rules can't express, `ComponentSpec` supports lifecycle hooks (`BeforeEnable`, `AfterEnable`, `BeforeDisable`, `AfterDisable`) that run Go functions with access to the Docker client and context config.
+Operation support is domain-specific. Compose mutation accepts `set`, `restore`,
+and `delete`; additional operations such as `replace`, `contains`, and
+`not_contains` are used by supported state-detection paths. Do not assume every
+operation is writable in every domain—cover both detection and application in the
+component tests.
+
+`Files` is the generic project-file domain for component-owned state outside
+Compose and Drupal YAML. It uses `FileStateSpec` and `FileRule`:
+
+```go
+type FileRule struct {
+    Files       []string
+    Op          RuleOp
+    Path        string
+    Value       any
+    StartMarker string
+    EndMarker   string
+    Content     string
+}
+```
+
+When `Path` is set, the target is JSON and the rule sets, restores, or deletes the
+named object path while retaining unrelated fields. Without `Path`, a text rule owns
+only its marked block; `set`/`restore` writes the block and `delete` removes it. Use
+stable, component-specific markers and the smallest possible JSON path or text block.
+The same context file-access layer supports local and remote projects, so a generic
+file rule must be deterministic, bounded, and idempotent in both environments.
+
+Generic file rules do not make an entire file component-owned. The normal field
+ownership contract still applies: unmarked text, adjacent JSON fields, and all other
+downstream content must survive set, disable, and converge operations.
+
+For operational work that structured YAML and generic file rules cannot express, `ComponentSpec` supports lifecycle hooks (`BeforeEnable`, `AfterEnable`, `BeforeDisable`, `AfterDisable`) that run Go functions with access to the Docker client and context config. Hooks are an exception for runtime transitions, not a reason to hide deterministic file ownership in arbitrary code.
 
 ### Field ownership contract
 
@@ -144,18 +192,17 @@ type DrupalModuleDependency struct {
 
 ## Registering a component
 
-Plugins register components with a `Registry` at startup:
+Plugins publish component metadata and register its apply handlers at startup:
 
 ```go
-registry := component.NewRegistry(
-    fcrepo.NewComponent(),
-    blazegraph.NewComponent(),
-)
+definitions := orderedComponentDefinitions()
+sdk.RegisterComponentDefinitions(definitions...)
+sdk.RegisterComponentCommand(componentExtensionCmd)
 ```
 
-`MustRegister` panics on duplicate names, which catches naming conflicts at startup rather than at runtime.
+`RegisterComponentDefinitions` exposes the v1 `Definition` metadata used by create and core component review. `RegisterComponentCommand` installs the plugin's hidden `list`, `describe`, `reconcile`, and `set` handlers; their flags must match the typed RPC parameter contract. Shared Compose service components should use `sdk.RegisterServiceComponents(...)`, which registers both metadata and standard handlers.
 
-The `component status` command iterates the registry and checks each definition against the live project state. The `component set` command looks up the definition by name, resolves the target `ComponentSpec`, and applies it via the `Manager`.
+The older `component.Registry` stores implementations of the legacy `component.Component` interface. It does not accept `component.Definition` values and is not how a v1 plugin publishes component metadata.
 
 ## When to define a new component
 
@@ -169,17 +216,37 @@ If a feature is always on and has no meaningful off state, it does not need to b
 
 If the component represents a reusable, self-contained service such as Traefik, Solr, MariaDB, Valkey, or Memcached, follow the [Service components](/contributing/service-components) architecture. The shared operation belongs in core `sitectl`; the application plugin should only add app-specific wiring.
 
+## Cross-domain feature bundles
+
+Use an application-plugin feature bundle when one operator-visible capability must
+change several application domains as a unit—for example, a Compose service plus a
+Drupal action, or Composer requirements plus Drupal and search configuration. Do not
+model only the container when that would leave the application half-configured, and
+do not move stack-specific rules into core merely because the bundle touches
+Compose.
+
+A bundle should declare whole-owned canonical assets separately from narrow
+mutations, preflight every target input before its first write, and expose the same
+state through create, `set`, describe, validate, and converge. Keep it local-only
+when the result must be reviewed and committed in the downstream fork. Dependency
+manifests can be owned narrowly, but package-manager lock files, live configuration
+imports, deployment, and data backfills remain explicit downstream operations.
+
+The ISLE [`mergepdf` and `hocr-search` bundles](/plugins/isle/feature-bundles) are the
+reference implementation and publish their exact whole-file, field, compatibility,
+and rollout boundaries for operators.
+
 ## Component workflow
 
 <Steps>
   <Step title="Define the component">
-    Write a new Go file in the plugin's `pkg/components` directory. Implement the `Definition` struct with `On` and `Off` domain specs. Add YAML rules for the observable state that `status`, `set`, and `converge` should detect.
+    Write a new Go file in the plugin's `pkg/components` directory. Implement the `Definition` struct with `On` and `Off` domain specs. Add structured YAML or generic file rules for the observable state that `describe`, `set`, and `converge` should detect.
   </Step>
   <Step title="Register it">
-    Add the new component to the plugin's `Registry` initialization.
+    Add the new definition to the plugin's ordered definition set. Ensure the SDK registers that set and the plugin's hidden component command tree exactly once.
   </Step>
   <Step title="Add it to the create flow">
-    If the component requires a decision at install time, set `PromptOnCreate: true`, add any `FollowUps` needed, and thread the decision through the plugin's create request/options object. The create path should apply the same behavior as `component set` so a new checkout and an existing checkout stay consistent.
+    If the component requires a decision at install time, set `PromptOnCreate: true`, add any `FollowUps` needed, and thread the decision through the plugin's create request/options object. The create path should apply the same behavior as top-level `set` so a new checkout and an existing checkout stay consistent.
   </Step>
   <Step title="Add the apply path">
     Use the repo's existing component apply pattern. For simple components, structured YAML mutation helpers are usually enough. For larger generated config blocks, put the static config in `pkg/create/assets/...` and load it with Go `embed` instead of keeping inline YAML strings in Go code.
@@ -199,7 +266,9 @@ Before opening a component PR, check that it covers the full operator workflow:
 - `Definition` includes clear guidance, allowed dispositions, behavior summaries, data migration impact, and `LocalOnly` when changes should only happen on local checkouts.
 - `PromptOnCreate` is true for features operators should decide on during initial site creation.
 - Create flags and recreate-command output include the component so automated installs and setup commits are reproducible.
-- `component set`, create, and converge/status detection agree on what `on`, `off`, and `drifted` mean.
+- `set`, create, and converge/describe detection agree on what `on`, `off`, and `drifted` mean.
+- Every follow-up value is explicitly non-secret and safe to expose through process argv.
+- Generic file rules own the smallest JSON path or marked text block and preserve sentinel downstream content around it.
 - Static generated YAML or templates live under `pkg/create/assets/...` and are loaded with Go `embed`; avoid large inline YAML blocks in Go.
 - Runtime warnings are printed for insecure defaults, required credentials, destructive changes, or behavior that can surprise production operators.
 - Integration tests explicitly set the component state, even when the intended state is the default.

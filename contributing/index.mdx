@@ -139,10 +139,10 @@ GoReleaser builds the release artifacts, including Linux packages via `nfpms`.
 
 Release publishing uses two independent credentials:
 
-- The caller's repository-scoped `GITHUB_TOKEN` creates the GitHub release and uploads its artifacts.
-- The `HOMEBREW_REPO` secret is exposed to GoReleaser only as `HOMEBREW_REPO_TOKEN` and may update the separate `libops/homebrew` tap. Do not replace `GITHUB_TOKEN` with this cross-repository token.
+- The GoReleaser job uses only the caller's source-repository-scoped `GITHUB_TOKEN` to create the GitHub release and upload its artifacts.
+- A separate, isolated tap-reconciliation job may use `HOMEBREW_REPO` to update the `libops/homebrew` repository. That cross-repository token is not exposed to GoReleaser or substituted for `GITHUB_TOKEN`.
 
-The application plugin template leaves package-repository publication disabled with `publish-package-repo: false`. A derived plugin should enable it only after its repository has a trusted package publisher and the required cloud identity and variables. Leaving it disabled still publishes GitHub release artifacts and the native package files attached to the release. Homebrew publication is independent and runs only when the derived repository points at a tap it controls and provides `HOMEBREW_REPO`.
+The application plugin template leaves package-repository publication disabled with `publish-package-repo: false`. A derived plugin should enable it only after its repository has a trusted package publisher and the required cloud identity and variables. Leaving it disabled still publishes GitHub release artifacts and the native package files attached to the release. Homebrew publication is independent and runs only when the derived repository points its isolated tap-reconciliation job at a tap it controls and provides `HOMEBREW_REPO` to that job.
 
 ### Linux package publishing
 
@@ -150,13 +150,28 @@ This repo publishes Debian and RPM repositories through the shared libops packag
 
 GitHub Actions workflows:
 
-- caller workflow: [sitectl `goreleaser.yaml` at the documented v1.0.0 commit](https://github.com/libops/sitectl/blob/65cfde137a58ba14aaa9a1512d88b943888872f3/.github/workflows/goreleaser.yaml)
-- pinned reusable workflow: [`reusable-goreleaser.yaml` at `481df511`](https://github.com/libops/terraform-linux-packages/blob/481df51116aed2efd1c002ef1ef6a287699828a0/.github/workflows/reusable-goreleaser.yaml)
-- pinned package publisher used by that workflow: [`publish-package-repo.sh` at `72d2f0c3`](https://github.com/libops/terraform-linux-packages/blob/72d2f0c3b01e5e396d6db074108b95e95eedf4d4/scripts/publish-package-repo.sh)
+- core caller workflow: [sitectl `goreleaser.yaml` at the documented `v1.0.0` commit](https://github.com/libops/sitectl/blob/65cfde137a58ba14aaa9a1512d88b943888872f3/.github/workflows/goreleaser.yaml)
+- core reusable workflow: [`reusable-goreleaser.yaml` at `481df51116aed2efd1c002ef1ef6a287699828a0`](https://github.com/libops/terraform-linux-packages/blob/481df51116aed2efd1c002ef1ef6a287699828a0/.github/workflows/reusable-goreleaser.yaml)
+- package publisher pinned by that core workflow: [`terraform-linux-packages` at `72d2f0c3b01e5e396d6db074108b95e95eedf4d4`](https://github.com/libops/terraform-linux-packages/tree/72d2f0c3b01e5e396d6db074108b95e95eedf4d4)
+- ArchivesSpace, OJS, Omeka Classic, Omeka S, and WordPress v1.0.0 reusable workflow: [`sitectl-plugin-goreleaser.yaml` at `39f81174b7b899f66aee31035308e1d9b1f3e165`](https://github.com/libops/.github/blob/39f81174b7b899f66aee31035308e1d9b1f3e165/.github/workflows/sitectl-plugin-goreleaser.yaml)
+- Drupal v1.0.0 and LibOps v1.3.0 reusable workflow: [`sitectl-plugin-goreleaser.yaml` at `e1e30b58c9c566f72b22f03e637cd5218d635727`](https://github.com/libops/.github/blob/e1e30b58c9c566f72b22f03e637cd5218d635727/.github/workflows/sitectl-plugin-goreleaser.yaml)
+- package publisher pinned by the five-application and Drupal/LibOps workflow revisions: [`terraform-linux-packages` at `285183831e6e5c14ec34d87e208629949f5b627c`](https://github.com/libops/terraform-linux-packages/tree/285183831e6e5c14ec34d87e208629949f5b627c)
+- ISLE v1.0.0 release-assets and Homebrew recovery workflow: [`sitectl-plugin-goreleaser.yaml` at `8e27d95846671a9e319f1900e86a488a1d4f39b3`](https://github.com/libops/.github/blob/8e27d95846671a9e319f1900e86a488a1d4f39b3/.github/workflows/sitectl-plugin-goreleaser.yaml)
+- ISLE v1.0.0 final Linux-package recovery workflow: [`sitectl-plugin-goreleaser.yaml` at `77724fe807ede3e0808d4556f47e4ad0ae266bac`](https://github.com/libops/.github/blob/77724fe807ede3e0808d4556f47e4ad0ae266bac/.github/workflows/sitectl-plugin-goreleaser.yaml)
+- package publisher pinned by that final ISLE recovery workflow: [`terraform-linux-packages` at `b14fd2f95b4017e897c595b3321b9cc3f48b5ddd`](https://github.com/libops/terraform-linux-packages/tree/b14fd2f95b4017e897c595b3321b9cc3f48b5ddd)
+
+The core and application-plugin paths are intentionally listed separately. The
+published plugin set spans immutable revisions of the shared workflow. ISLE's
+recovery used the `8e27d95` revision to restore release assets and reconcile
+Homebrew, then the `77724fe` revision and its `b14fd2f` package publisher to
+complete Debian and RPM repository publication. The [successful final recovery
+run](https://github.com/libops/sitectl-isle/actions/runs/29549667637) records the
+completed package publication. Advance a full SHA only with the caller and
+publisher contract tests in the same change; never replace it with `main`.
 
 Required GitHub secrets:
 
-- `HOMEBREW_REPO`: cross-repository token used only to update the Homebrew tap
+- `HOMEBREW_REPO`: cross-repository token available only to the isolated Homebrew tap-reconciliation job
 
 Required GitHub variables:
 

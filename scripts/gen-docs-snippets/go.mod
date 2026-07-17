@@ -6,6 +6,7 @@ require (
 	github.com/libops/sitectl v1.0.0
 	github.com/libops/sitectl-archivesspace v1.0.0
 	github.com/libops/sitectl-drupal v1.0.0
+	github.com/libops/sitectl-isle v1.0.0
 	github.com/libops/sitectl-libops v1.3.0
 	github.com/libops/sitectl-ojs v1.0.0
 	github.com/libops/sitectl-omeka-classic v1.0.0
@@ -51,7 +52,6 @@ require (
 	github.com/google/gnostic v0.7.1 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
@@ -98,6 +98,7 @@ replace (
 	github.com/libops/sitectl => ../../../../cli/sitectl
 	github.com/libops/sitectl-archivesspace => ../../../../cli/sitectl-archivesspace
 	github.com/libops/sitectl-drupal => ../../../../cli/sitectl-drupal
+	github.com/libops/sitectl-isle => ../../../../cli/sitectl-isle
 	github.com/libops/sitectl-libops => ../../../../cli/sitectl-libops
 	github.com/libops/sitectl-ojs => ../../../../cli/sitectl-ojs
 	github.com/libops/sitectl-omeka-classic => ../../../../cli/sitectl-omeka-classic

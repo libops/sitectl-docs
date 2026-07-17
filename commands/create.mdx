@@ -51,6 +51,26 @@ Plugin-specific create flags (for example `--path`, `--type`, `--checkout-source
 `--setup-only`, or ISLE's `--fcrepo` and `--blazegraph`) still go after the target,
 because they belong to the plugin's create runner.
 
+## Template release and provenance
+
+The documented application plugins clone their matching LibOps template from the
+stable `v1.0.0` ref by default. Use `--template-branch` only when you deliberately
+want another reviewed template ref; do not substitute a moving branch in unattended
+creation without recording that decision.
+
+Before sitectl discards the template's Git history, it resolves the exact cloned
+commit. It initializes a new repository owned by the site and atomically writes
+`.libops/template.lock.yaml`. Commit that file with the downstream fork. It records
+the source repository and commit, available sitectl/plugin build identities, the
+template contract digest, and the declared component-defaults revision.
+
+The lock is provenance, not an attestation or an automatic update channel. The
+template owns `.libops/template-contract.yaml` and may declare
+`.libops/component-defaults.revision`; the downstream create operation owns
+`.libops/template.lock.yaml`. A source template that already contains the lock is
+invalid. See [Updating a downstream fork](/apps#updating-a-downstream-fork) for the
+upgrade workflow.
+
 ## Remote Prerequisites
 
 For `--type remote`, the standard create runner checks the SSH target before cloning

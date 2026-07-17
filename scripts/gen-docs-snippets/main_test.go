@@ -32,12 +32,10 @@ func TestRemoveStaleGeneratedSnippets(t *testing.T) {
 	current := filepath.Join(dir, "current.mdx")
 	stale := filepath.Join(dir, "stale.mdx")
 	manual := filepath.Join(dir, "manual.mdx")
-	legacy := filepath.Join(dir, "sitectl-isle-sync.mdx")
 	for path, contents := range map[string]string{
 		current: autoGenHeader + "current\n",
 		stale:   autoGenHeader + "stale\n",
 		manual:  "manually maintained\n",
-		legacy:  "{/* Legacy snapshot from sitectl-isle v0.19.0. */}\n",
 	} {
 		if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
 			t.Fatalf("write %s: %v", path, err)
@@ -51,7 +49,7 @@ func TestRemoveStaleGeneratedSnippets(t *testing.T) {
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
 		t.Fatalf("stale generated snippet still exists: %v", err)
 	}
-	for _, path := range []string{current, manual, legacy} {
+	for _, path := range []string{current, manual} {
 		if _, err := os.Stat(path); err != nil {
 			t.Fatalf("expected %s to remain: %v", path, err)
 		}

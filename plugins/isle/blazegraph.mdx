@@ -31,8 +31,10 @@ sitectl set blazegraph enabled
 This adds the Blazegraph service and `blazegraph-data` volume back to
 `docker-compose.yml`, enables `ALPACA_TRIPLESTORE_INDEXER_ENABLED`, restores
 Drupal's default triplestore namespace, and seeds any missing managed Drupal
-triplestore action files. Existing action bodies remain downstream-owned and
-are not replaced.
+triplestore action files. Existing action bodies are preserved while Blazegraph
+remains enabled, but those files are component-owned lifecycle artifacts:
+disabling Blazegraph removes them, and a later re-enable seeds the canonical
+content again.
 
 The Islandora plugin changes only Blazegraph's named reaction entries inside
 the shared media, repository-content, and taxonomy context files. Unknown keys,

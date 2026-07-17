@@ -56,11 +56,12 @@ Use [`sitectl bump`](/commands/bump) or a reviewed Renovate pull request to upda
 
 Treat template updates like application changes, not generated files to overwrite:
 
-1. Create an update branch with a clean working tree and current database/file-volume backups.
-2. Merge or rebase the upstream template change using normal Git workflows. Resolve changes in files your fork owns before running sitectl.
+1. Create an update branch with a clean working tree and current database/file-volume backups. Read `.libops/template.lock.yaml` to identify the exact template repository and commit from which the site was created.
+2. Compare that recorded commit with the new reviewed template tag, then merge or apply the upstream change using normal Git workflows. Resolve changes in files your fork owns before running sitectl. The lock is a provenance record, not an instruction for sitectl to overwrite the fork.
 3. Run `sitectl validate`, then `sitectl converge --report`. Converge derives state from the checkout and repairs only drifted component-owned paths; it does not replace a separate desired-state store or discard a healthy enabled/disabled component choice.
 4. Apply `sitectl converge` or an explicit `sitectl set` when needed, inspect the Git diff, and commit the resulting component files with the upstream update.
-5. Build and test the branch, then use `sitectl deploy`. Complete every automatic or manual application migration gate before declaring the update finished.
+5. Retain the create-time lock as the site's origin record. Record the applied upstream template tag and commit in the update commit or pull request; do not hand-edit the lock to imply that a fresh create occurred.
+6. Build and test the branch, then use `sitectl deploy`. Complete every automatic or manual application migration gate before declaring the update finished.
 
 Keep app-specific customizations outside component-owned blocks when possible. When a feature must extend a managed component, update the plugin/component contract as well as the template so a later converge can preserve that customization deliberately.
 

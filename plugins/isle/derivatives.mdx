@@ -16,7 +16,10 @@ The ISLE plugin can switch individual derivative services between local Compose 
 | `homarus` | Removes `homarus` and sets Alpaca `ALPACA_DERIVATIVE_HOMARUS_URL` to `https://microservices.libops.site/homarus`. | Adds `homarus` to `docker-compose.dev.yml` and sets Alpaca back to `http://homarus:8080/`. |
 | `houdini` | Removes `houdini` and sets Alpaca `ALPACA_DERIVATIVE_HOUDINI_URL` to `https://microservices.libops.site/houdini`. | Adds `houdini` to `docker-compose.dev.yml` and sets Alpaca back to `http://houdini:8080/`. |
 | `hypercube` | Removes `hypercube` and sets Alpaca `ALPACA_DERIVATIVE_OCR_URL` to `https://microservices.libops.site/hypercube`. | Adds `hypercube` to `docker-compose.dev.yml` and sets Alpaca back to `http://hypercube:8080/`. |
-| `mergepdf` | Removes `mergepdf` and sets Alpaca `ALPACA_DERIVATIVE_MERGEPDF_URL` to `https://microservices.libops.site/mergepdf`. | Adds `mergepdf` to `docker-compose.dev.yml` and sets Alpaca back to `http://mergepdf:8080/`. |
+
+Mergepdf is a [feature bundle](/plugins/isle/feature-bundles), not a service-only
+topology switch, because its Compose service and Drupal event action must change
+together.
 
 ## Switch Services
 
@@ -26,7 +29,6 @@ sitectl set crayfits distributed
 sitectl set homarus distributed
 sitectl set houdini distributed
 sitectl set hypercube distributed
-sitectl set mergepdf distributed
 ```
 
 Return a service to the base Compose stack with `enabled`:
@@ -37,7 +39,6 @@ sitectl set crayfits enabled
 sitectl set homarus enabled
 sitectl set houdini enabled
 sitectl set hypercube enabled
-sitectl set mergepdf enabled
 ```
 
 ## FITS And Crayfits
@@ -61,8 +62,7 @@ sitectl create isle \
   --crayfits=distributed \
   --homarus=distributed \
   --houdini=distributed \
-  --hypercube=distributed \
-  --mergepdf=distributed
+  --hypercube=distributed
 ```
 
 Omit a flag to keep that service at the template default, or pass `enabled` to keep it local explicitly.
