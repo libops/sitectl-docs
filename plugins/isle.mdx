@@ -21,7 +21,7 @@ The create flow:
 
 <Steps>
   <Step title="Clone the template">
-    `sitectl-isle v1.0.0` clones `libops/isle` from its reviewed `v1.0.0` template ref into your chosen directory. Pass `--template-repo` and `--template-branch` to use a different reviewed source. The template has since published `v1.1.0`; selecting that newer ref is an explicit downstream update until a later plugin release advances its default.
+    `sitectl-isle v1.0.1` clones `libops/isle` from its reviewed `v1.0.0` template ref into your chosen directory. Pass `--template-repo` and `--template-branch` to use a different reviewed source. The template has since published `v1.1.0`; selecting that newer ref is an explicit downstream update until a later plugin release advances its default.
   </Step>
   <Step title="Configure a context">
     sitectl creates a local sitectl context for the new project directory.
@@ -55,7 +55,7 @@ The Islandora plugin currently manages these application components directly:
 
 | Component | What it controls | Common commands |
 |---|---|---|
-| [`fcrepo`](/plugins/isle/fcrepo) | Fedora Commons service, volume, Drupal Fedora config, and filesystem migration guidance. | `sitectl set fcrepo enabled` or `sitectl set fcrepo superceded --isle-file-system-uri public` |
+| [`fcrepo`](/plugins/isle/fcrepo) | Fedora Commons service, volume, Drupal Fedora config, and filesystem migration guidance. | `sitectl set fcrepo enabled` or `sitectl set fcrepo superseded --isle-file-system-uri public` |
 | [`blazegraph`](/plugins/isle/blazegraph) | Blazegraph service, triplestore volume, Alpaca triplestore indexing, and Drupal triplestore actions. | `sitectl set blazegraph enabled` or `sitectl set blazegraph disabled` |
 | [`iiif`](/plugins/isle/iiif) | The IIIF image server implementation: Cantaloupe or Triplet. | `sitectl set iiif cantaloupe` or `sitectl set iiif triplet` |
 | [`iiif-topology`](/plugins/isle/iiif) | Whether IIIF runs in this Compose project or behind an external upstream. | `sitectl set iiif-topology distributed --iiif-upstream-url https://iiif.example.edu` |

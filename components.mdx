@@ -30,7 +30,7 @@ Within a state, a component also has a **disposition** that describes the select
 |---|---|
 | `enabled` | Explicitly turned on by an operator |
 | `disabled` | Explicitly turned off by an operator |
-| `superceded` | Replaced by a different component or approach. This is the current CLI spelling. |
+| `superseded` | Replaced by a different component or approach. The legacy `superceded` spelling is accepted for RPC v1 compatibility but is never rendered. |
 | `distributed` | Plugin-specific distributed topology, such as routing ISLE IIIF traffic to an external upstream |
 | `cantaloupe` | Use Cantaloupe as the selected ISLE IIIF implementation |
 | `triplet` | Use Triplet as the selected ISLE IIIF implementation |
@@ -105,7 +105,7 @@ documented Compose secret or secret-store flow instead.
 
 <AccordionGroup>
   <Accordion title="fcrepo">
-    Fedora Commons repository. The LibOps default is `superceded` with Drupal private files. Use `enabled` for a Fedora-backed Islandora repository or `superceded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
+    Fedora Commons repository. The LibOps default is `superseded` with Drupal private files. Use `enabled` for a Fedora-backed Islandora repository or `superseded` with `--isle-file-system-uri` when another filesystem backend replaces Fedora. See [fcrepo](/plugins/isle/fcrepo).
   </Accordion>
   <Accordion title="blazegraph">
     Blazegraph triple store. The LibOps default is `disabled`. Use `enabled` for RDF/SPARQL indexing or `disabled` for stacks that do not use linked data queries. See [Blazegraph](/plugins/isle/blazegraph).
