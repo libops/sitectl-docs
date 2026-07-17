@@ -72,7 +72,9 @@ sitectl set isle/fcrepo off
 After a successful `sitectl set`, the relevant <Compose /> and application configuration files are already updated. Review and commit those changes in the downstream template fork.
 
 <Warning>
-  Component changes can rewrite <Compose /> files and Drupal configuration sync files. Make sure you have a recent backup before enabling or disabling components on a production site.
+  Component changes can rewrite owned fields in <Compose />, Drupal configuration,
+  JSON, and marked text blocks. Make sure you have a recent backup before enabling
+  or disabling components on a production site.
 </Warning>
 
 ## Applying changes with converge
@@ -94,6 +96,11 @@ sitectl converge --component fcrepo
 
 When you run `sitectl create isle`, sitectl asks you about each component that has a meaningful architectural choice, such as whether to include Fedora or Blazegraph. You can answer interactively or pass flags to skip the prompts. Your choices are applied to the project before the first launch.
 
+Component follow-up flags are non-secret configuration. They can cross the
+host/plugin boundary as process arguments, so never pass passwords, tokens, private
+keys, or other sensitive values through a component follow-up. Use the template's
+documented Compose secret or secret-store flow instead.
+
 ## Current ISLE components
 
 <AccordionGroup>
@@ -113,7 +120,10 @@ When you run `sitectl create isle`, sitectl asks you about each component that h
     Controls the Composer-owned Drupal source layout. The LibOps default is `git-root`, where the downstream repository root is the codebase. Use `nested` only for a template that intentionally keeps Drupal under its nested web-root layout; review the resulting Dockerfile, Compose build context, and bind mounts together.
   </Accordion>
   <Accordion title="Derivative microservices">
-    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, `hypercube`, and `mergepdf` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
+    Controls whether `fits`, `crayfits`, `homarus`, `houdini`, and `hypercube` run in the base Compose stack or use the managed LibOps microservices. Use `distributed` to remove the service from `docker-compose.yml` and update Alpaca's service URL where applicable. Use `enabled` to restore the service locally. See [derivative microservices](/plugins/isle/derivatives).
+  </Accordion>
+  <Accordion title="Feature bundles">
+    `mergepdf` coordinates its Compose service with the paged-content Drupal action. `hocr-search` coordinates Composer requirements, Drupal modules and configuration, IIIF annotations, and Solr search. Both are local-checkout changes that require a reviewed deploy and application-level follow-up. See [ISLE feature bundles](/plugins/isle/feature-bundles).
   </Accordion>
   <Accordion title="ingress">
     Controls public URL behavior for Traefik-backed applications. The default is `enabled --mode http --domain localhost`, so new stacks start at `http://localhost`. Use `enabled` with `--mode http|https|https-letsencrypt|https-custom|https-mkcert`, `--domain`, `--acme-email`, `--trusted-ip`, `--max-upload-size`, and `--upload-timeout` to update Traefik commands and dynamic router config together with the application settings mapped by the active plugin. PHP/nginx plugins map proxy and upload settings through every backend layer; another runtime needs an app-specific mapping before those values are end to end. `https` is the Cloudflare Origin CA path; `https-custom` reads `certs/cert.pem` and `certs/privkey.pem`; `https-mkcert` generates that pair for development contexts.

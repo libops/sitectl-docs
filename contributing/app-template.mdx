@@ -5,7 +5,7 @@ description: How to build a new Compose-backed sitectl application plugin from s
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 
-Use [`sitectl-app-tmpl`](https://github.com/libops/sitectl-app-tmpl) when adding a new application plugin for a standalone <Compose /> template repository.
+Use [`sitectl-app-tmpl` v1.0.0](https://github.com/libops/sitectl-app-tmpl/tree/6c1b09ad9b5decc0c9e9fe1aa9f199700a6f5f9c) when adding a new application plugin for a standalone <Compose /> template repository. Record the scaffold release and exact tag commit in the initial repository history so later maintainers can distinguish inherited behavior from application-specific changes.
 
 The template is intentionally thin. The application repository owns the Compose workload. Core `sitectl` owns shared lifecycle commands. The plugin contributes app-specific metadata and helpers.
 
@@ -26,6 +26,11 @@ Use the lower-level `RegisterComposeTemplateCreateRunner` only when an app plugi
 ## Create Definition Contract
 
 The create definition is more than a clone recipe. It is also the desired state metadata used by core `sitectl compose up` to decide whether a local checkout needs first-run init or image build work. See [Compose reconcile contract](/contributing/compose-reconcile) for the shared core behavior.
+
+A released plugin must point `DockerComposeBranch` at a reviewed stable template
+ref. The current LibOps application plugins use `v1.0.0`; `main` is for scaffold
+development, not a durable downstream create default. Advance the template ref only
+after its clean-create, migration, health, and verification smoke tests pass.
 
 ```go
 func createDefinition() plugin.CreateSpec {
@@ -73,6 +78,32 @@ func createDefinition() plugin.CreateSpec {
 ```
 
 The migration command in this scaffold is deliberately fail-closed guidance for the plugin author: it exits nonzero, so the final Compose health wait cannot run and deploy cannot claim success. Replace it before releasing a derived plugin. A final Compose health wait proves container health only; it cannot prove that an application schema migration happened.
+
+## Template contract
+
+Templates may declare the revision of their component defaults in
+`.libops/template-contract.yaml`:
+
+```yaml
+apiVersion: sitectl.libops.io/v1alpha1
+kind: TemplateContract
+schema: 1
+spec:
+  componentDefaults:
+    revision: components-v1
+```
+
+The same single-line revision may instead live in
+`.libops/component-defaults.revision`; when both are present they must match. Use a
+new stable revision whenever a template changes the default fields that a component
+will later detect or converge. The source template must never contain
+`.libops/template.lock.yaml`; core sitectl writes that downstream-owned provenance
+file after it resolves the exact source commit.
+
+The contract does not authorize a plugin to replace downstream customizations. A
+component release still needs explicit field ownership, transition logic from each
+supported defaults revision, and tests proving that unrelated downstream content is
+preserved.
 
 ## Standard App Registration
 
@@ -153,7 +184,7 @@ Applications without a supported noninteractive migration must instead fail at a
 
 Pin every directly consumed Compose image as `tag@sha256:digest`. Keep a versioned tag for reviewability and the digest for reproducibility. A buildable application's `BASE_IMAGE` remains a build argument so local `--tag` and explicit `tag@digest` testing work without deleting the Compose `build` contract.
 
-Register `dev-mode` only when the downstream checkout owns every mounted tree, or when each mount targets one explicitly named custom extension. Never mount a broad plugins, modules, themes, locales, or stylesheets directory over content bundled in a versioned base image. The v0.39 scaffold sets `DisableDevMode: true`; keep that default until a derived plugin can replace it with a safe, explicit `DevModeOptions` mount list.
+Register `dev-mode` only when the downstream checkout owns every mounted tree, or when each mount targets one explicitly named custom extension. Never mount a broad plugins, modules, themes, locales, or stylesheets directory over content bundled in a versioned base image. The scaffold sets `DisableDevMode: true`; keep that default until a derived plugin can replace it with a safe, explicit `DevModeOptions` mount list.
 
 The standard core healthcheck accepts a stopped service only when the effective Compose model proves it is a required `service_completed_successfully` dependency and its container is exactly `exited (0)`. Do not rely on that exception for optional jobs or ad hoc `docker compose run` containers.
 
@@ -179,7 +210,7 @@ Known buildable application services reject `--image`; use a known `--tag` or `-
 After creating a repository from `sitectl-app-tmpl`:
 
 1. Rename the Go module, binary, plugin name, display name, and release workflow outputs.
-2. Set `TemplateRepo`, `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants.
+2. Set `TemplateRepo`, a stable `TemplateBranch`, `DefaultPath`, `AppService`, `AppImage`, `DatabaseService`, `DatabaseName`, and codebase rootfs constants. Do not release a plugin whose create default still follows `main`.
 3. Update `CreateSpec` lifecycle commands, `InitArtifacts`, `InitVolumes`, and `Images` to match the real template repository. Replace the migration placeholder with supported fail-hard automation or a documented fail-closed manual-migration gate before release.
 4. Prefer `RegisterStandardComposeAppPlugin`; tune its `Discovery` option only when service-name detection is not enough. Keep the scaffold's `DisableDevMode: true` default unless the derived plugin can declare downstream-owned paths or explicitly named custom extensions.
 5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
@@ -187,9 +218,10 @@ After creating a repository from `sitectl-app-tmpl`:
 7. Implement debug, validate, healthcheck, and verify runners through the SDK. The template's verify runner deliberately returns an unimplemented warning; replace it with behavioral checks before releasing a derived plugin. Results should be structured; progress and diagnostics should go to stderr.
 8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
 9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run both `sitectl healthcheck` and `sitectl verify`.
-10. Point GoReleaser at a Homebrew tap the derived repository controls and provide its `HOMEBREW_REPO` secret, or remove that publisher. Keep the release workflow's repository-scoped `GITHUB_TOKEN` separate from this tap token. Leave `publish-package-repo: false` unless the repository also has its own trusted package publisher, cloud identity, and required variables.
-11. Add a plugin page to `sitectl-docs` for app-specific operations.
-12. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must fail at an `ACTION REQUIRED` gate, keep ingress stopped, and document the manual migration, full-stack start, and post-migration checks.
+10. Configure the isolated Homebrew tap-reconciliation job for a tap the derived repository controls and provide `HOMEBREW_REPO` only to that job, or disable tap reconciliation. Keep GoReleaser on the source repository's scoped `GITHUB_TOKEN`; do not expose the tap token to it. Leave `publish-package-repo: false` unless the repository also has its own trusted package publisher, cloud identity, and required variables.
+11. Add a versioned template contract/component-defaults revision, confirm the source does not contain `.libops/template.lock.yaml`, and test that local and remote create record the exact template commit.
+12. Add a plugin page to `sitectl-docs` for app-specific operations.
+13. Test a clean create and an upgrade rollout. Keep the pull/build preparation prefix before the outage boundary. Start only the application and its required dependencies before an automatic migration, make migration commands fail hard, bound every readiness wait, and finish with a bounded full-stack wait. Applications without a supported CLI migration must fail at an `ACTION REQUIRED` gate, keep ingress stopped, and document the manual migration, full-stack start, and post-migration checks.
 
 ## Local Verification
 

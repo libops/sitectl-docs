@@ -1,0 +1,244 @@
+---
+title: Feature bundles
+description: Add or remove complete Islandora capabilities across Compose, Drupal configuration, and Composer with reviewable sitectl changes.
+---
+
+import { Compose } from "/snippets/compose-tooltip.mdx";
+
+An ISLE feature bundle is a component that coordinates every tracked part of one
+application feature. It is different from a service-topology component: adding a
+container alone would leave Drupal unaware of the capability. The first bundles are
+`mergepdf` and `hocr-search`.
+
+Feature-bundle changes are local-checkout operations. Run them in the downstream
+site repository, review the resulting diff, commit it, and promote it through the
+site's normal deployment process. See [Components](/components) for the shared
+component workflow and status meanings.
+
+## Commands and create options
+
+Enable or disable a bundle in an existing checkout:
+
+```bash
+# Aggregated PDFs for paged content
+sitectl set mergepdf enabled --islandora-tag 6.3.19
+sitectl set mergepdf disabled
+
+# hOCR generation, indexing, IIIF annotations, and search
+sitectl set hocr-search enabled --hocr-term-id 56
+sitectl set hocr-search disabled
+```
+
+`--islandora-tag` must be a valid Docker tag at version `6.3.19` or newer. The
+default is `6.3.19`. `--hocr-term-id` must be the positive Drupal taxonomy term ID
+whose external URI is `https://discoverygarden.ca/use#hocr`; the template default is
+`56`, but a downstream site's term ID can differ.
+
+The same choices can be made non-interactively during create:
+
+```bash
+sitectl create isle \
+  --mergepdf enabled \
+  --islandora-tag 6.3.19 \
+  --hocr-search enabled \
+  --hocr-term-id 56
+```
+
+Both feature bundles are enabled in the v1 ISLE defaults. Pass `disabled` for either
+component when creating a site that should omit it. The recreate command emitted by
+sitectl retains the selected states and enabled-only option values.
+
+Inspect the current files before or after a change:
+
+```bash
+sitectl component describe --component mergepdf --verbose
+sitectl component describe --component hocr-search --verbose
+sitectl validate
+```
+
+## Compatibility checks
+
+Sitectl validates the complete target state before writing feature-bundle files.
+
+### mergepdf
+
+The selected `ISLANDORA_TAG` must be `6.3.19` or newer. The project must also have:
+
+- a top-level `x-common` mapping carrying the `&common` YAML anchor;
+- top-level <Compose /> secret declarations named `CERT_PUBLIC_KEY`,
+  `CERT_AUTHORITY`, `JWT_ADMIN_TOKEN`, and `JWT_PUBLIC_KEY`; and
+- an `alpaca` service with an image.
+
+When the Alpaca repository is `islandora/alpaca`, its resolved tag must also be
+`6.3.19` or newer. A different Alpaca repository is allowed because a downstream
+image can carry the required support independently; the downstream owner is
+responsible for certifying that compatibility.
+
+The bundle consumes the existing common anchor and secret declarations. It does not
+create them or change the Alpaca service.
+
+### hOCR search
+
+The project must have a `solr` service using one of these supported image contracts:
+
+- `islandora/solr:4.2.1` or newer;
+- `libops/solr`; or
+- `ghcr.io/libops/solr`.
+
+Sitectl rejects an unknown Solr repository rather than assuming its schema supports
+hOCR. It also requires valid `composer.json` and Drupal config-sync inputs, and the
+selected hOCR term ID must be a positive integer.
+
+## File ownership
+
+The ownership boundary determines what a later `set` or `converge` can repair or
+replace. Whole-file and whole-service assets are canonical: downstream edits inside
+them can be overwritten. Narrow mutations preserve unrelated keys and neighboring
+sequence entries.
+
+### mergepdf ownership
+
+The bundle owns the complete `services.mergepdf` block in `docker-compose.yml` and
+converges it to:
+
+```yaml
+mergepdf:
+  <<: *common
+  image: islandora/mergepdf:${ISLANDORA_TAG}
+  secrets:
+    - source: CERT_PUBLIC_KEY
+    - source: CERT_AUTHORITY
+    - source: JWT_ADMIN_TOKEN
+    - source: JWT_PUBLIC_KEY
+```
+
+It also owns the complete Drupal config-sync file
+`system.action.paged_content_created_aggregated_pdf.yml`. Enabling writes the
+selected `ISLANDORA_TAG` to the highest-precedence environment file in the active
+context, or to `.env` when the context has no explicit environment files.
+
+`ISLANDORA_TAG` is shared by the stack, so disabling `mergepdf` deliberately leaves
+that environment entry in place. The top-level common mapping, secret declarations,
+Alpaca service, secret values, and existing generated PDFs remain downstream-owned.
+This bundle does not change Composer requirements.
+
+### hOCR-search ownership
+
+The bundle owns these complete Drupal config-sync files:
+
+- `search_api_solr.solr_field_type.islandora_hocr_und_7_0_0.yml`
+- `search_api_solr.solr_request_handler.request_handler_select_islandora_hocr_7_0_0.yml`
+- `system.action.get_hocr_from_image.yml`
+- `views.view.search_in_hocr.yml`
+
+It owns only the following units in existing Drupal configuration:
+
+| File | Owned units |
+|---|---|
+| `context.context.pages.yml` | `reactions.derivative.actions.get_hocr_from_image` |
+| `core.extension.yml` | Module entries for `islandora_hocr` and `islandora_iiif_hocr` |
+| `field.field.media.file.field_media_file.yml` | Exact `htm` and `html` tokens in `settings.file_extensions` |
+| `search_api.index.default_solr_index.yml` | The `islandora_hocr` dependency entry, `field_settings.content`, and `processor_settings.islandora_hocr_field` |
+| `views.view.iiif_manifest.yml` | In `rest_export_1`, `rest_export_2`, and `rest_export_3`: the hOCR tile/file selections, structured-text term ID and URI, and search endpoint |
+
+On disable, the bundle restores the starter template's IIIF tile-field selections
+instead of deleting those pre-existing fields. It refuses to replace an unexpected
+downstream tile-field value with that baseline.
+
+In `composer.json`, the bundle owns only these top-level `require` entries:
+
+```json
+{
+  "born-digital/islandora_iiif_hocr": "^2.0",
+  "discoverygarden/islandora_hocr": "^1.4"
+}
+```
+
+The bundle validates the Solr service image but does not rewrite the Solr service.
+All other Compose, Drupal, and Composer fields remain downstream-owned.
+
+## Idempotency and drift
+
+Running the same `sitectl set` command again is idempotent after the checkout matches
+the selected disposition. Sitectl preflights the target inputs before changing any
+bundle files, so a missing prerequisite or incompatible image fails before a partial
+feature transition begins.
+
+`sitectl component describe` derives state from the current checkout. A component is
+`drifted` when only part of its selected contract remains or a canonical owned asset
+was edited. Use verbose describe output to inspect the failed checks, then rerun the
+appropriate `set` command or use `sitectl converge --component <name>` to repair the
+owned state.
+
+<Warning>
+  Repairing drift can replace a whole-owned service or config file. If a downstream
+  fork intentionally changed one of those assets, either move the customization
+  outside the owned boundary or stop reconciling that component before accepting a
+  repair.
+</Warning>
+
+## Enable rollout
+
+<Steps>
+  <Step title="Prepare the downstream change">
+    Work on a branch in a clean local checkout. Back up the database and application
+    files, confirm the active sitectl context, and run verbose component inspection.
+    For hOCR, verify the taxonomy term ID for
+    `https://discoverygarden.ca/use#hocr` before selecting it.
+  </Step>
+  <Step title="Apply and review">
+    Run the appropriate `sitectl set ... enabled` command. Review every changed
+    tracked file. The site owner, not sitectl, decides whether the generated diff is
+    suitable for that fork.
+  </Step>
+  <Step title="Resolve Composer dependencies">
+    For hOCR, run the site's established Composer update workflow for the two owned
+    packages and commit the resulting `composer.lock`. Sitectl changes
+    `composer.json`; it does not fabricate or update the lock file. Mergepdf has no
+    Composer step.
+  </Step>
+  <Step title="Deploy and import configuration">
+    Rebuild and deploy the Drupal application from the reviewed manifest and lock
+    file, then import the changed Drupal configuration through the site's normal
+    Drush/configuration workflow. Sitectl edits config-sync source; it does not import
+    configuration into the live Drupal database.
+  </Step>
+  <Step title="Backfill existing content">
+    For mergepdf, backfill aggregated PDFs for existing paged content when required.
+    For hOCR, generate hOCR derivatives for existing images and then reindex Solr so
+    the new field and search views contain existing content. These data operations
+    are site-specific and are not run automatically.
+  </Step>
+  <Step title="Verify and promote">
+    Run `sitectl validate` and the site's application smoke tests. Commit the source,
+    lock, and config changes together before promoting them to another environment.
+  </Step>
+</Steps>
+
+## Disable rollout
+
+Run `sitectl set mergepdf disabled` or `sitectl set hocr-search disabled` on a
+reviewed branch, then repeat the build, deploy, and Drupal config-import workflow.
+When disabling hOCR, update and commit `composer.lock` after sitectl removes the two
+owned requirements from `composer.json`.
+
+Disabling a bundle removes its owned service, files, fields, and requirements; it
+does not erase produced data. Existing aggregated PDFs remain after disabling
+mergepdf. Existing hOCR derivatives and Solr data remain after disabling hOCR, so
+clear or reindex stale hOCR search data according to the site's retention policy.
+Use the site's tested module-uninstall and config-import order when removing hOCR
+from a running installation.
+
+## Downstream fork boundary
+
+The template and plugin provide a repeatable source transition, not a controller for
+the live site. The downstream repository owns its Git history, `composer.lock`,
+deployment approval, database/config import, backfill, reindex, and data-retention
+decisions. Sitectl owns only the fields listed above while an operator chooses to use
+the component.
+
+Do not treat `.libops/template.lock.yaml` as desired state and do not expect a future
+plugin release to merge arbitrary downstream customizations. Keep changes outside
+the documented ownership units, review component diffs like application migrations,
+and commit the result in the fork. Developers adding another cross-domain bundle
+should follow the [component ownership contract](/contributing/components#field-ownership-contract).

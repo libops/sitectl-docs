@@ -164,6 +164,7 @@
               "plugins/isle/blazegraph",
               "plugins/isle/iiif",
               "plugins/triplet",
+              "plugins/isle/feature-bundles",
               "plugins/isle/derivatives",
               "plugins/isle/sync",
               "plugins/isle/cache"

@@ -47,9 +47,41 @@ Core v1 keeps the context boundary intact during deploy as well: context-selecte
 
 See [Compose reconcile contract](/contributing/compose-reconcile) for the detailed authoring contract and the boundary around Kubernetes-style terminology.
 
+## Template provenance and downstream evolution
+
+Released application plugins select stable template refs rather than moving default
+branches. During create, sitectl resolves the cloned template commit before removing
+its Git history, initializes a new downstream repository, and atomically writes
+`.libops/template.lock.yaml`. The lock can retain the source repository and commit,
+sitectl/plugin build identities, the SHA-256 digest of the source-owned
+`.libops/template-contract.yaml`, and a component-defaults revision.
+
+Ownership is deliberately asymmetric:
+
+- the upstream template owns `.libops/template-contract.yaml` and may publish a
+  component-defaults revision in that contract or in
+  `.libops/component-defaults.revision`;
+- the create operation owns `.libops/template.lock.yaml`; a source template must not
+  ship that downstream file; and
+- the site owner owns the fresh Git history and every later merge, customization,
+  migration, and deployment decision.
+
+The lock is retained provenance, not an attestation, a desired-state store, or an
+automatic update mechanism. Future component releases can use its contract revision
+to reason about the starting defaults, but they must still preserve downstream-owned
+fields and require an explicit reviewed transition. Template URLs containing inline
+credentials, query strings, or fragments are rejected; private sources should use an
+SSH agent or Git credential helper.
+
 ## Application and Image Ownership
 
 Each application tree has one source owner. Buildkit owns verified upstream releases for OJS, Omeka, and ArchivesSpace and publishes images whose tags identify the bundled upstream application version; their downstream templates extend those images with tracked customizations. Drupal, ISLE, and WordPress keep Composer manifests, lockfiles, and application code in the downstream checkout; their Buildkit image tags identify the runtime line, while the downstream Composer lockfile identifies the application dependency set. A published runtime image must not introduce a competing application tree.
+
+Cross-domain application features follow the same boundary. An application plugin
+may coordinate narrowly owned Compose, Drupal, and Composer-manifest changes as one
+reviewable component, but it does not generate the downstream lock file, import live
+configuration, deploy, or backfill data. The ISLE [feature-bundle contract](/plugins/isle/feature-bundles)
+shows this split for mergepdf and hOCR search.
 
 Tracked Compose dependencies use readable tags plus immutable digests. Buildable application services keep `BASE_IMAGE` as an overrideable build argument so a local context can test another version without replacing the downstream `build` contract. App plugins mirror that choice in `CreateSpec.Images` and rebuild policies.
 
@@ -107,7 +139,7 @@ The component model was designed to solve two problems:
 1. **Initial setup:** make it easy to start a site with the right capabilities enabled, without manually editing <Compose /> files
 2. **Incremental adoption:** existing sites can adopt new upstream capabilities by turning a component on, rather than hand-editing files and hoping nothing breaks
 
-The conservative default is that the upstream project template ships as-is. Components are an explicit override. This keeps the barrier to entry low while giving experienced operators a structured path to customization.
+Each component's `DefaultState` is desired state, not merely display metadata. During create, the application plugin resolves and applies every registered component decision, including defaults that do not prompt. A default-on feature bundle can therefore add or normalize the fields and files it owns even when the operator supplies no component flag. Explicit create flags override those defaults, and the generated recreate command records the resolved choices.
 
 The top-level `sitectl set` and `sitectl converge` commands are the operator-facing surface for the component model. `sitectl component describe`, `sitectl component set`, and `sitectl component reconcile` remain as lower-level commands backed by the same `__sitectl-rpc` protocol methods.
 

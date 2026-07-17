@@ -20,6 +20,13 @@
     "version": "v1.0.0",
     "ref": "f77290099aa1e014081393abb3efd3a6177b2f91"
   },
+  "sitectl_isle": {
+    "directory": "sitectl-isle",
+    "module": "github.com/libops/sitectl-isle",
+    "repository": "libops/sitectl-isle",
+    "version": "v1.0.0",
+    "ref": "cb0fb2e370c9632b242581ac062980607591d6f5"
+  },
   "sitectl_libops": {
     "directory": "sitectl-libops",
     "module": "github.com/libops/sitectl-libops",
