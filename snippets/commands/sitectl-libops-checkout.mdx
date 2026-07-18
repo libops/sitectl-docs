@@ -12,7 +12,7 @@ sitectl libops checkout <site-id> [directory]
 | `--default` | `true` | Set the updated context as current |
 | `--plugin` |   | sitectl plugin name; defaults from site application type |
 | `--project-dir` |   | Local or remote compose project directory |
-| `--ssh-host` |   | SSH hostname; defaults from the site managed domain |
+| `--ssh-host` |   | SSH hostname override; defaults to the exact hostname returned by the LibOps API |
 | `--ssh-key` |   | Path to SSH private key |
 | `--ssh-port` | `22` | SSH port |
 | `--ssh-user` | `deploy` | SSH username |

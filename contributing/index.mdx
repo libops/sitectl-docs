@@ -150,12 +150,11 @@ This repo publishes Debian and RPM repositories through the shared libops packag
 
 GitHub Actions workflows:
 
-- core caller workflow: [sitectl `goreleaser.yaml` at the documented `v1.0.0` commit](https://github.com/libops/sitectl/blob/65cfde137a58ba14aaa9a1512d88b943888872f3/.github/workflows/goreleaser.yaml)
-- core reusable workflow: [`reusable-goreleaser.yaml` at `481df51116aed2efd1c002ef1ef6a287699828a0`](https://github.com/libops/terraform-linux-packages/blob/481df51116aed2efd1c002ef1ef6a287699828a0/.github/workflows/reusable-goreleaser.yaml)
-- package publisher pinned by that core workflow: [`terraform-linux-packages` at `72d2f0c3b01e5e396d6db074108b95e95eedf4d4`](https://github.com/libops/terraform-linux-packages/tree/72d2f0c3b01e5e396d6db074108b95e95eedf4d4)
+- core v1.0.2 recovery caller workflow: [sitectl `goreleaser.yaml` at `589a634cae78ad7b02d70cbae054e9b17e649669`](https://github.com/libops/sitectl/blob/589a634cae78ad7b02d70cbae054e9b17e649669/.github/workflows/goreleaser.yaml)
+- core v1.0.2, Drupal v1.0.0, and LibOps v1.4.0 shared workflow: [`sitectl-plugin-goreleaser.yaml` at `e1e30b58c9c566f72b22f03e637cd5218d635727`](https://github.com/libops/.github/blob/e1e30b58c9c566f72b22f03e637cd5218d635727/.github/workflows/sitectl-plugin-goreleaser.yaml)
+- package publisher pinned by that shared workflow: [`terraform-linux-packages` at `b14fd2f95b4017e897c595b3321b9cc3f48b5ddd`](https://github.com/libops/terraform-linux-packages/tree/b14fd2f95b4017e897c595b3321b9cc3f48b5ddd)
 - ArchivesSpace, OJS, Omeka Classic, Omeka S, and WordPress v1.0.0 reusable workflow: [`sitectl-plugin-goreleaser.yaml` at `39f81174b7b899f66aee31035308e1d9b1f3e165`](https://github.com/libops/.github/blob/39f81174b7b899f66aee31035308e1d9b1f3e165/.github/workflows/sitectl-plugin-goreleaser.yaml)
-- Drupal v1.0.0 and LibOps v1.3.0 reusable workflow: [`sitectl-plugin-goreleaser.yaml` at `e1e30b58c9c566f72b22f03e637cd5218d635727`](https://github.com/libops/.github/blob/e1e30b58c9c566f72b22f03e637cd5218d635727/.github/workflows/sitectl-plugin-goreleaser.yaml)
-- package publisher pinned by the five-application and Drupal/LibOps workflow revisions: [`terraform-linux-packages` at `285183831e6e5c14ec34d87e208629949f5b627c`](https://github.com/libops/terraform-linux-packages/tree/285183831e6e5c14ec34d87e208629949f5b627c)
+- package publisher pinned by that five-application workflow revision: [`terraform-linux-packages` at `285183831e6e5c14ec34d87e208629949f5b627c`](https://github.com/libops/terraform-linux-packages/tree/285183831e6e5c14ec34d87e208629949f5b627c)
 - ISLE v1.0.0 release-assets and Homebrew recovery workflow: [`sitectl-plugin-goreleaser.yaml` at `8e27d95846671a9e319f1900e86a488a1d4f39b3`](https://github.com/libops/.github/blob/8e27d95846671a9e319f1900e86a488a1d4f39b3/.github/workflows/sitectl-plugin-goreleaser.yaml)
 - ISLE v1.0.0 final Linux-package recovery workflow: [`sitectl-plugin-goreleaser.yaml` at `77724fe807ede3e0808d4556f47e4ad0ae266bac`](https://github.com/libops/.github/blob/77724fe807ede3e0808d4556f47e4ad0ae266bac/.github/workflows/sitectl-plugin-goreleaser.yaml)
 - package publisher pinned by that final ISLE recovery workflow: [`terraform-linux-packages` at `b14fd2f95b4017e897c595b3321b9cc3f48b5ddd`](https://github.com/libops/terraform-linux-packages/tree/b14fd2f95b4017e897c595b3321b9cc3f48b5ddd)

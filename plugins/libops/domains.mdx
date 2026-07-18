@@ -1,15 +1,20 @@
 ---
 title: Domains
-description: Create, list, and delete custom domains for LibOps sites.
+description: Create and observe server-managed custom-domain provisioning for LibOps sites.
 ---
 
-Custom domain commands attach hostnames to a LibOps site and show the Cloud Run target that should receive traffic.
+Domain commands attach a customer-owned hostname to a LibOps site and expose
+the server-owned Google Certificate Manager and LibOps Cloud DNS edge workflow;
+the customer's authoritative DNS remains customer-owned. A create request is
+always pending. The CLI cannot set status, edge action, service tier, logging
+policy, origin, certificate resources, or route readiness.
 
-For DNS, ingress, and launch guidance, see [Custom Domains](https://docs.libops.io/platform/custom-domains) and [Getting a Site Ready to Publish](https://docs.libops.io/platform/getting-site-ready-to-publish).
+For DNS and launch guidance, see [Custom Domains](https://docs.libops.io/platform/custom-domains)
+and [Getting a Site Ready to Publish](https://docs.libops.io/platform/getting-site-ready-to-publish).
 
 ## create domain
 
-Create a domain for a site:
+Create a pending domain binding:
 
 ```bash
 sitectl libops create domain \
@@ -17,36 +22,87 @@ sitectl libops create domain \
   --domain journals.example.edu
 ```
 
-Optional flags control provisioning metadata and edge behavior:
-
-```bash
-sitectl libops create domain \
-  --site-id "$SITE_ID" \
-  --domain journals.example.edu \
-  --tier standard \
-  --status pending \
-  --edge-action allow \
-  --success-log-sample-rate 0.1
-```
-
-`--status` accepts `pending`, `active`, `suspended`, or `blocked`. `--edge-action` accepts `allow`, `challenge`, or `block`.
+The response includes the stable domain ID, `pending` state, and the current
+DNS instruction supplied by the API. The first instruction is normally the
+one-time ownership TXT record. The command does not publish traffic or mark the
+domain active.
 
 ## list domains
 
-List all custom domains attached to a site:
+List every current, pending, failed, and deleting binding for a site:
 
 ```bash
 sitectl libops list domains --site-id "$SITE_ID"
 ```
 
-The output includes the domain, status, edge action, tier, and Cloud Run hostname target.
+Output contains stable domain ID, hostname, server-owned provisioning state,
+route readiness, safe error reason, and transition times. It does not expose a
+Cloud Run origin, certificate resource name, provider payload, or secret proof.
+
+## get domain
+
+Get one binding and its current DNS instructions:
+
+```bash
+sitectl libops get domain "$DOMAIN_ID" --site-id "$SITE_ID"
+```
+
+Use the exact record names and values in this response. A customer validation
+CNAME must remain in DNS for certificate renewal. A traffic CNAME or apex
+A/AAAA instruction is returned only after the certificate map and route are
+ready.
+
+## check domain
+
+Request a bounded observation of DNS and wake the reconciler if state changed:
+
+```bash
+sitectl libops check domain "$DOMAIN_ID" --site-id "$SITE_ID"
+```
+
+Check does not force a state transition or skip ownership, certificate, map,
+route, or traffic verification. LibOps also re-observes active bindings. If a
+Certificate Manager dependency disappears, the route is blocked and
+reconciliation resumes at the missing prerequisite instead of trusting a
+stale certificate-map entry.
+
+## retry domain
+
+Retry a corrected or expired failed binding:
+
+```bash
+sitectl libops retry domain "$DOMAIN_ID" --site-id "$SITE_ID"
+```
+
+Retry clears server-owned backoff and wakes reconciliation. When Google
+Certificate Manager has terminally failed issuance, commonly because CAA did
+not permit `pki.goog`, first correct DNS and then retry once. The explicit
+retry removes any dependent certificate-map entry and requests one replacement
+certificate; LibOps does not continuously churn a terminal resource.
+Retry never skips ownership, authoritative DNS, certificate, map, route, or
+traffic verification and never marks a domain active.
 
 ## delete domain
 
-Delete a custom domain from a site:
+Start fail-closed cleanup by stable domain ID:
 
 ```bash
-sitectl libops delete domain journals.example.edu --site-id "$SITE_ID"
+sitectl libops delete domain "$DOMAIN_ID" --site-id "$SITE_ID"
 ```
 
-The command prompts before deleting the domain. Pass `--yes` to skip the prompt in automation.
+The command prompts before deletion. Pass `--yes` in automation. The binding
+remains visible in `deleting` state while LibOps blocks the route, waits beyond
+the positive route-cache ceiling, and removes its certificate-map entry,
+certificate, and authorization in dependency order. Each Google resource is
+confirmed absent on a later reconciliation. Remove the customer traffic CNAME
+or A/AAAA records when instructed; deletion cannot finish while public DNS
+still sends the hostname to the LibOps edge. Keep the validation CNAME until
+the response says it is safe to remove.
+
+## SSH hostname contract
+
+Domain and runtime output includes the exact `ssh_hostname` supplied by the
+LibOps API when SSH is available. Checkout, context-update, and SSH commands use
+that value. They do not derive an SSH hostname from the managed HTTP domain,
+site name, project name, or environment. `--ssh-host` is an explicit operator
+override, not a fallback naming algorithm.

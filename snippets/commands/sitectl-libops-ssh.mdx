@@ -8,7 +8,7 @@ sitectl libops ssh <site-id> [-- ssh-args...]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--ssh-host` |   | SSH hostname; defaults from the site managed domain |
+| `--ssh-host` |   | SSH hostname override; defaults to the exact hostname returned by the LibOps API |
 | `--ssh-key` |   | Path to SSH private key |
 | `--ssh-port` | `22` | SSH port |
 | `--ssh-user` | `deploy` | SSH username |
