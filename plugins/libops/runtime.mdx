@@ -25,7 +25,7 @@ sitectl libops ssh "$SITE_ID"
 sitectl libops ssh "$SITE_ID" --ssh-user deploy --ssh-key ~/.ssh/id_ed25519
 ```
 
-The command derives `ssh.<managed-domain>` from the Site domains when possible. Use `--ssh-host` when you need an explicit host.
+The command uses the exact SSH hostname returned by the LibOps API. It does not derive an SSH name from a managed HTTP domain. Use `--ssh-host` only when you need an explicit operator override.
 
 ## Checkout
 

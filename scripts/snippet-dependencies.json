@@ -3,8 +3,8 @@
     "directory": "sitectl",
     "module": "github.com/libops/sitectl",
     "repository": "libops/sitectl",
-    "version": "v1.0.1",
-    "ref": "6356d93e6fe45c4618e7a1099563e74400c0da39"
+    "version": "v1.0.2",
+    "ref": "b2f5f8e927b18c4c1a590d7f67f43593442447d1"
   },
   "sitectl_archivesspace": {
     "directory": "sitectl-archivesspace",
@@ -31,8 +31,8 @@
     "directory": "sitectl-libops",
     "module": "github.com/libops/sitectl-libops",
     "repository": "libops/sitectl-libops",
-    "version": "v1.3.0",
-    "ref": "e8123cf672f4162259cbf025130439d478035186"
+    "version": "v1.4.0",
+    "ref": "4d44a14bbc9349bef125d5bc6ea79c0e0dce6aa3"
   },
   "sitectl_ojs": {
     "directory": "sitectl-ojs",

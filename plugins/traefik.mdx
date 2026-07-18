@@ -32,7 +32,7 @@ The ingress component updates the Compose Traefik service and dynamic router fil
 
 ## TLS Modes
 
-Use `--mode https` for the default Cloudflare path. This configures Traefik for HTTPS with certificates mounted at `certs/cert.pem` and `certs/privkey.pem`; put a Cloudflare Origin CA certificate and private key at those paths before starting the stack.
+Use `--mode https` for the self-hosted Cloudflare Origin CA mode. This configures Traefik for HTTPS with certificates mounted at `certs/cert.pem` and `certs/privkey.pem`; put a Cloudflare Origin CA certificate and private key at those paths before starting the stack. Managed LibOps domains use Google Certificate Manager and the LibOps Google Cloud edge; they do not use this self-hosted mode.
 
 Use `--mode https-letsencrypt` when the hostname resolves directly to the origin and is not proxied through Cloudflare during issuance. This mode requires `--acme-email` and stores ACME state in the `acme-data` Compose volume.
 

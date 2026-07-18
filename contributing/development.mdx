@@ -140,7 +140,7 @@ Rebuilding `sitectl` locally without reinstalling the plugin binaries means core
 
 ## Core and Plugin Release Order
 
-Plugin executables embed the sitectl SDK version selected by their `go.mod`; installing a newer core binary does not update SDK behavior inside an already-built plugin. The reviewed v1 plugin set uses core `v1.0.0` and RPC schema 1. Treat a major core change as a compatibility boundary even when a package dependency written as a lower bound would accept it.
+Plugin executables embed the sitectl SDK version selected by their `go.mod`; installing a newer core binary does not update SDK behavior inside an already-built plugin. The reviewed application-plugin v1.0.0 releases embed core `v1.0.0`; `sitectl-libops v1.4.0` embeds core `v1.0.2`. Both use RPC schema 1. Treat a major core change as a compatibility boundary even when a package dependency written as a lower bound would accept it.
 
 Use this order for any release that raises the minimum core SDK version:
 
