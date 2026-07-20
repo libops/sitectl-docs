@@ -1,6 +1,6 @@
 ---
 title: Drupal plugin
-description: Drupal-oriented sitectl workflows including drush execution, user login links, and database and config sync between environments.
+description: Drupal-oriented sitectl workflows including Composer, Drush, Solr configuration, login links, and database and config sync.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -20,6 +20,51 @@ sitectl drupal drush updb -y
 ```
 
 sitectl resolves the correct container from the context and executes the command inside it. You don't need to know the container name or remember which context you're connected to.
+
+### composer
+
+Run Composer from the configured Drupal root inside the running Drupal container:
+
+```bash
+sitectl drupal composer install
+sitectl drupal composer update -W
+sitectl drupal composer require 'drupal/islandora:^2.11'
+```
+
+The command passes arguments directly to Composer. For authoring commands such as
+`require`, `remove`, and `update`, first enable [dev mode](/plugins/drupal/dev) or
+provide equivalent bind mounts so `composer.json` and `composer.lock` are persisted
+to the host checkout.
+Changes made only inside an image-backed production container disappear when that
+container is rebuilt or replaced. Review and commit both manifests after every
+dependency change.
+
+### solr-config refresh
+
+Generate Drupal Search API Solr configuration and reconcile the tracked and runtime
+copies:
+
+```bash
+sitectl drupal solr-config refresh
+sitectl drupal solr-config refresh --reindex
+```
+
+Use this after updating Solr or `drupal/search_api_solr`, or when Drupal reports that
+the Solr server configuration is out of date. When generated, tracked, and runtime
+configuration already match, refresh is a successful no-op. `--reindex` reindexes
+only when the runtime configuration changed, so it is also safe to repeat.
+
+The command detects the running Solr version, atomically replaces only a drifted
+core's `conf`, preserves its data directory, and reloads the core (or creates it when
+missing). Use `--server`, `--core`, `--solr-version`, or `--output` only when the
+site differs from the context defaults.
+
+Generate and commit any tracked configuration diff in development before
+promotion. Refresh without `--reindex` does not repopulate the index. If an index
+needs rebuilding while runtime configuration is already current, reindex explicitly
+through the Search API administration page or the site's established Drush workflow.
+See [Solr service commands](/plugins/solr) for override flags and the full reindex
+caveat.
 
 ### login
 
@@ -66,13 +111,37 @@ Use the core component workflow to enable local Drupal development mounts:
 sitectl set dev-mode enabled
 ```
 
-Use ordinary git and Composer workflows inside the project checkout for extension branches, patches, and upstream source changes.
+Dev mode bind-mounts the Composer manifests and local source paths into the Drupal
+container. This lets `sitectl drupal composer` persist dependency edits into the
+host checkout. Use ordinary git workflows for extension branches, patches, and
+upstream source changes.
 
-## Deploy and Database Updates
+## Update workflow
 
-The downstream checkout owns Drupal through its Composer manifests and lockfile. `sitectl deploy` pulls dependencies and rebuilds the local image while the current stack is still online. After stopping it, deploy starts only the Drupal service and its required Compose dependencies, waits for Drupal's installation marker, then runs `drush updb -y` and `drush cr`. Database-update and cache-rebuild failures stop the deploy; only a successful migration is followed by a bounded full-stack start and health wait.
+The downstream checkout owns Drupal through its Composer manifests and lockfile.
+Use this sequence for Drupal and contributed-module updates:
 
-Back up the database and the public/private files volumes before changing Drupal core or contributed dependencies. Commit Composer and component-generated changes in the same update branch so another checkout can reproduce the image and configuration.
+1. On an update branch in a development context, run `sitectl bump` or author a
+   targeted change with `sitectl drupal composer`. Review and commit
+   `composer.json`, `composer.lock`, and any generated Solr or config-sync changes.
+2. Read the dependency release notes, test the rebuilt development image, and take
+   tested backups of MariaDB and the public/private files before production rollout.
+3. Run `sitectl deploy`. It pulls dependency images and rebuilds Drupal while the
+   current stack is online, then performs the ordered down/up rollout. During the
+   gate it starts Drupal and its dependencies, waits for installation, and runs
+   `drush updb -y` followed by `drush cr`. Either failure stops the deploy before
+   the full-stack start.
+4. If the reviewed branch changed config-sync files, import them explicitly with
+   `sitectl drupal drush cim -y`. Deploy does not import Drupal configuration.
+5. If Solr or Search API Solr changed, run
+   `sitectl drupal solr-config refresh --reindex`. If the MariaDB image changed,
+   run `sitectl mariadb upgrade`.
+6. Run `sitectl healthcheck`, application smoke tests, and any module-specific
+   verification before discarding the backup.
+
+Database updates, configuration imports, and content reindexing are separate gates.
+A successful `updb` and cache rebuild do not prove that a pending config import or
+Solr reindex has completed.
 
 ## Assigning the Drupal plugin to a context
 

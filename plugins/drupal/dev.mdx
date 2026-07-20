@@ -9,7 +9,7 @@ The Drupal plugin participates in core component workflows. For local developmen
 sitectl set dev-mode enabled
 ```
 
-Dev mode keeps the stack in the normal Compose model while adding the bind mounts expected for local custom module and theme work. Use ordinary git commands in the project checkout for branch, remote, and upstream management.
+Dev mode keeps the stack in the normal Compose model while adding the bind mounts expected for local custom module and theme work. It also persists `composer.json` and `composer.lock` from the Drupal container to the host, which is required when using `sitectl drupal composer require`, `remove`, or `update` to author dependency changes. Use ordinary git commands in the project checkout for branch, remote, and upstream management.
 
 To work through a sandboxed coding agent, add the assistant service:
 

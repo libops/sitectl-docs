@@ -1,6 +1,6 @@
 ---
 title: MariaDB service commands
-description: Core sitectl MariaDB operations for backups, restores, sync, and service inspection.
+description: Core sitectl MariaDB operations for backups, restores, sync, upgrades, and service inspection.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -54,6 +54,25 @@ sitectl mariadb status
 ```
 
 Standalone MariaDB Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated MariaDB CLI plugin.
+
+## Upgrade system tables
+
+After deploying a new MariaDB image, reconcile its system tables with the running
+server:
+
+```bash
+sitectl mariadb upgrade
+```
+
+The command uses `mariadb-upgrade` (or the compatible legacy utility available in
+the container). When the installed utility supports an upgrade-needed probe,
+sitectl checks first and reports success without changing anything if the database
+is already current. Upgrade failures remain failures; they are not treated as a
+no-op. Use `--service` when the Compose service is not named `mariadb`.
+
+<Warning>
+  Back up MariaDB and test the restore before changing the image or running a system-table upgrade. The command is designed to be safe to repeat, but it is not a substitute for a recoverable pre-upgrade backup.
+</Warning>
 
 ## Reference
 

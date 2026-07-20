@@ -6,9 +6,17 @@ description: Run targeted Renovate dependency updates for a sitectl project.
 import { Compose } from "/snippets/compose-tooltip.mdx";
 import BumpCmd from "/snippets/commands/sitectl-bump.mdx";
 
-The `bump` command runs Renovate in Docker for a `sitectl` project. Use it to update <Compose /> image tags, GitHub Actions, and application dependencies without editing dependency files by hand.
+The `bump` command runs Renovate in Docker for a `sitectl` project. Use it to propose updates to <Compose /> image references, GitHub Actions, and application dependencies without editing dependency files by hand.
 
-Compose templates pin direct images as `tag@sha256:digest`. Renovate keeps that human-readable version and immutable digest together; do not remove the digest to make an update easier. A Dockerfile base-tag change can also change the upstream application release for OJS, Omeka, or ArchivesSpace, while Composer changes control Drupal, ISLE, and WordPress application code. Review those updates as application releases, including backups, smoke tests, and migration gates.
+Compose templates record image versions directly and normally pin them as
+`tag@sha256:digest`. Renovate keeps a human-readable version and its immutable
+digest together when both are present; do not remove a tracked digest to make an
+update easier. A Dockerfile base-tag change can also change the upstream application release for OJS, Omeka, or ArchivesSpace, while Composer changes control Drupal, ISLE, and WordPress application code. Review those updates as application releases, including backups, smoke tests, and migration gates.
+
+ISLE image versions are tracked directly in the repository's Compose files. An
+environment-wide image tag is not an update interface: keep each image reference
+explicit, preserve its digest when present, review the dependency diff, and let
+`sitectl deploy` apply the committed references.
 
 Pick exactly one update level. Levels are cumulative: `--minor` includes patch updates, and `--major` includes minor and patch updates.
 
@@ -45,6 +53,22 @@ sitectl bump --patch --actions=off --dependencies=off
 ```
 
 For non-dry runs, Renovate needs a GitHub token. Set `RENOVATE_TOKEN` or `GITHUB_TOKEN` in the shell before running the command.
+
+## Update workflow
+
+1. Run a dry-run bump at the smallest appropriate update level and read the
+   affected projects' release notes.
+2. Run the real bump, review the proposed tag, digest, lockfile, and workflow
+   changes, and test the branch in a non-production context.
+3. Before deploying an application or database-image update, take and test the
+   relevant database and file-volume backups.
+4. Merge the reviewed changes, then run `sitectl deploy` in the target context.
+5. Run any application-owned follow-up, such as Drupal configuration import,
+   Search API Solr config refresh and reindexing, or `sitectl mariadb upgrade`.
+
+`sitectl bump` selects dependency changes; it does not restart the site. The deploy
+command applies the versions already recorded in the reviewed checkout and does not
+choose newer versions on its own.
 
 ## Reference
 

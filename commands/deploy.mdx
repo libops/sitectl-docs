@@ -7,6 +7,12 @@ import DeployCmd from "/snippets/commands/sitectl-deploy.mdx";
 
 Use `deploy` to apply a full update cycle to a running site: update the checkout when the active branch has a git upstream, update images, rebuild the downstream application image, run supported schema migrations, and restart services. It uses the active plugin's declared rollout when available and otherwise falls back to the generic pull/down/up sequence.
 
+Dependency versions come from the reviewed checkout. In particular, ISLE uses
+explicit image references in Compose rather than a shared environment tag, with
+immutable digests retained where they are tracked. Use [`sitectl bump`](/commands/bump)
+to propose those source changes; use `sitectl deploy` only after the resulting
+branch or commit has been reviewed.
+
 `sitectl deploy` is not a zero-downtime rollout. After Git and the rollout's contiguous leading pull/build preparation prefix succeed, it stops the current Compose project before restart and migration gates. Schedule application-version and schema changes in a maintenance window, and keep a tested database/file-volume restore available until post-deploy checks pass.
 
 Git updates require a clean checkout, including no untracked files. This prevents a branch or exact-ref deployment from overwriting local work. Commit or move intended changes first, or use `--skip-git` only when the current checkout is already the exact source you intend to deploy.
@@ -53,6 +59,15 @@ sitectl deploy --skip-git --no-pull
 If the original deploy named a non-active context, pass the same `--context NAME` to both commands. A timeout, inspection error, cancellation, or required migration never falls through to the final full-stack start. After the resumed deploy succeeds, run `sitectl healthcheck`, exercise application routes, and verify application plugins/modules/themes that may have their own upgrade work.
 
 Back up the database and every application-owned file/upload volume before changing an application version. A green container healthcheck proves the declared services are running or completed successfully; it does not replace an application schema migration or a restore test.
+
+For Drupal and ISLE, the automatic gate does not run `drush config:import`, refresh
+Search API Solr configuration, or reindex content. Import a reviewed config-sync
+change explicitly with `sitectl drupal drush cim -y`. When Solr or the Search API
+Solr module changed, run `sitectl drupal solr-config refresh --reindex`; reindexing
+only runs when that command changes the runtime Solr configuration. After changing
+the MariaDB image, run `sitectl mariadb upgrade`; an already-current database is a
+successful no-op. Keep the pre-deploy backup until these follow-ups and application
+checks pass.
 
 ## Common workflows
 

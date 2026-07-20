@@ -21,7 +21,7 @@ Enable or disable a bundle in an existing checkout:
 
 ```bash
 # Aggregated PDFs for paged content
-sitectl set mergepdf enabled --islandora-tag 6.3.19
+sitectl set mergepdf enabled
 sitectl set mergepdf disabled
 
 # hOCR generation, indexing, IIIF annotations, and search
@@ -29,17 +29,17 @@ sitectl set hocr-search enabled --hocr-term-id 56
 sitectl set hocr-search disabled
 ```
 
-`--islandora-tag` must be a valid Docker tag at version `6.3.19` or newer. The
-default is `6.3.19`. `--hocr-term-id` must be the positive Drupal taxonomy term ID
-whose external URI is `https://discoverygarden.ca/use#hocr`; the template default is
-`56`, but a downstream site's term ID can differ.
+MergePDF uses the explicit image reference tracked in Compose. Update that
+dependency through `sitectl bump` and review the literal image change with the rest
+of the site. `--hocr-term-id` must be the positive Drupal taxonomy term ID whose
+external URI is `https://discoverygarden.ca/use#hocr`; the template default is `56`,
+but a downstream site's term ID can differ.
 
 The same choices can be made non-interactively during create:
 
 ```bash
 sitectl create isle \
   --mergepdf enabled \
-  --islandora-tag 6.3.19 \
   --hocr-search enabled \
   --hocr-term-id 56
 ```
@@ -62,17 +62,17 @@ Sitectl validates the complete target state before writing feature-bundle files.
 
 ### mergepdf
 
-The selected `ISLANDORA_TAG` must be `6.3.19` or newer. The project must also have:
+The project must have:
 
 - a top-level `x-common` mapping carrying the `&common` YAML anchor;
 - top-level <Compose /> secret declarations named `CERT_PUBLIC_KEY`,
   `CERT_AUTHORITY`, `JWT_ADMIN_TOKEN`, and `JWT_PUBLIC_KEY`; and
 - an `alpaca` service with an image.
 
-When the Alpaca repository is `islandora/alpaca`, its resolved tag must also be
-`6.3.19` or newer. A different Alpaca repository is allowed because a downstream
-image can carry the required support independently; the downstream owner is
-responsible for certifying that compatibility.
+The tracked MergePDF and Alpaca image references must be from compatible release
+lines. Review them together when a dependency bump changes either image. A
+downstream image can carry the required support independently, but the downstream
+owner is responsible for certifying that compatibility.
 
 The bundle consumes the existing common anchor and secret declarations. It does not
 create them or change the Alpaca service.
@@ -98,29 +98,18 @@ sequence entries.
 
 ### mergepdf ownership
 
-The bundle owns the complete `services.mergepdf` block in `docker-compose.yml` and
-converges it to:
-
-```yaml
-mergepdf:
-  <<: *common
-  image: islandora/mergepdf:${ISLANDORA_TAG}
-  secrets:
-    - source: CERT_PUBLIC_KEY
-    - source: CERT_AUTHORITY
-    - source: JWT_ADMIN_TOKEN
-    - source: JWT_PUBLIC_KEY
-```
+On initial enable, the bundle creates the complete `services.mergepdf` block in
+`docker-compose.yml`, including the direct default image
+`islandora/mergepdf:6.3.19`, common service settings, and required certificate and
+JWT secrets. After that, the image reference is dependency-managed: `sitectl bump`
+can replace it with another compatible, explicit `islandora/mergepdf` reference,
+and component inspection or convergence preserves that reviewed update. The bundle
+continues to own the remaining service shape.
 
 It also owns the complete Drupal config-sync file
-`system.action.paged_content_created_aggregated_pdf.yml`. Enabling writes the
-selected `ISLANDORA_TAG` to the highest-precedence environment file in the active
-context, or to `.env` when the context has no explicit environment files.
-
-`ISLANDORA_TAG` is shared by the stack, so disabling `mergepdf` deliberately leaves
-that environment entry in place. The top-level common mapping, secret declarations,
-Alpaca service, secret values, and existing generated PDFs remain downstream-owned.
-This bundle does not change Composer requirements.
+`system.action.paged_content_created_aggregated_pdf.yml`. The top-level common
+mapping, secret declarations, Alpaca service, secret values, and existing generated
+PDFs remain downstream-owned. This bundle does not change Composer requirements.
 
 ### hOCR-search ownership
 
@@ -162,7 +151,9 @@ All other Compose, Drupal, and Composer fields remain downstream-owned.
 Running the same `sitectl set` command again is idempotent after the checkout matches
 the selected disposition. Sitectl preflights the target inputs before changing any
 bundle files, so a missing prerequisite or incompatible image fails before a partial
-feature transition begins.
+feature transition begins. For an enabled MergePDF bundle, rerunning `set` or
+`converge` preserves a compatible direct `islandora/mergepdf` image reference
+installed by a reviewed dependency bump.
 
 `sitectl component describe` derives state from the current checkout. A component is
 `drifted` when only part of its selected contract remains or a canonical owned asset
@@ -192,22 +183,29 @@ owned state.
     suitable for that fork.
   </Step>
   <Step title="Resolve Composer dependencies">
-    For hOCR, run the site's established Composer update workflow for the two owned
-    packages and commit the resulting `composer.lock`. Sitectl changes
-    `composer.json`; it does not fabricate or update the lock file. Mergepdf has no
-    Composer step.
+    For hOCR, enable dev mode and update the two owned packages:
+
+    ```bash
+    sitectl drupal composer update born-digital/islandora_iiif_hocr discoverygarden/islandora_hocr -W
+    ```
+
+    Commit the resulting `composer.lock`. Sitectl changes `composer.json`; it does
+    not fabricate or update the lock file. Mergepdf has no Composer step.
   </Step>
   <Step title="Deploy and import configuration">
-    Rebuild and deploy the Drupal application from the reviewed manifest and lock
-    file, then import the changed Drupal configuration through the site's normal
-    Drush/configuration workflow. Sitectl edits config-sync source; it does not import
-    configuration into the live Drupal database.
+    Run `sitectl deploy` from the reviewed manifest and lock file, then import the
+    changed Drupal configuration with `sitectl drupal drush cim -y`. Sitectl edits
+    config-sync source; deploy does not import configuration into the live Drupal
+    database.
   </Step>
   <Step title="Backfill existing content">
     For mergepdf, backfill aggregated PDFs for existing paged content when required.
-    For hOCR, generate hOCR derivatives for existing images and then reindex Solr so
-    the new field and search views contain existing content. These data operations
-    are site-specific and are not run automatically.
+    For hOCR, run `sitectl drupal solr-config refresh --reindex` to refresh the
+    runtime configuration, then generate hOCR derivatives for existing images so
+    the new field and search views can contain existing content. Reindex again
+    through the Search API administration page or the site's established Drush
+    indexing workflow after the derivative backfill. Derivative backfills remain
+    site-specific and are not run automatically.
   </Step>
   <Step title="Verify and promote">
     Run `sitectl validate` and the site's application smoke tests. Commit the source,

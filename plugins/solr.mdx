@@ -29,6 +29,57 @@ Use `--service` when the Compose service is not named `solr`.
 
 Standalone Solr Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated Solr CLI plugin.
 
+## Drupal Search API configuration
+
+Core `sitectl solr` commands inspect the service. Drupal owns the Search API Solr
+schema that the service consumes, so refresh that configuration through the Drupal
+plugin:
+
+```bash
+sitectl drupal solr-config refresh
+sitectl drupal solr-config refresh --reindex
+```
+
+The command is available in a Drupal context and in an ISLE context, because the
+ISLE plugin includes Drupal. Run it after updating Solr or the Drupal Search API
+Solr module, or when Drupal reports that the server configuration is out of date.
+
+Refresh generates the configuration from the running Drupal application and
+reconciles its tracked and runtime copies. If the generated, tracked, and runtime
+configuration already match, the command succeeds without changing anything. With
+`--reindex`, reindexing runs only when the runtime configuration changed, so the
+same command remains safe to repeat.
+
+When it does run, `--reindex` resets trackers and indexes all Drupal Search API
+indexes. Treat that as a potentially long-running content operation and schedule it
+for the site's index size and traffic.
+
+By default, sitectl detects the Solr version from the running server, uses Drupal's
+`default_solr_server`, manages the `default` core, and writes the tracked seed under
+the image rootfs inferred from the context's Drupal settings. For the standard
+layouts, that is `rootfs/opt/solr/server/solr/default/conf` in Drupal and
+`drupal/rootfs/opt/solr/server/solr/default/conf` in ISLE. Override those choices
+when a site has a different layout or naming contract:
+
+```bash
+sitectl drupal solr-config refresh --server archive_solr --core archive
+sitectl drupal solr-config refresh --solr-version 9.10.1
+sitectl drupal solr-config refresh --output config/solr/default/conf
+```
+
+The output directory must remain inside the context project. Both the Drupal and
+Solr containers must be running. When runtime configuration changed, sitectl stages
+and verifies the replacement, atomically swaps only the core's `conf` directory,
+preserves its `data`, and then reloads the core or creates it if missing.
+
+Generate and commit any tracked configuration diff in development before
+promotion. In a target environment, a reported tracked update means the generated
+source and deployed seed had diverged; reconcile that diff into the reviewed source
+branch before the next deploy. Without `--reindex`, refreshing configuration does
+not repopulate an index. If content needs reindexing while runtime configuration is
+already current, use Drupal's Search API administration page or the site's
+established Drush indexing workflow.
+
 ## Reference
 
 ### `status`
