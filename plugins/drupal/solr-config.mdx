@@ -1,0 +1,65 @@
+---
+title: solr-config
+description: Generate and reconcile Drupal Search API Solr configuration.
+---
+
+Use `solr-config refresh` after upgrading Solr or `drupal/search_api_solr`, or when
+Drupal reports that its Solr server configuration is out of date:
+
+```bash
+sitectl drupal solr-config refresh
+```
+
+The command is available in both Drupal and ISLE contexts. It generates configuration
+from the running Drupal application and compares it with the tracked image seed and
+the running Solr core. Copies that already match are left unchanged, making the
+command safe to repeat.
+
+## Reindex after a configuration change
+
+To rebuild Drupal Search API indexes when the running core configuration changes:
+
+```bash
+sitectl drupal solr-config refresh --reindex
+```
+
+`--reindex` resets trackers and rebuilds all enabled Drupal Search API indexes. It
+runs only after a runtime configuration change. If the runtime configuration is
+already current, rebuild indexes through Drupal's Search API administration page or
+the site's established Drush indexing workflow instead.
+
+## Defaults and overrides
+
+By default, sitectl:
+
+- detects the version from the running Solr server;
+- uses the Drupal server `default_solr_server`;
+- manages the Solr core `default`; and
+- writes the tracked seed under the image rootfs inferred from the context.
+
+The standard tracked paths are
+`rootfs/opt/solr/server/solr/default/conf` for Drupal and
+`drupal/rootfs/opt/solr/server/solr/default/conf` for ISLE.
+
+Override a nonstandard site explicitly:
+
+```bash
+sitectl drupal solr-config refresh --server archive_solr --core archive
+sitectl drupal solr-config refresh --solr-version 9.10.1
+sitectl drupal solr-config refresh --output config/solr/default/conf
+```
+
+The output directory must remain inside the context project, and both Drupal and
+Solr must be running.
+
+## Safe replacement and recovery
+
+sitectl stages and verifies a changed configuration before replacing only the
+core's `conf` directory. It preserves the core's `data` directory and then reloads
+the existing core or creates it when missing. A target-side lock prevents concurrent
+operators from modifying the same core, and durable transaction state allows a
+failed reload or reindex to resume safely on the next invocation.
+
+Generate and commit tracked configuration changes in development before promotion.
+See [Solr service commands](/plugins/solr) for the service-level status and info
+commands.
