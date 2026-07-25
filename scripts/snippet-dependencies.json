@@ -24,8 +24,8 @@
     "directory": "sitectl-isle",
     "module": "github.com/libops/sitectl-isle",
     "repository": "libops/sitectl-isle",
-    "version": "v1.0.1",
-    "ref": "a34e9cdffd7a01bb4fa4a6a6a08a82ac744a9ed0"
+    "version": "v1.2.0",
+    "ref": "6f7fe9816f635017e5c3773d99777121de8c9191"
   },
   "sitectl_libops": {
     "directory": "sitectl-libops",
