@@ -2,8 +2,10 @@
 
 Validate the active context's configuration and project layout.
 
-Core checks include: required context fields, compose project presence,
-context file accessibility, override symlink, and Docker socket access.
+Core checks include required context fields, Compose project presence, context
+file accessibility, override symlink, and Docker socket access. The same
+component reconciliation plan used by converge must also be reproducible and in
+sync; missing intent, unknown ownership, or drift fails validation.
 
 If the active context's plugin registers a validate handler, plugin-specific
 checks (e.g. Drupal rootfs path, component state consistency) are also run
@@ -20,5 +22,5 @@ Examples:
   sitectl validate `--codebase-rootfs` drupal/rootfs
 
 ```bash
-sitectl validate [flags]
+sitectl validate
 ```

@@ -5,6 +5,7 @@ description: Toggle and inspect optional stack features like fcrepo and Blazegra
 
 import ComponentCmd from "/snippets/commands/sitectl-component.mdx";
 import ComponentDescribe from "/snippets/commands/sitectl-component-describe.mdx";
+import ComponentList from "/snippets/commands/sitectl-component-list.mdx";
 import ComponentReconcile from "/snippets/commands/sitectl-component-reconcile.mdx";
 import ComponentSet from "/snippets/commands/sitectl-component-set.mdx";
 
@@ -20,12 +21,25 @@ See the [components concept page](/components) for an explanation of what compon
 
 <ComponentDescribe />
 
+## list
+
+<ComponentList />
+
 ## reconcile
 
 <ComponentReconcile />
 
-A component shows as `drifted` when its project files do not match one complete supported disposition, for example after a partial manual Compose edit. Sitectl derives this from the current files and has no historical component-state record. Run `reconcile` to review the detected drift and bring the project back into alignment.
+A component shows as `drifted` when its component-owned project files do not
+match the disposition and settings recorded in `.libops/site.yaml`. Run
+`reconcile --report` to inspect every proposed operation, its target, and its
+risk without changing the project. Unknown components or changes that sitectl
+cannot classify block application instead of being guessed.
 
 ## set
 
 <ComponentSet />
+
+After confirmation, `set` applies the component transformation and records the
+selected disposition and non-secret settings in `.libops/site.yaml`. Commit that
+file with the Compose project: it is the reviewable intent used by `reconcile`,
+`validate`, and `verify`.

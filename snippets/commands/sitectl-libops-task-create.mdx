@@ -8,10 +8,11 @@ sitectl libops task create <message>
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--agent-model` | `glm-5.2:cloud` | Coding agent model (glm-5.2:cloud, kimi-k2.6) |
-| `--harness` | `codex` | Coding harness (codex, claude, pi, opencode, gemini) |
+| `--agent-model` | `glm-5.2:cloud` | Coding agent model (glm-5.2:cloud) |
+| `--harness` | `codex` | Coding harness (codex) |
 | `--no-wait` | `false` | Return after queueing the task |
 | `--organization-id` |   | Organization ID |
 | `--poll-interval` | `3s` | Task polling interval while attached |
 | `--project-id` |   | Project ID |
+| `--request-id` |   | Stable UUID for safely retrying task creation |
 | `--site-id` |   | Site ID |

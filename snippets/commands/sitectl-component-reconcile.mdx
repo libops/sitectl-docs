@@ -1,9 +1,13 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Inspect each component and apply any changes needed to bring the project back into alignment.
+Compare component-owned project configuration with .libops/site.yaml, print
+the complete reconciliation plan, and apply approved changes needed to restore
+the selected dispositions and settings.
 
-By default the command is interactive and asks before applying changes. Pass `--report` to preview
-what would change without applying it.
+Unknown or unclassified changes block mutation. Destructive operations are
+identified in the plan. By default each component change requires confirmation.
+Pass `--report` to preview without changing files, or `--yolo` to skip confirmation
+after reviewing the same plan in automation.
 
 ```bash
 sitectl component reconcile
@@ -13,7 +17,8 @@ sitectl component reconcile
 |------|---------|-------------|
 | `--codebase-rootfs` |   | Path to the application codebase rootfs, relative to `--path`. |
 | `-c, --component` |   | Component to reconcile, e.g. isle/fcrepo. Defaults to all components. |
-| `--format` |   | Output format (default: table). |
+| `--format` |   | Plan output format: section, table, json, or yaml. |
 | `--path` |   | Path to the project directory. Defaults to the active context project directory. |
 | `--report` | `false` | Preview changes without applying them. |
 | `--verbose` | `false` | Show additional details for each component. |
+| `--yolo` | `false` | Skip confirmation and apply every non-blocked change in the displayed plan. |

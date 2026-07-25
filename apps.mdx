@@ -11,7 +11,15 @@ import { Compose } from "/snippets/compose-tooltip.mdx";
 
 `docker-compose.yml` or `docker-compose.yaml` is the production contract. It should describe the stack that runs on the host: services, volumes, secrets, Traefik ingress, health checks, build definitions, and the default published ports.
 
-Local-only changes belong in `docker-compose.override.yml`. That file is intentionally ignored by template repositories. Developers can use it for temporary bind mounts, image overrides, secrets used only on their workstation, and port swaps. Production should not rely on a Compose override file; production behavior should be visible in the tracked Compose file and tracked component changes.
+Local-only changes can live in `docker-compose.override.yml`. Templates may ignore
+that file for private workstation experiments, or a team can track a named file
+such as `docker-compose.dev.yml` and select it only in local contexts. Set the
+context's Compose files in merge order—for example, `docker-compose.yml` followed
+by `docker-compose.dev.yml`—and every `sitectl compose`, deploy, health, and
+validation operation uses the same effective project. Contexts for the same site
+can therefore share the canonical stack while selecting different tracked
+overlays. Production should only select files that describe reviewed production
+behavior.
 
 When an application service requires MariaDB during startup, declare that relationship in the tracked Compose file with `depends_on` and `condition: service_healthy`. The application plugins' standard healthcheck runner verifies that policy for MariaDB-backed web apps.
 
@@ -58,7 +66,7 @@ Treat template updates like application changes, not generated files to overwrit
 
 1. Create an update branch with a clean working tree and current database/file-volume backups. Read `.libops/template.lock.yaml` to identify the exact template repository and commit from which the site was created.
 2. Compare that recorded commit with the new reviewed template tag, then merge or apply the upstream change using normal Git workflows. Resolve changes in files your fork owns before running sitectl. The lock is a provenance record, not an instruction for sitectl to overwrite the fork.
-3. Run `sitectl validate`, then `sitectl converge --report`. Converge derives state from the checkout and repairs only drifted component-owned paths; it does not replace a separate desired-state store or discard a healthy enabled/disabled component choice.
+3. Run `sitectl validate`, then `sitectl converge --report`. Converge compares component-owned paths with the versioned intent in `.libops/site.yaml`, including each selected disposition and setting, and reports only the changes needed to restore that intent.
 4. Apply `sitectl converge` or an explicit `sitectl set` when needed, inspect the Git diff, and commit the resulting component files with the upstream update.
 5. Retain the create-time lock as the site's origin record. Record the applied upstream template tag and commit in the update commit or pull request; do not hand-edit the lock to imply that a fresh create occurred.
 6. Build and test the branch, then use `sitectl deploy`. Complete every automatic or manual application migration gate before declaring the update finished.

@@ -13,6 +13,10 @@ tests.
 Use `verify` in CI after site updates to make sure important site behavior still
 works, beyond confirming that containers are running.
 
+Verification also consumes the same component plan as `validate` and
+`converge`. A site cannot report successful behavior while its desired
+component state is missing, ambiguous, or unapplied.
+
 ## Reference
 
 <VerifyCmd />
