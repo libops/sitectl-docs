@@ -55,4 +55,8 @@ The component argument may include a plugin prefix (`plugin/component`). This is
 
 ## After setting
 
-Running `set` modifies the relevant project files after any required confirmation. Use `sitectl validate` to confirm the result. Use `sitectl converge` only when later manual edits or upstream changes have caused drift.
+Running `set` modifies the relevant project files after any required confirmation
+and records the selected component disposition and settings in
+`.libops/site.yaml`. Use `sitectl validate` to confirm the result. Use
+`sitectl converge --report` to inspect later manual edits or upstream changes
+against that durable intent before applying a repair.

@@ -1,6 +1,11 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Create a new stack using a first-class create definition registered by an installed sitectl plugin.
+Create a new stack using a first-class definition registered by an installed plugin.
+
+Interactive creation establishes the working path first, then reviews the saved
+context name, target machine, Compose identity, checkout source, and plugin-owned
+component choices before changing files or starting containers. Pass `--yolo` for
+an explicitly noninteractive run that accepts resolved defaults.
 
 ```bash
 sitectl create [plugin[/definition]] [args...]

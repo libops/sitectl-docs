@@ -1,11 +1,14 @@
 ---
 title: converge
-description: Detect and repair component configuration drift.
+description: Plan and safely repair component configuration drift.
 ---
 
 import ConvergeCmd from "/snippets/commands/sitectl-converge.mdx";
 
-Use `converge` when component files have drifted from the state represented by the project, for example after pulling upstream changes or editing component-owned files by hand. `sitectl set` applies its change immediately and does not require a follow-up converge.
+Use `converge` when component-owned files differ from the dispositions and
+settings recorded in `.libops/site.yaml`, for example after pulling template
+changes or editing managed Compose configuration by hand. The command always
+builds the same typed plan used by component reconciliation and safety checks.
 
 ## Reference
 
@@ -22,15 +25,21 @@ sitectl converge
 
 # Converge a single component
 sitectl converge --component fcrepo
+
+# Apply a previously reviewed, non-blocked plan without prompting
+sitectl converge --yolo
 ```
 
 ## Relationship to validate
 
-`sitectl validate` tells you *whether* something has drifted. `sitectl converge` repairs drifted components while preserving components that are already in a valid enabled or disabled state. Run validate first to understand what needs to change.
+`validate`, `verify`, and `converge` consume the same reconciliation plan.
+Validation fails when desired state is missing, a component is unknown, or
+component-owned configuration has drifted. `verify` also refuses to hide those
+configuration failures behind successful runtime checks.
 
 ## Plugin flags
 
-All flags are forwarded to the plugin's converge handler. For the ISLE plugin the following flags are available:
+Core routes convergence through the active plugin's component contract:
 
 | Flag | Description |
 |------|-------------|
@@ -39,3 +48,12 @@ All flags are forwarded to the plugin's converge handler. For the ISLE plugin th
 | `--verbose` | Show additional detail for each component |
 | `--format` | Output format for `--report` (table, json, yaml) |
 | `--codebase-rootfs` | Codebase rootfs path relative to the project directory |
+| `--yolo` | Skip confirmation and apply every non-blocked change in the displayed plan |
+
+## Safety behavior
+
+The plan identifies changes that may restart services and destructive removals.
+Secret-bearing details are hidden. If sitectl cannot reproduce intent or
+classify an operation, it reports the unknown and does not mutate the project.
+Review the resulting Git diff before deployment and use normal version-control
+recovery if the proposed source changes are not appropriate.

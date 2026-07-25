@@ -56,7 +56,7 @@ The core workflow commands form a natural progression:
     New stacks default to `http://localhost`. Ingress settings such as TLS mode, domain, trusted proxies, and upload limits are handled by the `ingress` component.
   </Step>
   <Step title="Inspect or repair drift">
-    Use `sitectl converge` after manual edits or an upstream update to inspect component drift and repair only components that are out of alignment. `set` changes do not require this extra step.
+    Use `sitectl converge` after manual edits or an upstream update to compare the checkout with `.libops/site.yaml` and repair only components that are out of alignment. `sitectl set` updates the component files and this durable intent together.
 
     ```bash
     sitectl converge --report   # preview

@@ -1,31 +1,34 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Set or update properties of a context. Creates a new context if it does not exist.
+Create or update a context that tells sitectl which Docker Compose project to operate.
+
+The context records the site and environment identity, project directory, Compose
+identity, Docker endpoint, and—when the target is remote—its SSH connection. Use
+`--default` to make this the fallback target for commands that omit `--context`.
 
 ```bash
-sitectl config set-context [context-name]
+sitectl config set-context <context-name>
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-f, --compose-file` | `[]` | docker compose file paths to use (equivalent to docker compose -f flag). Multiple files can be specified. |
-| `--compose-network` |   | Primary Docker Compose network name for this environment |
-| `--compose-project-name` |   | Docker Compose project name, matching COMPOSE_PROJECT_NAME or compose name: |
-| `--database-name` | `drupal_default` | Name of the database to connect to (e.g. drupal_default) |
-| `--database-password-secret` | `DB_ROOT_PASSWORD` | Name of the docker compose secret containing the database password |
-| `--database-service` | `mariadb` | Name of the database service in Docker Compose |
-| `--database-user` | `root` | Database user to connect as (e.g. root, admin) |
-| `--default` | `false` | set to default context |
-| `--docker-socket` | `/var/run/docker.sock` | Path to Docker socket |
-| `--env-file` | `[]` | when running remote docker commands, the `--env-file` paths to pass to docker compose |
-| `--environment` |   | Environment name for this context, such as local, dev, staging, or prod |
-| `--plugin` | `core` | Owning plugin identifier for this context, such as core, isle, or drupal |
-| `--project-dir` |   | Path to docker compose project directory |
-| `--project-name` | `docker-compose` | Logical project name for this context |
-| `--site` |   | Logical site name this context belongs to |
-| `--ssh-hostname` |   | Remote contexts DNS name for the host. |
-| `--ssh-key` |   | Path to SSH private key for remote context. e.g. ~/.ssh/id_rsa |
-| `--ssh-port` | `2222` | Port number |
-| `--ssh-user` |   | SSH user for remote context |
-| `--sudo` | `false` | for remote contexts, run docker commands as sudo |
-| `--type` | `local` | Type of context: local or remote |
+| `-f, --compose-file` | `[]` | Compose files passed as Docker Compose -f options in this order; may be repeated. |
+| `--compose-network` |   | Primary Docker Compose network sitectl uses to resolve and connect to stack services. |
+| `--compose-project-name` |   | Docker Compose identity used to name and label this stack's containers, volumes, and networks. |
+| `--database-name` | `drupal_default` | Default database schema shared backup, restore, and sync jobs operate on. |
+| `--database-password-secret` | `DB_ROOT_PASSWORD` | Compose secret name shared jobs read for the database password; this stores the reference, not the password. |
+| `--database-service` | `mariadb` | Compose service that shared database backup, restore, and sync jobs execute against. |
+| `--database-user` | `root` | Database account shared jobs use inside the database service; no password is stored here. |
+| `--default` | `false` | Use this context when a command does not select one explicitly. |
+| `--docker-socket` | `/var/run/docker.sock` | Unix socket where Docker accepts API requests on the target machine. |
+| `--env-file` | `[]` | Environment files passed to Docker Compose in this order; paths resolve on the target machine. |
+| `--environment` |   | Deployment label within the site, such as local, dev, staging, or prod. |
+| `--plugin` | `core` | Application plugin that owns stack-specific behavior for this context, such as isle or drupal. |
+| `--project-dir` |   | Docker Compose project directory on the target machine; relative Compose and env files resolve from here. |
+| `--site` |   | Logical site shared by related environment contexts, such as museum-local and museum-prod. |
+| `--ssh-hostname` |   | DNS name or IP address of the remote machine that hosts the stack. |
+| `--ssh-key` |   | Private key used to authenticate to the remote host; the key contents are not stored in the context. Example: ~/.ssh/id_rsa |
+| `--ssh-port` | `22` | TCP port used to establish the remote SSH connection. |
+| `--ssh-user` |   | Remote account whose permissions sitectl uses for Docker and filesystem operations. |
+| `--type` | `local` | Execution target: local runs Docker on this machine; remote runs it over SSH. |
+| `--yolo` | `false` | Save resolved flag, stored-context, and product defaults without reviewing each decision. |

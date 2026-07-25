@@ -235,7 +235,9 @@ deployment approval, database/config import, backfill, reindex, and data-retenti
 decisions. Sitectl owns only the fields listed above while an operator chooses to use
 the component.
 
-Do not treat `.libops/template.lock.yaml` as desired state and do not expect a future
+Do not treat `.libops/template.lock.yaml` as component desired state.
+`.libops/site.yaml` owns component selections; the template lock records template
+provenance. Do not expect a future
 plugin release to merge arbitrary downstream customizations. Keep changes outside
 the documented ownership units, review component diffs like application migrations,
 and commit the result in the fork. Developers adding another cross-domain bundle

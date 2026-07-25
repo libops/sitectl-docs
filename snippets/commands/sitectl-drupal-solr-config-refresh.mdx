@@ -1,0 +1,18 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Generate configuration with Drupal Search API Solr, compare it with both the
+tracked seed and the running Solr core, and update only the copies that have drifted.
+The running core's data directory is preserved. With `--reindex`, all Drupal Search API
+index trackers are reset and all indexes are rebuilt after a live configuration change.
+
+```bash
+sitectl drupal solr-config refresh
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--core` | `default` | Solr core name |
+| `--output` |   | Tracked Solr conf directory, relative to the context project |
+| `--reindex` | `false` | Reset trackers and rebuild all Drupal Search API indexes after a live configuration change |
+| `--server` | `default_solr_server` | Drupal Search API server machine name |
+| `--solr-version` |   | Solr version for generated config (detected from the running server by default) |

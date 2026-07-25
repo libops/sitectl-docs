@@ -90,7 +90,16 @@ sitectl converge
 sitectl converge --component fcrepo
 ```
 
-`converge` detects the component state represented by the project, compares its owned files with that state, and repairs drifted components. It does not read a separate persistent desired-state store. Use `--report` to review drift before applying repairs.
+`converge` reads the selected dispositions and non-secret settings from
+`.libops/site.yaml`, compares them with component-owned project paths, and
+builds a typed plan before changing anything. Use `--report` to inspect the
+plan. Unknown components and unclassified changes block mutation; service
+restarts and destructive operations are identified explicitly.
+
+The canonical Compose template remains the runnable base. Components define the
+deterministic transformations that produce the selected application topology.
+Context-specific Compose files, such as a tracked development override, remain
+ordered execution inputs and are not silently absorbed into component intent.
 
 ## The create flow
 

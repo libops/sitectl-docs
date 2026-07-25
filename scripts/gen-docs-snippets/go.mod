@@ -3,15 +3,15 @@ module github.com/libops/sitectl-docs/gen-docs-snippets
 go 1.26.3
 
 require (
-	github.com/libops/sitectl v1.0.2
-	github.com/libops/sitectl-archivesspace v1.0.0
-	github.com/libops/sitectl-drupal v1.0.0
+	github.com/libops/sitectl v1.4.0
+	github.com/libops/sitectl-archivesspace v1.1.0
+	github.com/libops/sitectl-drupal v1.2.0
 	github.com/libops/sitectl-isle v1.0.1
-	github.com/libops/sitectl-libops v1.4.0
-	github.com/libops/sitectl-ojs v1.0.0
-	github.com/libops/sitectl-omeka-classic v1.0.0
-	github.com/libops/sitectl-omeka-s v1.0.0
-	github.com/libops/sitectl-wp v1.0.0
+	github.com/libops/sitectl-libops v1.5.0
+	github.com/libops/sitectl-ojs v1.1.0
+	github.com/libops/sitectl-omeka-classic v1.1.0
+	github.com/libops/sitectl-omeka-s v1.1.0
+	github.com/libops/sitectl-wp v1.1.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 )
@@ -51,6 +51,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/gnostic v0.7.1 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
@@ -87,7 +88,7 @@ require (
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
 	google.golang.org/grpc v1.82.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect

@@ -1,6 +1,8 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Set the state or disposition of a named component in the active context's plugin.
+Set the desired disposition and settings of a named component, apply its
+component-owned project changes, and persist the reviewed intent in
+.libops/site.yaml for later validation and convergence.
 
 Prefix the component name with the plugin namespace to target it directly:
 
@@ -12,5 +14,5 @@ All flags after "set" are forwarded to the plugin's component set handler. Use
 component-specific flags.
 
 ```bash
-sitectl component set <component> [disposition] [flags]
+sitectl component set <component> [disposition]
 ```

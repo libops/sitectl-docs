@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Run Composer commands inside the Drupal container of the active context.
+
+Arguments are passed directly to Composer without shell interpretation. The command runs
+from the context's configured Drupal container root.
+
+Examples:
+  sitectl drupal composer install
+  sitectl drupal composer update -W
+  sitectl drupal composer require `drupal/islandora:^2.11`
+  sitectl drupal composer `--context` prod install `--no-dev`
+
+```bash
+sitectl drupal composer [COMMAND...]
+```
