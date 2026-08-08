@@ -43,11 +43,16 @@ sitectl set dev-mode --assistant --harness codex
 
 # Let the assistant inspect the running Compose stack and Docker daemon
 sitectl set dev-mode enabled --assistant --harness claude --compose-access
+
+# Platform controller: restrict an untrusted Task Agent to its private model gateway
+sitectl set dev-mode enabled --assistant --egress-profile managed --model http://10.42.17.9/v1
 ```
 
 Ingress settings such as TLS mode, domain, ACME email, trusted proxy IPs, upload size, and read timeout are component settings. New stacks default to `http://localhost`. See [Ingress runtime tuning](/components#ingress-runtime-tuning) before applying upload values; backend coverage differs for PHP/nginx applications and ArchivesSpace.
 
 `dev-mode --assistant` writes a `cli-sandbox` service into `docker-compose.override.yml` with the plugin's editable code mounts. The service is on the `assistant` profile, so start it explicitly with Docker Compose when you want an interactive coding agent.
+
+The egress profile defaults to `interactive` for a trusted developer. It permits the broader provider access needed for a human-driven session and is not a confidentiality boundary. The platform controller must select `--egress-profile managed` and supply its provisioned Private Service Connect model-gateway URL as a literal IPv4 `http://` or `https://` URL. Managed runs block DNS and IPv6 and allow TCP only to that exact address and port. Never combine a managed Task Agent with `--compose-access` or `--skip-egress-firewall`.
 
 ## Namespacing
 
