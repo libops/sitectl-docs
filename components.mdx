@@ -141,7 +141,7 @@ documented Compose secret or secret-store flow instead.
     Controls Cloudflare Turnstile-backed Traefik challenge middleware where the application plugin supports it. Use `on` to install captcha-protect wiring and `off` to remove the middleware.
   </Accordion>
   <Accordion title="dev-mode">
-    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and plugin-declared host bind mounts for editable code. Add `--assistant` to include a profiled `cli-sandbox` coding-agent service using the same plugin-owned code mounts. Use `--harness codex|claude|pi|opencode|gemini`, `--model default|MODEL|URL`, `--compose-access`, and `--skip-egress-firewall` to tune that assistant container. Use `disabled` to remove the override.
+    Controls the local development override. Use `enabled` to write `docker-compose.override.yml` with the app container `UID` environment value and plugin-declared host bind mounts for editable code. Add `--assistant` to include a profiled `cli-sandbox` coding-agent service using the same plugin-owned code mounts. Use `--harness codex|claude|pi|opencode|gemini`, `--model default|MODEL|URL`, and `--egress-profile interactive|managed` to select the agent and its network boundary. The default `interactive` profile is for trusted human-driven development; `managed` is only for the platform Task Agent with an operator-provided literal private model-gateway IPv4 URL. `--compose-access` and `--skip-egress-firewall` are interactive-only escape hatches and must never be enabled for a managed Task Agent. Use `disabled` to remove the override.
   </Accordion>
 </AccordionGroup>
 

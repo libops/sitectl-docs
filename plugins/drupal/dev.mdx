@@ -20,6 +20,8 @@ docker compose --profile assistant run --rm cli-sandbox
 
 The Drupal plugin supplies the Drupal-specific code mounts; the shared dev-mode component supplies the `cli-sandbox` service.
 
+The assistant defaults to `--egress-profile interactive` for trusted local development. The LibOps platform controller instead uses `--egress-profile managed` with the site's literal private model-gateway IPv4 URL. Managed Task Agents must not receive `--compose-access` or `--skip-egress-firewall`.
+
 Disable dev mode the same way:
 
 ```bash
