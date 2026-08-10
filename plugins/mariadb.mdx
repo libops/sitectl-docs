@@ -5,6 +5,7 @@ description: Core sitectl MariaDB operations for backups, restores, sync, upgrad
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
 import BackupCmd from "/snippets/commands/sitectl-mariadb-backup.mdx";
+import CliCmd from "/snippets/commands/sitectl-mariadb-cli.mdx";
 import RestoreCmd from "/snippets/commands/sitectl-mariadb-restore.mdx";
 import SyncCmd from "/snippets/commands/sitectl-mariadb-sync.mdx";
 import StatusCmd from "/snippets/commands/sitectl-mariadb-status.mdx";
@@ -47,10 +48,12 @@ The sync flow reuses a recent source backup when possible, stages the artifact b
 
 ## Inspection
 
-Check the MariaDB container status:
+Check the MariaDB container status or open an interactive client whose password
+is read only inside the container:
 
 ```bash
 sitectl mariadb status
+sitectl mariadb cli --database appdb
 ```
 
 Standalone MariaDB Compose projects may still exist, but the shared command surface belongs to core `sitectl`, not to a dedicated MariaDB CLI plugin.
@@ -91,3 +94,7 @@ no-op. Use `--service` when the Compose service is not named `mariadb`.
 ### `status`
 
 <StatusCmd />
+
+### `cli`
+
+<CliCmd />

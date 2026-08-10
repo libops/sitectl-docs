@@ -1,0 +1,12 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Manage ISLE recovery bundles.
+
+Bundles contain the Drupal database and public/private files plus the Fcrepo database and
+object data when Fcrepo is enabled. Secrets are deliberately excluded and must be recovered
+from the organization's Vault backup. Solr, Blazegraph, broker queues, caches, and derivatives
+are rebuildable state and are not included.
+
+```bash
+sitectl isle recovery <command>
+```

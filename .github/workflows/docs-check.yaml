@@ -27,10 +27,30 @@ jobs:
         id: dependency_refs
         shell: bash
         run: |
+          set -euo pipefail
+
+          expected_dependency_count=9
           bash scripts/check-snippet-dependencies.sh --manifest-only
-          while IFS=$'\t' read -r name ref; do
+
+          checkout_records_text="$(
+            jq -er --argjson expected_count "$expected_dependency_count" \
+              -f scripts/snippet-dependency-programs/checkout-refs.jq \
+              scripts/snippet-dependencies.json
+          )"
+          mapfile -t checkout_records <<<"$checkout_records_text"
+          if ((${#checkout_records[@]} != expected_dependency_count)); then
+            echo "expected exactly $expected_dependency_count snippet dependency checkout records" >&2
+            exit 1
+          fi
+
+          for record in "${checkout_records[@]}"; do
+            IFS=$'\t' read -r name directory ref extra <<<"$record"
+            if [[ -z "$name" || -z "$directory" || -z "$ref" || -n "$extra" ]]; then
+              echo "snippet dependency checkout records must contain exactly three nonempty fields" >&2
+              exit 1
+            fi
             printf '%s=%s\n' "$name" "$ref" >> "$GITHUB_OUTPUT"
-          done < <(jq -r 'to_entries[] | [.key, .value.ref] | @tsv' scripts/snippet-dependencies.json)
+          done
 
       - name: Check out sitectl
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -104,14 +124,41 @@ jobs:
           path: .dependencies/cli/sitectl-wp
           persist-credentials: false
 
-      - name: Link snippet generator dependencies
+      - name: Verify and link snippet generator dependencies
         shell: bash
         run: |
+          set -euo pipefail
+
+          expected_dependency_count=9
+          checkout_records_text="$(
+            jq -er --argjson expected_count "$expected_dependency_count" \
+              -f scripts/snippet-dependency-programs/checkout-refs.jq \
+              scripts/snippet-dependencies.json
+          )"
+          mapfile -t checkout_records <<<"$checkout_records_text"
+          if ((${#checkout_records[@]} != expected_dependency_count)); then
+            echo "expected exactly $expected_dependency_count snippet dependency checkout records" >&2
+            exit 1
+          fi
+
           dependency_root="$GITHUB_WORKSPACE/../../cli"
           mkdir -p "$dependency_root"
-          while IFS= read -r repository; do
-            ln -sfn "$GITHUB_WORKSPACE/.dependencies/cli/$repository" "$dependency_root/$repository"
-          done < <(jq -r '.[].directory' scripts/snippet-dependencies.json)
+          for record in "${checkout_records[@]}"; do
+            IFS=$'\t' read -r name directory expected_ref extra <<<"$record"
+            if [[ -z "$name" || -z "$directory" || -z "$expected_ref" || -n "$extra" ]]; then
+              echo "snippet dependency checkout records must contain exactly three nonempty fields" >&2
+              exit 1
+            fi
+
+            checkout="$GITHUB_WORKSPACE/.dependencies/cli/$directory"
+            actual_ref="$(git -C "$checkout" rev-parse HEAD)"
+            if [[ "$actual_ref" != "$expected_ref" ]]; then
+              echo "snippet dependency $name checkout is $actual_ref, expected $expected_ref" >&2
+              exit 1
+            fi
+
+            ln -sfn "$checkout" "$dependency_root/$directory"
+          done
 
       - name: Set up Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6

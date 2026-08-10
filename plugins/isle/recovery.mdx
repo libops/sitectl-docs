@@ -1,0 +1,60 @@
+---
+title: Full-state recovery
+description: Back up, validate, restore, and drill the authoritative state of an ISLE site.
+---
+
+import IsleRecovery from "/snippets/commands/sitectl-isle-recovery.mdx";
+import IsleRecoveryBackup from "/snippets/commands/sitectl-isle-recovery-backup.mdx";
+import IsleRecoveryValidate from "/snippets/commands/sitectl-isle-recovery-validate.mdx";
+import IsleRecoveryRestore from "/snippets/commands/sitectl-isle-recovery-restore.mdx";
+
+<IsleRecovery />
+
+## State boundary
+
+Recovery bundles contain authoritative application state:
+
+- Drupal database
+- Drupal public and private files
+- Fcrepo database and object data when Fcrepo is enabled
+
+They do not contain rebuildable Solr or Blazegraph indexes, ActiveMQ queues, IIIF caches, or generated derivatives. Customer secrets and source-controlled project configuration are deliberately excluded. Recreate the target from the matching site Git revision and template provenance lock, then recover secrets through the organization's Vault backup before starting a restored site. The Fedora-enabled state of the target must match the bundle.
+
+## Back up and validate
+
+<IsleRecoveryBackup />
+
+```bash
+sitectl isle recovery backup --output /var/backups/isle/site-$(date +%F).tar.gz
+```
+
+The command enters Drupal maintenance mode and pauses mutation-producing services while it captures consistent state. Move the resulting bundle to encrypted off-host storage with retention and scheduling that meet the customer's documented recovery point objective (RPO).
+
+Validate the manifest, required artifact set, and SHA-256 checksums without changing the site:
+
+<IsleRecoveryValidate />
+
+```bash
+sitectl isle recovery validate --input /var/backups/isle/site-2026-08-07.tar.gz
+```
+
+## Restore and recovery drill
+
+<IsleRecoveryRestore />
+
+Restore is destructive and prompts before replacing authoritative state:
+
+```bash
+sitectl isle recovery restore --input /var/backups/isle/site-2026-08-07.tar.gz
+```
+
+Run the restore first in a disposable context. Afterward:
+
+1. Rebuild Solr and Blazegraph indexes as applicable.
+2. Replay required derivative jobs and confirm queues drain.
+3. Run `sitectl healthcheck`.
+4. Run `sitectl verify --strict`.
+5. Confirm representative objects, binaries, IIIF delivery, and search.
+6. Record backup age as achieved RPO and elapsed recovery time as achieved recovery time objective (RTO).
+
+Schedule this destructive recovery drill at least quarterly and after material topology changes. A successful checksum validation alone is not a restore proof.

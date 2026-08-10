@@ -1,7 +1,17 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Delete a site context
+Delete a saved context from the local sitectl configuration.
+
+By default, this removes only the connection record and leaves containers, volumes,
+remote resources, and project files unchanged. With `--delete-project`, a local context
+requires two typed confirmations before sitectl runs `docker compose down -v`, deletes
+the complete project directory, and removes the saved context. Remote project files
+and containers are never deleted by this command.
 
 ```bash
 sitectl config delete-context <context-name>
 ```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--delete-project` | `false` | For a local context, also delete its Compose volumes and complete project directory after a second typed confirmation. |

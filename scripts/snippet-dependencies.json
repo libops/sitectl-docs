@@ -2,64 +2,73 @@
   "sitectl": {
     "directory": "sitectl",
     "module": "github.com/libops/sitectl",
+    "module_version": "v1.9.1",
     "repository": "libops/sitectl",
-    "version": "v1.4.0",
-    "ref": "43d6c0c1450616567082af965424750c0ab6fdeb"
+    "version": "v1.9.1",
+    "ref": "10afc6eae1c25fab99b4e8087dbb56e028883de5"
   },
   "sitectl_archivesspace": {
     "directory": "sitectl-archivesspace",
     "module": "github.com/libops/sitectl-archivesspace",
+    "module_version": "v0.0.0",
     "repository": "libops/sitectl-archivesspace",
-    "version": "v1.1.0",
-    "ref": "b6ed822a14adbfd33e70d19b442225269839b4d0"
+    "version": "v2.1.1",
+    "ref": "8d1ee34580a2aec40544ca18b2acab9197d22790"
   },
   "sitectl_drupal": {
     "directory": "sitectl-drupal",
     "module": "github.com/libops/sitectl-drupal",
+    "module_version": "v1.5.0",
     "repository": "libops/sitectl-drupal",
-    "version": "v1.2.0",
-    "ref": "9ae298be760e0bc18b18ea0ac6558a1be528c75a"
+    "version": "v1.5.0",
+    "ref": "9fa3aa081e191bcbc2bc6118f96e7d09a80b1439"
   },
   "sitectl_isle": {
     "directory": "sitectl-isle",
     "module": "github.com/libops/sitectl-isle",
+    "module_version": "v1.6.0",
     "repository": "libops/sitectl-isle",
-    "version": "v1.2.0",
-    "ref": "6f7fe9816f635017e5c3773d99777121de8c9191"
+    "version": "v1.6.0",
+    "ref": "a0a544cf3e7e21bd9103e7c6a43b0dd0b089d32f"
   },
   "sitectl_libops": {
     "directory": "sitectl-libops",
     "module": "github.com/libops/sitectl-libops",
+    "module_version": "v1.7.0",
     "repository": "libops/sitectl-libops",
-    "version": "v1.5.0",
-    "ref": "6908f738556a2db62944ecfa3a39472546dfaa44"
+    "version": "v1.7.0",
+    "ref": "3ad5bc05ce97e4fa0052dd17251632cf234b17d4"
   },
   "sitectl_ojs": {
     "directory": "sitectl-ojs",
     "module": "github.com/libops/sitectl-ojs",
+    "module_version": "v1.4.0",
     "repository": "libops/sitectl-ojs",
-    "version": "v1.1.0",
-    "ref": "57041c3b08ecce67e344bbbcbcc6017308a79d1b"
+    "version": "v1.4.0",
+    "ref": "30c65e6f14d77d87acdd736f455c33da36481560"
   },
   "sitectl_omeka_classic": {
     "directory": "sitectl-omeka-classic",
     "module": "github.com/libops/sitectl-omeka-classic",
+    "module_version": "v1.4.0",
     "repository": "libops/sitectl-omeka-classic",
-    "version": "v1.1.0",
-    "ref": "588cf292c97ba8017babf3b68acf5049af286a5e"
+    "version": "v1.4.0",
+    "ref": "8954d0c71dfe0d80fc47f752a6b47e820a864e76"
   },
   "sitectl_omeka_s": {
     "directory": "sitectl-omeka-s",
     "module": "github.com/libops/sitectl-omeka-s",
+    "module_version": "v1.4.0",
     "repository": "libops/sitectl-omeka-s",
-    "version": "v1.1.0",
-    "ref": "99e364d6e07887ba41fb7537c2b55c5cdaf14231"
+    "version": "v1.4.0",
+    "ref": "063b779c9b42b3165b5ac6ad0e0908f07465bfdf"
   },
   "sitectl_wp": {
     "directory": "sitectl-wp",
     "module": "github.com/libops/sitectl-wp",
+    "module_version": "v0.0.0",
     "repository": "libops/sitectl-wp",
-    "version": "v1.1.0",
-    "ref": "e9d305da559abfdd5af00e1d5aa43f072bc091d8"
+    "version": "v2.1.0",
+    "ref": "874331cb315508715097f2003d5818f547a00fe7"
   }
 }

@@ -215,7 +215,7 @@ After creating a repository from `sitectl-app-tmpl`:
 4. Prefer `RegisterStandardComposeAppPlugin`; tune its `Discovery` option only when service-name detection is not enough. Keep the scaffold's `DisableDevMode: true` default unless the derived plugin can declare downstream-owned paths or explicitly named custom extensions.
 5. Keep app-specific commands in the plugin namespace. Avoid registering `build`, `init`, `up`, `down`, `status`, `logs`, or `rollout` unless the app has a deliberate compatibility need.
 6. Use core service commands for shared operations. For example, document `sitectl mariadb backup app` rather than adding a thin app plugin alias.
-7. Implement debug, validate, healthcheck, and verify runners through the SDK. The template's verify runner deliberately returns an unimplemented warning; replace it with behavioral checks before releasing a derived plugin. Results should be structured; progress and diagnostics should go to stderr.
+7. Implement debug, validate, healthcheck, and verify runners through the SDK. The template's verify runner deliberately returns an unimplemented warning; replace it with behavioral checks before releasing a derived plugin. Release smoke tests must run `sitectl verify --strict`, which fails for missing, empty, or warning-only verification. Results should be structured; progress and diagnostics should go to stderr.
 8. Keep local workspace wiring in `go.work`; do not add sibling-module `replace` directives to `go.mod`.
 9. Update the integration script to create with `--setup-only`, start with `sitectl compose up`, and then run both `sitectl healthcheck` and `sitectl verify`.
 10. Configure the isolated Homebrew tap-reconciliation job for a tap the derived repository controls and provide `HOMEBREW_REPO` only to that job, or disable tap reconciliation. Keep GoReleaser on the source repository's scoped `GITHUB_TOKEN`; do not expose the tap token to it. Leave `publish-package-repo: false` unless the repository also has its own trusted package publisher, cloud identity, and required variables.
@@ -239,6 +239,6 @@ Then verify the installed plugin can be discovered and used through core command
 sitectl create app-tmpl/default --path ./app --type local --checkout-source template --setup-only
 sitectl compose up
 sitectl healthcheck
-sitectl verify
+sitectl verify --strict
 sitectl app-tmpl exec -- printenv
 ```

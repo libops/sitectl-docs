@@ -1,7 +1,14 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Deploy a site through the LibOps API, then run the same post-deploy
-checks used by CI.
+Deploy one immutable commit on the site's configured branch through the
+LibOps API, then run the same post-deploy checks used by CI.
+
+The full commit SHA is required. If request delivery is uncertain, retry with
+the same `--request-id` so the API returns the original deployment.
+
+The command validates the deployment ID returned by the API, uses it for every
+status request, and checks the response echo so another deployment of the same
+site cannot satisfy the wait.
 
 The command always runs sitectl healthcheck unless `--skip-healthcheck` is set.
 For non-production sites it also runs sitectl verify. Production sites only run
@@ -13,13 +20,15 @@ sitectl libops deploy site <site-id>
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--deployment-interval` | `15s` | Delay between LibOps deployment status checks |
-| `--deployment-timeout` | `20m0s` | Maximum time to wait for LibOps deployment status |
+| `--commit-sha` |   | Full 40- or 64-character commit SHA to deploy |
+| `--deployment-interval` | `15s` | Delay between exact LibOps deployment receipt checks |
+| `--deployment-timeout` | `20m0s` | Maximum time to wait for the exact LibOps deployment receipt |
 | `--environment` | `auto` | Deployment environment: auto, production, staging, development, preview, or another non-production label |
-| `--git-ref` |   | Branch, tag, PR ref, or commit to deploy |
+| `--git-ref` |   | Configured branch ref to deploy; omit to use the site's stored branch |
 | `--healthcheck-interval` | `15s` | Delay between persistent healthcheck attempts |
 | `--healthcheck-timeout` | `10m0s` | Maximum time to wait for sitectl healthcheck |
-| `--skip-deployment-wait` | `false` | Do not wait for LibOps deployment status before post-deploy checks |
+| `--request-id` |   | Stable UUID for safely retrying this deployment request |
+| `--skip-deployment-wait` | `false` | Skip waiting for the exact LibOps deployment receipt before post-deploy checks |
 | `--skip-healthcheck` | `false` | Skip post-deploy sitectl healthcheck |
 | `--skip-verify` | `false` | Skip sitectl verify for non-production deployments |
 | `--verify` | `false` | Run sitectl verify even for production deployments |

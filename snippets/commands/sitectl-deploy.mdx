@@ -2,8 +2,12 @@
 
 Deploy the active context by orchestrating a full update cycle.
 
-The deploy sequence runs:
-  1. git pull `--ff-only` for the current upstream branch (unless `--skip-git` is set)
+The deploy sequence validates the complete rollout before changing the checkout.
+Production services must run image-backed application code: a successful Git
+checkout necessarily changes files immediately for services that bind-mount the
+project source. After validation, sitectl runs:
+  1. A fast-forward-only Git sync, or a verified exact-ref checkout, unless
+     `--skip-git` is set
   2. Pull images and build application images while the current site is still
      running (explicit pulls are skipped when `--no-pull` is set)
   3. Plugin pre-down hooks (if the context plugin registers a deploy runner)
@@ -12,11 +16,16 @@ The deploy sequence runs:
      otherwise docker compose up -d `--remove-orphans`
   6. Plugin post-up hooks (if the context plugin registers a deploy runner)
 
-The `--branch` flag fetches and checks out a named remote branch before a
-fast-forward merge. The `--ref` flag fetches an exact remote ref (including a
-pull-request ref or advertised commit) and checks it out detached without
-rewriting a local branch. If both are omitted, sitectl updates the current
-branch when it has a git upstream.
+If a failure occurs after shutdown begins, sitectl makes one bounded direct
+Docker Compose start and readiness check from the current checkout while the
+project mutation lock is still held. Recovery does not roll back Git or
+application data.
+
+The `--branch` flag fetches a named remote branch, proves an existing local target
+is its ancestor, and then checks out the fetched commit. The `--ref` flag fetches
+an exact remote ref (including a pull-request ref or advertised commit) and
+checks it out detached without rewriting a local branch. If both are omitted,
+sitectl updates the current branch when it has a git upstream.
 
 Examples:
   sitectl deploy                         # Deploy the current upstream branch

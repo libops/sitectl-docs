@@ -1,6 +1,11 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Log in to ArchivesSpace and print the session response
+Authenticate to the ArchivesSpace backend API for the active site.
+
+The password is read from a local file or environment reference and sent to
+curl over stdin, so it is not placed in a shell command or process argument.
+The JSON response contains a session credential; redirect it to a protected
+file instead of allowing automation to capture it in logs.
 
 ```bash
 sitectl archivesspace api login
@@ -8,6 +13,6 @@ sitectl archivesspace api login
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--password` |   | ArchivesSpace password. Defaults to ARCHIVESSPACE_PASSWORD. |
-| `--url` | `http://localhost/api` | Base ArchivesSpace API URL. |
+| `--password-file` |   | Read the ArchivesSpace password from this local file instead of process arguments. Defaults to ARCHIVESSPACE_PASSWORD_FILE or ARCHIVESSPACE_PASSWORD. |
+| `--url` | `http://127.0.0.1:8089` | Base ArchivesSpace API URL reachable from the ArchivesSpace container. |
 | `--username` | `admin` | ArchivesSpace username. |

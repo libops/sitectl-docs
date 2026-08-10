@@ -40,7 +40,8 @@
                 "expanded": true,
                 "pages": [
                   "commands/create",
-                  "commands/config"
+                  "commands/config",
+                  "commands/template"
                 ]
               },
               {
@@ -51,7 +52,8 @@
                   "commands/verify",
                   "commands/converge",
                   "commands/set",
-                  "commands/deploy"
+                  "commands/deploy",
+                  "commands/backup"
                 ]
               },
               {
@@ -59,6 +61,8 @@
                 "expanded": true,
                 "pages": [
                   "commands/job",
+                  "commands/secrets",
+                  "commands/certs",
                   "commands/image",
                   "commands/bump",
                   "commands/compose"
@@ -69,6 +73,7 @@
                 "expanded": true,
                 "pages": [
                   "commands/healthcheck",
+                  "commands/doctor",
                   "commands/stats",
                   "commands/debug",
                   "commands/port-forward",
@@ -143,6 +148,7 @@
               "plugins/archivesspace/lifecycle",
               "plugins/archivesspace/api",
               "plugins/archivesspace/resources",
+              "plugins/archivesspace/verification",
               "plugins/archivesspace/scripts"
             ]
           },
@@ -168,6 +174,7 @@
               "plugins/isle/feature-bundles",
               "plugins/isle/derivatives",
               "plugins/isle/sync",
+              "plugins/isle/recovery",
               "plugins/isle/cache"
             ]
           },

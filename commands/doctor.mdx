@@ -1,0 +1,21 @@
+---
+title: doctor
+description: Turn common Compose and application health failures into concrete operator actions.
+---
+
+import DoctorCmd from "/snippets/commands/sitectl-doctor.mdx";
+
+Run `doctor` when a site is unhealthy and the next diagnostic step is unclear:
+
+```bash
+sitectl doctor
+```
+
+The command inspects the active context, Compose runtime, and application health
+and reports suggested actions. It is diagnostic: review its evidence before
+making a destructive repair. Use `sitectl debug` when support needs a broader
+diagnostic bundle.
+
+## Reference
+
+<DoctorCmd />

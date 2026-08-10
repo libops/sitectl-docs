@@ -144,6 +144,18 @@ sitectl isle sync fcrepo --source museum-prod --target museum-local
 
 This backs up fcrepo on the source, stages the artifact, and imports it into the target.
 
+## Recovery
+
+Create a full-state, checksummed recovery bundle for the active context:
+
+```bash
+sitectl isle recovery plan
+sitectl isle recovery backup --output /var/backups/isle/site-$(date +%F).tar.gz
+sitectl isle recovery validate --input /var/backups/isle/site-2026-08-08.tar.gz
+```
+
+See [Full-state recovery](/plugins/isle/recovery) for the authoritative-state boundary, off-host storage requirements, destructive restore workflow, and recovery-drill gate.
+
 ## Validate
 
 Check that the active context's project configuration is valid:

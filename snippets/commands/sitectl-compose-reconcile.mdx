@@ -8,7 +8,8 @@ Starts with additional Compose flags or selected services pass through unchanged
 run this command explicitly first when those starts also need lifecycle repair.
 Use `--force` to rerun build/up even when the project is cached as current. Use
 `--reset-init` to remove plugin-declared init artifacts and init volumes before
-reconciling.
+reconciling. Because that operation destroys data, it requires a typed
+confirmation unless `--yolo` is supplied.
 
 ```bash
 sitectl compose reconcile
@@ -18,3 +19,4 @@ sitectl compose reconcile
 |------|---------|-------------|
 | `--force` | `false` | Ignore the reconcile cache and rerun build/up. |
 | `--reset-init` | `false` | Remove plugin-declared init artifacts and init volumes before reconciling. |
+| `--yolo` | `false` | Skip the destructive `--reset-init` confirmation prompt. |

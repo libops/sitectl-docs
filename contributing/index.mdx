@@ -11,11 +11,16 @@ import { TUI } from "/snippets/tui-tooltip.mdx";
 
 `sitectl` has a core binary and optional plugin binaries named `sitectl-<plugin>`.
 
-The current local development plugin chain in this workspace is:
+The current local development checkout set in this workspace is:
 
 - `sitectl`: core binary; owns the operator-facing commands
+- `sitectl-archivesspace`: ArchivesSpace application operations
+- `sitectl-drupal`: Drupal operations; also included by the ISLE plugin
 - `sitectl-isle`: ISLE plugin; stack logic, component definitions, ISLE-specific jobs
-- `sitectl-drupal`: Drupal plugin; drush, sync, ULI; included by the ISLE plugin
+- `sitectl-ojs`: Open Journal Systems application operations
+- `sitectl-omeka-classic`: Omeka Classic application operations
+- `sitectl-omeka-s`: Omeka S application operations
+- `sitectl-wp`: WordPress application operations
 
 Core sitectl owns the operator-facing command shape. Plugins extend that behavior through the private `__sitectl-rpc` protocol dispatched based on the active context's plugin field.
 
@@ -49,16 +54,19 @@ make install
 That target will:
 
 1. Build and install `sitectl`
-2. Change into `../sitectl-isle` and run `make install`
-3. Change into `../sitectl-drupal` and run `make install`
+2. Discover supported sibling checkouts named `../sitectl-<application>`
+3. Build and install every supported plugin checkout that is present
 
-The plugin `install` targets run `make work` before building so they use the local core `sitectl` checkout during development.
+Run `make work` first to create a local Go workspace containing core and all
+supported sibling plugin checkouts. The core `make test` and `make build`
+targets download declared dependencies but never rewrite `go.mod` or `go.sum`;
+dependency upgrades use the explicit `make deps-update` target.
 
 If you are only working on a single plugin:
 
 ```bash
 cd ../sitectl-isle && make install
-cd ../sitectl-drupal && make install
+cd ../sitectl-archivesspace && make install
 ```
 
 ## Why `make install` matters
@@ -66,8 +74,8 @@ cd ../sitectl-drupal && make install
 If you only rebuild `sitectl` locally but do not install the plugin binaries into a directory on `PATH`, core command dispatch will not see the current local plugin builds. Installing the full chain keeps the stack aligned while you work on:
 
 - core command routing in `sitectl`
-- stack logic in `sitectl-isle`
-- Drupal-specific extensions in `sitectl-drupal`
+- application behavior in any supported `sitectl-<application>` plugin
+- included-plugin behavior such as Drupal extensions used by ISLE
 
 ## UI Architecture
 

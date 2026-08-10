@@ -1,0 +1,15 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Create a compressed logical MariaDB dump plus tar archives for named
+Compose volumes not mounted as MariaDB data. sitectl briefly stops the running
+application services while leaving MariaDB available, then resumes exactly the
+services that were running even when backup creation fails. Full-site backup is
+currently supported from Linux operator hosts.
+
+```bash
+sitectl backup create
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-o, --output` |   | Project-relative backup directory; defaults to backups/YYYYMMDDTHHMMSSZ. |

@@ -1,0 +1,38 @@
+---
+title: verification
+description: Verify ArchivesSpace API authentication and Solr-backed search without exposing credentials.
+---
+
+Run healthcheck first, then use the ArchivesSpace verifier for application-level
+behavior:
+
+```bash
+sitectl healthcheck
+sitectl verify --strict --session-file /secure/path/archivesspace-session
+```
+
+The verifier checks that the backend reports an ArchivesSpace version, that the
+session can list repositories, and that an authenticated search returns a valid
+`total_hits` result. A failure in any check makes verification fail. The session
+travels to the container through stdin instead of a Compose shell command or
+process argument.
+
+If a session does not already exist, the verifier can create one from a password
+file:
+
+```bash
+sitectl verify --strict \
+  --username admin \
+  --password-file /secure/path/archivesspace-password
+```
+
+For a newly created, disposable CI site only, use the image's bootstrap admin
+credential:
+
+```bash
+sitectl verify --strict --disposable
+```
+
+Never use `--disposable` for a retained site. Rotate the bootstrap credential,
+use a purpose-limited account where possible, and remove temporary credential
+files after the run.

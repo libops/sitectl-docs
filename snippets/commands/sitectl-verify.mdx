@@ -12,10 +12,14 @@ unknown component ownership, or unapplied component changes.
 
 All flags not consumed by sitectl itself are forwarded to the plugin's verify
 handler, allowing plugin-specific flags such as `--fcrepo` or `--bot-mitigation`.
+Use `--strict` in release and smoke-test automation to fail when the active
+plugin has no verification checks, returns no check results, or reports a
+warning that requires operator review.
 
 Examples:
   sitectl verify
   sitectl verify `--format` table
+  sitectl verify `--strict`
   sitectl verify `--bot-mitigation` on
 
 ```bash

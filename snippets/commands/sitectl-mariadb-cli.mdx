@@ -1,0 +1,17 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Open the MariaDB command-line client inside the active site's database container.
+
+The password is resolved from the configured mounted secret or database container
+environment and sent only in the Docker exec environment. It is never placed on the
+host command line or written to sitectl output.
+
+```bash
+sitectl mariadb cli
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--database` |   | Database selected when the client starts; empty leaves it unselected. |
+| `--service` | `mariadb` | Compose service containing the MariaDB client and root secret. |
+| `--user` | `root` | Database account used by the interactive client. |

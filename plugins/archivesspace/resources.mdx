@@ -34,7 +34,9 @@ sitectl archivesspace search "identifier:MS" --repo 2
 sitectl archivesspace jobs --repo 2
 ```
 
-These shortcuts accept the same read flags as API requests, including `--url`, `--session`, and repeated `--query name=value` filters.
+These shortcuts accept the same read flags as API requests, including `--url`,
+`--session-file`, and repeated `--query name=value` filters. You can also set
+`ARCHIVESSPACE_SESSION_FILE` once for a sequence of read commands.
 
 ## Reference
 

@@ -1,0 +1,15 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Validate and restore an ISLE recovery bundle.
+
+This is destructive. The command briefly enters Drupal maintenance mode and pauses mutation
+consumers. After restoration, rebuild derived indexes and queues and run strict verification.
+
+```bash
+sitectl isle recovery restore
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--input` |   | Absolute recovery bundle path on the context host |
+| `--yolo` | `false` | Skip confirmation before destructive authoritative-state replacement |

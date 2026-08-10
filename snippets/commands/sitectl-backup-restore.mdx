@@ -1,0 +1,16 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Validate and stage the complete backup before stopping the site, retain
+recovery snapshots of current file and MariaDB volumes, then replace the site.
+If a commit step fails, sitectl restores every retained snapshot and restarts the
+stack. External Compose volumes are never modified. This destructive operation
+requires `--yolo` after the operator verifies the selected backup and is currently
+supported from Linux operator hosts.
+
+```bash
+sitectl backup restore DIRECTORY
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--yolo` | `false` | Confirm replacement of current database and file-volume contents. |

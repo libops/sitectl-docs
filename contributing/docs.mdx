@@ -43,12 +43,12 @@ To regenerate after changing a command's flags or description:
 make docs-snippets
 ```
 
-Pull requests run `make docs-snippets-check`, which regenerates these files from the exact core and plugin commits recorded in `scripts/snippet-dependencies.json` and fails when the result differs from the committed snippets. The dependency check requires an exact manifest/module/replace set and verifies that every recorded stable release tag resolves to its recorded commit. The same required workflow runs the pinned Mintlify CLI through `make docs-check` to validate the strict documentation build and internal links.
+Pull requests run `make docs-snippets-check`, which regenerates these files from the exact core and plugin commits recorded in `scripts/snippet-dependencies.json` and fails when the result differs from the committed snippets. The dependency check requires an exact manifest/module/replace set and verifies that every recorded stable release tag resolves to its recorded commit. A plugin that publishes a v2 binary while retaining its v1 Go module path records `module_version: v0.0.0`; the local replacement still points at the exact reviewed v2 checkout without asking Go to resolve an invalid v2 module version. The same required workflow runs the pinned Mintlify CLI through `make docs-check` to validate the strict documentation build and internal links.
 
 When one command change spans repositories, publish core first, then any plugin dependency, then the dependent plugins, and open or refresh the docs pull request last. Update each manifest `version` and `ref` only after the stable tag exists and resolves to that exact commit. Hosted docs CI checks those immutable commits rather than moving default branches. Do not hand-edit generated snippets to make documentation run ahead of the command binaries they describe.
 
 This runs `scripts/gen-docs-snippets/main.go`, which imports the core sitectl command
-tree plus every plugin in the active v1 compatibility set: `sitectl-isle`, `sitectl-drupal`,
+tree plus every plugin in the active command compatibility set: `sitectl-isle`, `sitectl-drupal`,
 `sitectl-archivesspace`, `sitectl-ojs`, `sitectl-omeka-classic`, `sitectl-omeka-s`,
 `sitectl-wp`, and `sitectl-libops`. It renders each command to an `.mdx` snippet
 file.
@@ -61,14 +61,16 @@ dependency graph.
 
 To add a plugin to the generated reference, update all of these contracts together:
 
-1. Add the repository key, module version, stable tag commit, and checkout directory to `scripts/snippet-dependencies.json` and to the checker's exact `expected_keys` set.
+1. Add the repository key, Go module version, stable tag version and commit, and checkout directory to `scripts/snippet-dependencies.json` and to the checker's exact `expected_keys` set. Use `module_version: v0.0.0` only when a v2-or-newer binary tag intentionally retains a v1 module path.
 2. Add matching direct `require` and local `replace` directives to `scripts/gen-docs-snippets/go.mod`.
 3. Add the plugin import and generator registration to `scripts/gen-docs-snippets/main.go`.
 4. Add the exact-SHA checkout step to `.github/workflows/docs-check.yaml`; dependency linking is derived from the manifest.
 
 The checker rejects missing or extra sitectl modules, indirect requirements, mismatched
 local replace paths, unpublished tags, and tags that do not resolve to the recorded
-commit.
+commit. Its jq and awk logic lives in checked program files under
+`scripts/snippet-dependency-programs/`; shell and workflow steps pass data and arguments
+to those files instead of embedding another language in command strings.
 
 When a plugin is temporarily outside the active compatibility set, do not leave its
 module in the active generator and rely on Go's minimum-version selection to make it

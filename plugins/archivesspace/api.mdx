@@ -6,28 +6,43 @@ description: Log in to ArchivesSpace and call arbitrary REST API paths through s
 import ApiLogin from "/snippets/commands/sitectl-archivesspace-api-login.mdx";
 import ApiRequest from "/snippets/commands/sitectl-archivesspace-api-request.mdx";
 
-Log in and use the returned session token for authenticated API calls:
+Keep the password and returned session out of shell arguments and logs. Store
+each in a mode-0600 file, then refer to those files from the command:
 
 ```bash
-ARCHIVESSPACE_PASSWORD=admin \
-  sitectl archivesspace api login
+umask 077
+ARCHIVESSPACE_PASSWORD_FILE=/secure/path/archivesspace-password \
+  sitectl archivesspace api login \
+  | jq -r .session > .archivesspace-session
 
-sitectl archivesspace api request GET repositories/2/resources --session "$ARCHIVESSPACE_SESSION"
+ARCHIVESSPACE_SESSION_FILE=.archivesspace-session \
+  sitectl archivesspace api request GET repositories/2/resources
 ```
+
+Delete the session file when the task is complete. `ARCHIVESSPACE_PASSWORD` and
+`ARCHIVESSPACE_SESSION` remain available for ephemeral process environments,
+but file references are safer for interactive shells and automation.
 
 API helpers accept:
 
-- `--url` for the base API URL, defaulting to `http://localhost/api`
-- `--session` for the `X-ArchivesSpace-Session` header
+- `--url` for the API URL reachable inside the ArchivesSpace container
+- `--session-file` for the local file containing the session token
 - `--query name=value` for repeated query parameters
 - `--data` or `--file` for JSON request bodies on arbitrary requests
 
 Use `api request` when you need a path that does not have a named shortcut:
 
 ```bash
-sitectl archivesspace api request GET repositories/2/archival_objects --query page=1 --session "$ARCHIVESSPACE_SESSION"
-sitectl archivesspace api request POST repositories/2/resources --file resource.json --session "$ARCHIVESSPACE_SESSION"
+ARCHIVESSPACE_SESSION_FILE=.archivesspace-session \
+  sitectl archivesspace api request GET repositories/2/archival_objects --query page=1
+ARCHIVESSPACE_SESSION_FILE=.archivesspace-session \
+  sitectl archivesspace api request POST repositories/2/resources --file resource.json
 ```
+
+The plugin resolves the active local or remote context, executes `curl` through
+the Docker API with an argv array, and sends the credential-bearing curl config
+over stdin. The token is never rendered into the logged Compose command or
+container process arguments.
 
 ## Reference
 

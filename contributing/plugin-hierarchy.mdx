@@ -255,7 +255,7 @@ type HealthcheckRunner interface {
 
 Registered by `sdk.RegisterVerifyRunner(runner)`. Core `sitectl verify` invokes `verify.run` when the active context plugin supports verification (`CanVerify: true`). Use this runner for CI and update validation checks that go beyond basic running-app health, such as important application workflows or feature-specific assertions that should survive a site update. The plugin returns `[]validate.Result` in the JSON response `result`, and core sorts and renders those results with the normal validation report renderer.
 
-Unlike `validate` and `healthcheck`, core `verify` has no built-in checks today. A context with no plugin-specific verify runner renders a warning result rather than failing. `--format` is host-owned because core renders the final report; all other unclaimed flags are passed through in `args` for the plugin's verify runner.
+Unlike `validate` and `healthcheck`, core `verify` has no built-in behavioral checks. In interactive mode, a context with no plugin verifier renders a warning for operator review. In release automation, `--strict` turns missing, empty, or warning results into failures. `--format` and `--strict` are host-owned because core renders and evaluates the final report; all other unclaimed flags are passed through in `args` for the plugin's verify runner.
 
 The SDK calls `VerifyRunner.Run` and marshals the returned results into the RPC result. A verify runner should not render its own report or write result JSON to stdout. Diagnostics that should stream during verification should go to `cmd.ErrOrStderr()`.
 

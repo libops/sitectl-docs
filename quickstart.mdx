@@ -80,11 +80,11 @@ The core workflow commands form a natural progression:
     ```
   </Step>
   <Step title="Verify site behavior">
-    Use `sitectl verify` after updates to run healthcheck-style status plus additional checks supplied by the active plugin. Wire this into CI to make sure important site functionality remains intact.
+    After healthcheck succeeds, use `sitectl verify` to run deeper application checks supplied by the active plugin. Use strict mode in CI so a missing, empty, or warning-only verifier cannot pass a release gate.
 
     ```bash
     sitectl verify
-    sitectl verify --format table
+    sitectl verify --strict --format table
     ```
   </Step>
 </Steps>

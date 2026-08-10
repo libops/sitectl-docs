@@ -1,0 +1,34 @@
+---
+title: backup
+description: Create and restore complete site backups containing MariaDB and persistent file volumes.
+---
+
+import BackupCmd from "/snippets/commands/sitectl-backup.mdx";
+import BackupCreateCmd from "/snippets/commands/sitectl-backup-create.mdx";
+import BackupRestoreCmd from "/snippets/commands/sitectl-backup-restore.mdx";
+
+Use `backup` when database state and persistent application files must move or
+recover together. The resulting directory contains a logical MariaDB dump,
+archives for the selected non-database volumes, and metadata needed for restore.
+
+```bash
+sitectl backup create
+sitectl backup restore backups/20260808T120000Z --yolo
+```
+
+Restore replaces current state. Keep a separate copy of the current site,
+inspect the selected context, and stop customer writes before proceeding. After
+restore, run `sitectl healthcheck` followed by the application's
+`sitectl verify` checks.
+
+## Reference
+
+<BackupCmd />
+
+### `backup create`
+
+<BackupCreateCmd />
+
+### `backup restore`
+
+<BackupRestoreCmd />

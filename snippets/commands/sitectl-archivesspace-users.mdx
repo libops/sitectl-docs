@@ -9,5 +9,5 @@ sitectl archivesspace users [ID]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `-q, --query` | `[]` | Additional query parameter as name=value. May be repeated. |
-| `--session` |   | ArchivesSpace session token for X-ArchivesSpace-Session. |
-| `--url` | `http://localhost/api` | Base ArchivesSpace API URL. |
+| `--session-file` |   | Read the ArchivesSpace session from this local file instead of process arguments. Defaults to ARCHIVESSPACE_SESSION_FILE or ARCHIVESSPACE_SESSION. |
+| `--url` | `http://127.0.0.1:8089` | Base ArchivesSpace API URL reachable from the ArchivesSpace container. |

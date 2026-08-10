@@ -11,9 +11,9 @@ sitectl libops checkout <site-id> [directory]
 | `--context-name` |   | sitectl context name |
 | `--default` | `true` | Set the updated context as current |
 | `--plugin` |   | sitectl plugin name; defaults from site application type |
-| `--project-dir` |   | Local or remote compose project directory |
+| `--project-dir` |   | Remote Compose checkout directory on the managed host; defaults from the site ID |
 | `--ssh-host` |   | SSH hostname override; defaults to the exact hostname returned by the LibOps API |
 | `--ssh-key` |   | Local private key used to authenticate the generated sitectl context to the managed host. |
 | `--ssh-port` | `22` | SSH port |
-| `--ssh-user` | `deploy` | SSH username |
+| `--ssh-user` |   | Linux account override; defaults to the authenticated LibOps account UUID provisioned on the managed host |
 | `--update-context` | `false` | Update a sitectl context after checkout |

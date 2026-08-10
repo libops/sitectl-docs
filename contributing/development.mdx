@@ -11,7 +11,11 @@ For local development, install all binaries into a directory on your `$PATH` so 
 make install
 ```
 
-This builds and installs `sitectl`, then changes into `../sitectl-isle` and `../sitectl-drupal` and runs `make install` in each. The plugin `install` targets run `make work` before building so they use the local sitectl checkout.
+This builds and installs `sitectl`, discovers the supported sibling application
+plugin checkouts, and runs `make install` in each checkout that is present. Run
+`make work` first to create one local Go workspace for core and those plugins.
+Normal build and test targets do not rewrite dependency files; use the explicit
+dependency-update target when changing module versions.
 
 If you're only working on a single plugin:
 

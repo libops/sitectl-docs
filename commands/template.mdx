@@ -1,0 +1,27 @@
+---
+title: template
+description: Inspect differences from the exact upstream Compose template recorded for a site.
+---
+
+import TemplateCmd from "/snippets/commands/sitectl-template.mdx";
+import TemplateDiffCmd from "/snippets/commands/sitectl-template-diff.mdx";
+
+Created sites retain `.libops/template.lock.yaml` with their exact upstream
+template commit and contract digest. Use `template diff` to compare that source
+with both the current upstream and the downstream site checkout:
+
+```bash
+sitectl template diff
+```
+
+The command uses a temporary checkout and does not modify the site. Review the
+two name-status diffs before choosing an upstream update or reconciling local
+customizations.
+
+## Reference
+
+<TemplateCmd />
+
+### `template diff`
+
+<TemplateDiffCmd />

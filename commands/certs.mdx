@@ -1,0 +1,35 @@
+---
+title: certs
+description: Generate local site certificates and trust their certificate authority on a development workstation.
+---
+
+import CertsCmd from "/snippets/commands/sitectl-certs.mdx";
+import CertsRegenerateCmd from "/snippets/commands/sitectl-certs-regenerate.mdx";
+import CertsTrustCmd from "/snippets/commands/sitectl-certs-trust.mdx";
+
+The `certs` commands support local HTTPS. Generate missing certificate material
+through the template's init service, then explicitly trust that site's local
+certificate authority on the workstation:
+
+```bash
+sitectl certs regenerate
+sitectl certs trust
+```
+
+Generation retains existing keys and certificates. Trust changes the operating
+system trust store and can request administrator privileges, so confirm the
+active context and inspect `certs/rootCA.pem` first. Production certificates
+should use the ingress component's managed or custom-certificate workflow, not
+a development certificate authority.
+
+## Reference
+
+<CertsCmd />
+
+### `certs regenerate`
+
+<CertsRegenerateCmd />
+
+### `certs trust`
+
+<CertsTrustCmd />

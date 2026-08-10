@@ -10,6 +10,6 @@ sitectl archivesspace search QUERY
 |------|---------|-------------|
 | `-q, --query` | `[]` | Additional query parameter as name=value. May be repeated. |
 | `--repo` |   | Repository ID for repository-scoped search. |
-| `--session` |   | ArchivesSpace session token for X-ArchivesSpace-Session. |
+| `--session-file` |   | Read the ArchivesSpace session from this local file instead of process arguments. Defaults to ARCHIVESSPACE_SESSION_FILE or ARCHIVESSPACE_SESSION. |
 | `--type` |   | Limit search to an ArchivesSpace record type. |
-| `--url` | `http://localhost/api` | Base ArchivesSpace API URL. |
+| `--url` | `http://127.0.0.1:8089` | Base ArchivesSpace API URL reachable from the ArchivesSpace container. |

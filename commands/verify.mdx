@@ -5,10 +5,10 @@ description: Run plugin behavioral verification checks for the active site.
 
 import VerifyCmd from "/snippets/commands/sitectl-verify.mdx";
 
-Think of the checks in three layers: `validate` is for configuration and project
-layout, `healthcheck` is a basic status check for the running application, and
-`verify` is the healthcheck layer plus additional plugin-owned functionality
-tests.
+Think of the checks in three layers: `validate` checks configuration and project
+layout, `healthcheck` observes whether the runtime is online, and `verify` runs
+deeper application behavior supplied by the active plugin. Run healthcheck
+before verify; one does not substitute for the other.
 
 Use `verify` in CI after site updates to make sure important site behavior still
 works, beyond confirming that containers are running.
@@ -39,14 +39,16 @@ The `--format` flag controls how the report is rendered:
 sitectl verify
 
 # Render a compact CI-friendly report
-sitectl verify --format table
+sitectl verify --strict --format table
 
 # Verify expected Islandora component behavior
 sitectl verify --fcrepo off --iiif triplet --bot-mitigation on
 ```
 
-Only failed results make the command exit non-zero. Warnings are rendered in the
-report but do not fail the command.
+By default, only failed results make the command exit non-zero. Warnings remain
+visible for an operator to review. Use `--strict` for CI and release gates: it
+also fails when the plugin has no verifier, returns no checks, or reports any
+warning.
 
 ## Plugin verification
 

@@ -1,6 +1,12 @@
 {/* Auto-generated from source. Run `make docs-snippets` to update. */}
 
-Call an arbitrary ArchivesSpace API path
+Call an arbitrary path on the ArchivesSpace backend API for the active site.
+
+The plugin executes curl inside the running ArchivesSpace container. Session
+credentials and request bodies are carried over stdin instead of a shell
+command. A `--file` path identifies a local JSON file read by sitectl. A literal
+`--data` value remains visible in the local sitectl process arguments, so use
+`--file` whenever a request body is confidential.
 
 ```bash
 sitectl archivesspace api request METHOD PATH
@@ -11,5 +17,5 @@ sitectl archivesspace api request METHOD PATH
 | `--data` |   | JSON request body. |
 | `--file` |   | Path to a JSON request body file. |
 | `-q, --query` | `[]` | Additional query parameter as name=value. May be repeated. |
-| `--session` |   | ArchivesSpace session token for X-ArchivesSpace-Session. |
-| `--url` | `http://localhost/api` | Base ArchivesSpace API URL. |
+| `--session-file` |   | Read the ArchivesSpace session from this local file instead of process arguments. Defaults to ARCHIVESSPACE_SESSION_FILE or ARCHIVESSPACE_SESSION. |
+| `--url` | `http://127.0.0.1:8089` | Base ArchivesSpace API URL reachable from the ArchivesSpace container. |
