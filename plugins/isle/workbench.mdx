@@ -12,15 +12,15 @@ Crosswalk owns metadata conversion and emits Workbench CSVs with a versioned `cr
 | `workbench-retry-media` | Retry only a recognized Workbench media-upload timeout cascade. | Adds media through Workbench |
 | `workbench-rollback` | Delete exactly the nodes named by a Workbench rollback artifact. | Destructive |
 
-Run `sitectl job list` against an Islandora context to confirm that the jobs are available.
+Run `sitectl job list` against an Islandora context to confirm that the jobs are available. See [job operations](/commands/job) for the shared sitectl job workflow.
 
 <Note>
-  Every job path is an exact, canonical, absolute path on the selected context host. For a remote context, it names a path on the remote server, not on the workstation running sitectl. Root paths, relative paths, URLs, path normalization such as `/tmp/../file.csv`, and symlinked trust boundaries are rejected.
+  Every job path is an exact, canonical, absolute path on the selected context host. For a remote context, it names a path on the remote server, not on the workstation running sitectl. Root paths, relative paths, URLs, and path normalization such as `/tmp/../file.csv` are rejected. Input artifacts and trust-boundary directories must also be non-symlink regular files or directories as appropriate.
 </Note>
 
 ## Provision the artifact contract
 
-Crosswalk writes `crosswalk-artifacts.json` beside each Workbench CSV. The manifest binds the batch to its transformation specification, optional profile and model fingerprints, transformation policy, and each CSV's byte count, SHA-256 digest, and data-row count.
+Crosswalk includes `crosswalk-artifacts.json` in each Workbench artifact plan, such as a fetch written with `--artifact-dir` or the ZIP returned by the HTTP transformation service. The manifest binds the batch to its transformation specification, optional profile and model fingerprints, transformation policy, and each CSV's byte count, SHA-256 digest, and data-row count.
 
 Create a separate, artifact-free trust anchor from the reviewed specification and published profile:
 
