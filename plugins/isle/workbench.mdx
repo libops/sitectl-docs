@@ -1,0 +1,150 @@
+---
+title: Crosswalk Workbench operations
+description: Preflight media, reconcile Crosswalk artifacts, retry safe upload failures, and roll back exact Islandora Workbench batches.
+---
+
+Crosswalk owns metadata conversion and emits Workbench CSVs with a versioned `crosswalk-artifacts.json` manifest. sitectl owns the context-aware operations that inspect files or mutate an Islandora site. The Islandora plugin provides four jobs for that operational boundary.
+
+| Job | Purpose | Site mutation |
+|---|---|---|
+| `workbench-preflight` | Classify media paths before an import. | None |
+| `workbench-reconcile-supplemental` | Verify a Crosswalk batch and attach generated node IDs to pending supplemental media. | Writes a context-host CSV only |
+| `workbench-retry-media` | Retry only a recognized Workbench media-upload timeout cascade. | Adds media through Workbench |
+| `workbench-rollback` | Delete exactly the nodes named by a Workbench rollback artifact. | Destructive |
+
+Run `sitectl job list` against an Islandora context to confirm that the jobs are available.
+
+<Note>
+  Every job path is an exact, canonical, absolute path on the selected context host. For a remote context, it names a path on the remote server, not on the workstation running sitectl. Root paths, relative paths, URLs, path normalization such as `/tmp/../file.csv`, and symlinked trust boundaries are rejected.
+</Note>
+
+## Provision the artifact contract
+
+Crosswalk writes `crosswalk-artifacts.json` beside each Workbench CSV. The manifest binds the batch to its transformation specification, optional profile and model fingerprints, transformation policy, and each CSV's byte count, SHA-256 digest, and data-row count.
+
+Create a separate, artifact-free trust anchor from the reviewed specification and published profile:
+
+```bash
+crosswalk spec contract \
+  --spec islandora-object-spec.yaml \
+  --profile repository-items \
+  --output crosswalk-workbench-contract.json
+```
+
+Provision that reviewed file through the site's normal configuration deployment at a stable path on the context host, outside every uploaded batch directory. For example:
+
+```text
+/etc/sitectl/crosswalk-workbench-contract.json
+```
+
+<Warning>
+  Never build the trusted contract by copying an uploaded batch manifest. The contract must arrive through an independent, reviewed deployment path or it cannot establish trust in the batch.
+</Warning>
+
+The version 1 contract contains the stable manifest subset and no per-batch artifact list:
+
+```json
+{
+  "version": 1,
+  "spec": {
+    "name": "drupal-islandora_object-workbench",
+    "version": "1",
+    "fingerprint": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "profile_fingerprint": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+  "model_fingerprint": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+  "policy": {
+    "path_mode": "staged-posix",
+    "staging_root": "/mnt/islandora_staging",
+    "allowed_absolute_roots": ["/home", "/mnt"],
+    "supplemental_media_use_tid": "151326",
+    "pending_supplemental_published": "1",
+    "unpublished_supplemental_media_use_tid": "151326",
+    "unpublished_supplemental_published": "0"
+  }
+}
+```
+
+The values above are illustrative. Media-use term IDs, publication values, staging paths, and allowed roots come from the site's reviewed transformation specification; sitectl does not invent institution-specific defaults.
+
+## Preflight media paths
+
+Run preflight before giving a create or add-media CSV to Workbench:
+
+```bash
+sitectl job run workbench-preflight \
+  --input /var/lib/crosswalk/import-2026-08-13/target.csv
+```
+
+The job reads the CSV through the context and inspects local values in the `file`, `supplemental_file`, and `unpublished_supplemental_file` columns. HTTP and HTTPS values are skipped. Relative paths resolve beneath `/mnt/islandora_staging`; absolute paths must be beneath the staging root, `/home`, or `/mnt` by default.
+
+Use a site-specific staging root or columns when needed:
+
+```bash
+sitectl job run workbench-preflight \
+  --input /srv/imports/batch/target.csv \
+  --staging-root /srv/islandora-staging \
+  --allowed-root /srv/islandora-staging \
+  --column file \
+  --column supplemental_file
+```
+
+When `--allowed-root` is supplied, repeat it for every permitted root. The job reports each failed row as `missing`, `unreadable`, or `invalid` and exits unsuccessfully if any referenced file is unavailable. Symlinks and non-regular files are invalid.
+
+## Reconcile supplemental media
+
+After Workbench creates the nodes in `target.csv`, reconcile pending supplemental rows with the exact rollback CSV produced by that create run:
+
+```bash
+sitectl job run workbench-reconcile-supplemental \
+  --input-dir /var/lib/crosswalk/import-2026-08-13 \
+  --contract /etc/sitectl/crosswalk-workbench-contract.json \
+  --rollback-csv /var/lib/workbench/rollback.csv
+```
+
+The job writes deduplicated rows to `target.add_media.csv` in `--input-dir`. `--rollback-csv` is required only when blank node IDs must be reconciled positionally from `target.csv`; omit it when every supplemental row already names its node ID.
+
+Before reading or writing a CSV, sitectl requires the batch manifest to match the independently provisioned contract's complete specification identity, profile/model provenance, and policy. It then verifies every listed artifact's exact size, digest, CSV structure, and row count. Known Crosswalk CSV filenames present in the directory but omitted from the manifest are rejected.
+
+The manifest must list at least one of `target.pending_supplemental.csv` and `target.unpublished_supplemental.csv`. The corresponding media-use and publication pair must be present in the trusted policy. sitectl fails closed rather than substituting a term ID or publication default.
+
+## Retry a media timeout
+
+Use the retry job only for a Workbench add-media run whose log contains the recognized four-entry cascade: a `504` file upload followed by the matching `422` media failure and request details.
+
+```bash
+sitectl job run workbench-retry-media \
+  --failed-log /var/lib/workbench/logs/add-media.failed.log \
+  --output /var/lib/workbench/retry/add-media.csv \
+  --config /etc/islandora-workbench/add-media.yml \
+  --workbench /opt/islandora-workbench/workbench \
+  --retry-log /var/lib/workbench/logs/add-media.retry.log
+```
+
+sitectl refuses logs containing a critical error, an incomplete cascade, a different failure type, unsafe paths, or conflicting details. It deduplicates matching node-and-file pairs, creates a fresh retry CSV, invokes Workbench, and validates the resulting log. The output CSV and retry log must not already exist.
+
+The Workbench configuration must have `task: add_media`, and its `host` must match the Drupal application URL resolved from the selected sitectl context. Settings that could acquire more input, filter rows, invoke hooks or scripts, add secondary tasks, or otherwise expand the exact retry are rejected. sitectl uses an execution-only snapshot that pins Workbench logging to `--retry-log`; it does not rewrite the source configuration.
+
+<Warning>
+  Do not use this job as a general Workbench retry mechanism. Any failure outside the allowlisted upload-timeout cascade requires manual review and reconciliation.
+</Warning>
+
+## Roll back created nodes
+
+Use the rollback CSV emitted by the exact Workbench create run you intend to reverse:
+
+```bash
+sitectl job run workbench-rollback \
+  --rollback-csv /var/lib/workbench/rollback.csv \
+  --config /etc/islandora-workbench/delete.yml \
+  --workbench /opt/islandora-workbench/workbench \
+  --log /var/lib/workbench/logs/rollback.log
+```
+
+The first CSV column must be `node_id`, every ID must be a unique positive integer, and the artifact must contain at least one node. The Workbench configuration must have `task: delete`, and its `host` must match the context's resolved Drupal URL. sitectl takes immutable execution snapshots, invokes Workbench with only the exact IDs, and validates that the fresh log accounts for the requested deletion set.
+
+<Warning>
+  Rollback deletes the selected nodes and any media or files Workbench deletes with them. sitectl prompts with the context, rollback path, and node count. Use `--yolo` only in automation that has already reviewed those exact values.
+</Warning>
+
+After any mutation, retain the Crosswalk manifest, trusted-contract revision, Workbench configuration, input and rollback CSVs, and logs with the batch review record. For creating the Drupal-bound profile and resolving the JSON:API endpoint, see [Crosswalk](/plugins/drupal/crosswalk).

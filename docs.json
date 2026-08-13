@@ -156,6 +156,7 @@
             "group": "Drupal",
             "pages": [
               "plugins/drupal",
+              "plugins/drupal/crosswalk",
               "plugins/drupal/drush",
               "plugins/drupal/dev",
               "plugins/drupal/solr-config",
@@ -174,6 +175,7 @@
               "plugins/isle/feature-bundles",
               "plugins/isle/derivatives",
               "plugins/isle/sync",
+              "plugins/isle/workbench",
               "plugins/isle/recovery",
               "plugins/isle/cache"
             ]

@@ -1,0 +1,89 @@
+---
+title: Crosswalk
+description: Create site-bound metadata profiles and run Crosswalk with a Drupal context's resolved JSON:API endpoint.
+---
+
+[Crosswalk](https://github.com/lehigh-university-libraries/crosswalk) owns metadata models, mappings, transformation specifications, and duplicate-detection policy. The Drupal plugin owns the operational inputs that come from a site: its active `config/sync` model and its public JSON:API endpoint.
+
+This boundary lets each Drupal site use mappings and identifier rules compiled from its own configuration without copying Drupal operations into Crosswalk.
+
+## Prerequisites
+
+- Select the Drupal or Islandora context whose model you want to capture.
+- Install `crosswalk` on the machine running sitectl and place it on `PATH`. To use another executable path, set `SITECTL_CROSSWALK_BINARY`.
+- Choose a persistent Crosswalk configuration directory. Use the same directory for draft creation, validation, publication, and service startup.
+- Know the Drupal entity type and bundle represented by the profile. The usual Islandora object bundle is `node` / `islandora_object`.
+
+<Warning>
+  Profile creation runs `drush config:export -y` against the selected context before taking the snapshot. This updates that site's normal `config/sync` directory. Review any resulting configuration changes through the site's usual version-control workflow.
+</Warning>
+
+## Create a profile draft
+
+Create an editable profile from the selected site's active Drupal configuration:
+
+```bash
+sitectl drupal crosswalk profile create repository-items \
+  --bundle islandora_object \
+  --config-dir "$PWD/.crosswalk" \
+  --output repository-items.draft.yaml
+```
+
+sitectl exports the active configuration, streams a private bounded snapshot to Crosswalk, and removes its temporary copy afterward. The snapshot contains only site identity, field storage, field instance, and RDF mapping documents used to compile the metadata model. Crosswalk stores that immutable model in `--config-dir` and writes an ordered draft; it does not publish the generated mappings.
+
+Use `--entity-type` when the profile represents something other than a Drupal node. Use `--context` to capture a context other than the current one.
+
+### Institution-specific identifiers
+
+Do not assume a generic local identifier is globally unique. To make an institution-owned identifier eligible as exact duplicate evidence, define its Drupal typed-identifier attribute, a distinct scheme, an absolute authority namespace, a fully anchored Go regular expression, and its identity level:
+
+```bash
+sitectl drupal crosswalk profile create repository-items \
+  --bundle islandora_object \
+  --config-dir "$PWD/.crosswalk" \
+  --output repository-items.draft.yaml \
+  --institution-attribute accession \
+  --institution-scheme example-accession \
+  --institution-namespace https://repository.example.edu/id/accession/ \
+  --institution-pattern '^[A-Z]{3}-[0-9]{6}$' \
+  --institution-identity-level source_record
+```
+
+`--institution-scheme`, `--institution-namespace`, and `--institution-pattern` must be supplied together. Valid identity levels are `work`, `version`, `manifestation`, `concept`, and `source_record`. Review the draft's selectors, codecs, merge rules, and cardinalities before sealing it.
+
+## Validate and publish the profile
+
+Crosswalk, rather than sitectl, owns profile review and publication:
+
+```bash
+crosswalk profile validate \
+  --config-dir "$PWD/.crosswalk" \
+  --input repository-items.draft.yaml \
+  --output repository-items.sealed.yaml
+
+crosswalk profile publish \
+  --config-dir "$PWD/.crosswalk" \
+  --input repository-items.sealed.yaml
+```
+
+Validation seals the edited definition with fingerprints for the exact model and mapping policy. Publication atomically installs that sealed definition under its profile name.
+
+## Serve the site profile
+
+Use sitectl to start Crosswalk with the selected context's named `jsonapi` route. Configure Crosswalk's HTTP authentication and, when the repository requires it, Drupal credentials in environment variables:
+
+```bash
+export SHARED_SECRET='replace-with-a-deployment-secret'
+export DRUPAL_JSONAPI_TOKEN='replace-with-a-read-only-token'
+
+sitectl drupal crosswalk serve \
+  --config-dir "$PWD/.crosswalk" \
+  --drupal-profile repository-items \
+  --drupal-token-env DRUPAL_JSONAPI_TOKEN
+```
+
+The plugin consumes `--context`, resolves the site's public JSON:API root from the context's ingress route catalog and active Traefik configuration, and forwards the remaining options to `crosswalk serve`. It rejects a caller-supplied `--drupal-jsonapi`; run Crosswalk directly only when intentionally using an endpoint outside the selected sitectl context.
+
+Credentials stay in environment variables and are not added to child-process arguments or configuration snapshots. The Drupal credential should have only the read access needed for duplicate lookup. Crosswalk also requires either its shared-secret authentication or a complete Google identity policy before the HTTP server starts.
+
+When deploying the Workbench transformation produced from this profile, continue with [Crosswalk Workbench operations](/plugins/isle/workbench) to provision the reviewed artifact contract and operate against an Islandora context.
