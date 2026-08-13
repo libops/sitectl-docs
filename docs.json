@@ -27,6 +27,7 @@
             "pages": [
               "tui",
               "context",
+              "endpoint-resolution",
               "apps",
               "plugins",
               "components"

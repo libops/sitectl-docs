@@ -12,20 +12,36 @@ Crosswalk owns metadata conversion and emits Workbench CSVs with a versioned `cr
 | `workbench-retry-media` | Retry only a recognized Workbench media-upload timeout cascade. | Adds media through Workbench |
 | `workbench-rollback` | Delete exactly the nodes named by a Workbench rollback artifact. | Destructive |
 
+These four jobs are not a general Crosswalk-plan executor. The plugin does not
+currently run ordinary Workbench create/update batches or execute
+`agents.csv`. Crosswalk does not run Workbench or mutate Drupal either. Manage a
+create or update as an explicit, separately reviewed operation and do not infer
+authorization from the presence of a manifest.
+
 Run `sitectl job list` against an Islandora context to confirm that the jobs are available. See [job operations](/commands/job) for the shared sitectl job workflow.
 
 <Note>
-  Every job path is an exact, canonical, absolute path on the selected context host. For a remote context, it names a path on the remote server, not on the workstation running sitectl. Root paths, relative paths, URLs, and path normalization such as `/tmp/../file.csv` are rejected. Input artifacts and trust-boundary directories must also be non-symlink regular files or directories as appropriate.
+  Every artifact, executable, configuration, log, and batch path passed to these jobs is an exact, canonical, absolute path on the selected context host. For a remote context, it names a path on the remote server, not on the workstation running sitectl. Root paths, relative paths, URLs, and path normalization such as `/tmp/../file.csv` are rejected. Input artifacts and trust-boundary directories must also be non-symlink regular files or directories as appropriate.
 </Note>
 
 ## Provision the artifact contract
 
 Crosswalk includes `crosswalk-artifacts.json` in each Workbench artifact plan, such as a fetch written with `--artifact-dir` or the ZIP returned by the HTTP transformation service. The manifest binds the batch to its transformation specification, optional profile and model fingerprints, transformation policy, and each CSV's byte count, SHA-256 digest, and data-row count.
 
+When a library caller or non-CSV adapter supplies Hub records without
+Crosswalk's `_source_columns` provenance, Crosswalk routes each primary artifact
+by projecting every active update target through the serializer's own value
+path. A record with a node ID, primary file, and `Publisher`, for example,
+routes to `target.update.csv` and retains the publisher instead of being
+mistaken for an add-media-only record. This routing belongs to Crosswalk;
+sitectl trusts only the resulting reviewed manifest and independently
+provisioned contract.
+
 Create a separate, artifact-free trust anchor from the reviewed specification and published profile:
 
 ```bash
 crosswalk spec contract \
+  --config-dir "$PWD/.crosswalk" \
   --spec islandora-object-spec.yaml \
   --profile repository-items \
   --output crosswalk-workbench-contract.json
@@ -40,6 +56,16 @@ Provision that reviewed file through the site's normal configuration deployment 
 <Warning>
   Never build the trusted contract by copying an uploaded batch manifest. The contract must arrive through an independent, reviewed deployment path or it cannot establish trust in the batch.
 </Warning>
+
+The contract pins the reviewed specification, optional profile/model, and
+stable policy. It does not contain per-batch artifact digests, sign the uploaded
+manifest, or prove that Crosswalk generated the CSVs. A party able to replace
+both a CSV and its manifest can recompute that manifest's digest while copying
+the public spec fingerprint. Deliver batches through an authenticated,
+access-controlled path and retain or attest the original manifest at the
+production boundary. Before a general mutation, re-run deterministic validation
+and all required context preflight unless a separately reviewed signing or
+attestation layer authenticates the batch.
 
 The version 1 contract contains the stable manifest subset and no per-batch artifact list:
 
@@ -78,6 +104,30 @@ sitectl job run workbench-preflight \
 
 The job reads the CSV through the context and inspects local values in the `file`, `supplemental_file`, and `unpublished_supplemental_file` columns. HTTP and HTTPS values are skipped. Relative paths resolve beneath `/mnt/islandora_staging`; absolute paths must be beneath the staging root, `/home`, or `/mnt` by default.
 
+Filename compatibility is a separate deterministic Crosswalk rule. A sealed
+`media_extension` rule has no canonical-field selector: its `media_types`
+entries contain Workbench `select_extensions`, Drupal-model
+`allowed_extensions`, and exactly one fallback. Crosswalk compiles that policy
+for primary and both supplemental columns by reading only the exact standard
+Workbench file field for each standard media bundle. It does not substitute
+another file field or automatically emit custom bundles; custom selectors must
+be declared in an explicit, complete, sealed `media_types` policy. Crosswalk
+also derives a direct allowlist for modeled Drupal `file`, `image`, or
+`media_track` fields that declare `file_extensions`. This sitectl preflight
+checks path safety and readability; it does not replace or infer that extension
+policy from an object-model label.
+
+This differs from the local-file resolver installed by a Drupal-configured
+`crosswalk serve`: that resolver checks the filesystem visible to the
+Crosswalk process. Use this sitectl-isle job when Crosswalk is not running on
+the Workbench host or when validation must reflect the selected context user's
+actual permissions. Resolving a remote Drupal endpoint does not make its
+staging mount available to Crosswalk.
+
+<Warning>
+  Skipping an HTTP value is not authorization to let Workbench download it. Crosswalk's Workbench path contract rejects URLs. For an independently supplied CSV, reject remote media or acquire it through a separately approved, bounded downloader and preflight the resulting local path.
+</Warning>
+
 Use a site-specific staging root or columns when needed:
 
 ```bash
@@ -104,9 +154,27 @@ sitectl job run workbench-reconcile-supplemental \
 
 The job writes deduplicated rows to `target.add_media.csv` in `--input-dir`. `--rollback-csv` is required only when blank node IDs must be reconciled positionally from `target.csv`; omit it when every supplemental row already names its node ID.
 
+Positional reconciliation assumes the rollback node IDs are in exactly the same
+data-row order as the `target.csv` used by that create run. Use artifacts from
+the same run and do not sort, filter, append, or reuse either file. The job
+rejects unequal row counts, but equal counts cannot prove that a rollback file
+was not reordered.
+
 Before reading or writing a CSV, sitectl requires the batch manifest to match the independently provisioned contract's complete specification identity, profile/model provenance, and policy. It then verifies every listed artifact's exact size, digest, CSV structure, and row count. Known Crosswalk CSV filenames present in the directory but omitted from the manifest are rejected.
 
 The manifest must list at least one of `target.pending_supplemental.csv` and `target.unpublished_supplemental.csv`. The corresponding media-use and publication pair must be present in the trusted policy. sitectl fails closed rather than substituting a term ID or publication default.
+
+## Linked agents
+
+Crosswalk may emit `agents.csv` with unique contributor taxonomy rows and
+extended person metadata. No sitectl-isle job resolves or creates those Drupal
+terms. Review contributor types, relator policy, identifiers, and person-only
+fields, then use a separately authorized taxonomy workflow if the site needs
+term creation. Do not add term mutation to metadata transformation or Check My
+Work. Offline Crosswalk transformation does not query terms. A
+Drupal-configured live Check My Work service can query mapping-declared term
+IDs, names, and URIs on its fixed selected site, but that read-only resolver
+still does not execute `agents.csv` or create anything.
 
 ## Retry a media timeout
 
@@ -129,6 +197,11 @@ The Workbench configuration must have `task: add_media`, and its `host` must mat
   Do not use this job as a general Workbench retry mechanism. Any failure outside the allowlisted upload-timeout cascade requires manual review and reconciliation.
 </Warning>
 
+The allowlist and success verifier depend on the exact Workbench log messages.
+Before upgrading Islandora Workbench, run a disposable failure and success test
+against the new version and confirm the plugin still recognizes the complete
+cascade and exactly one success for every planned node/file pair.
+
 ## Roll back created nodes
 
 Use the rollback CSV emitted by the exact Workbench create run you intend to reverse:
@@ -141,10 +214,19 @@ sitectl job run workbench-rollback \
   --log /var/lib/workbench/logs/rollback.log
 ```
 
-The first CSV column must be `node_id`, every ID must be a unique positive integer, and the artifact must contain at least one node. The Workbench configuration must have `task: delete`, and its `host` must match the context's resolved Drupal URL. sitectl takes immutable execution snapshots, invokes Workbench with only the exact IDs, and validates that the fresh log accounts for the requested deletion set.
+The first CSV column must be `node_id`, every ID must be a unique positive integer, and the artifact must contain at least one node. The Workbench configuration must have `task: delete`, and its `host` must match the context's resolved Drupal URL. sitectl takes exact execution snapshots, invokes Workbench with the validated rollback artifact, and validates that the fresh log accounts for the requested deletion set.
+
+Host matching uses the shared selected-context resolver rather than a
+caller-supplied URL. See [Endpoint resolution](/endpoint-resolution) for named
+routes, Traefik precedence, degraded catalog fallback, and remote-context
+behavior.
 
 <Warning>
   Rollback deletes the selected nodes and any media or files Workbench deletes with them. sitectl prompts with the context, rollback path, and node count. Use `--yolo` only in automation that has already reviewed those exact values.
 </Warning>
 
 After any mutation, retain the Crosswalk manifest, trusted-contract revision, Workbench configuration, input and rollback CSVs, and logs with the batch review record. For creating the Drupal-bound profile and resolving the JSON:API endpoint, see [Crosswalk](/plugins/drupal/crosswalk).
+
+Coordinate these jobs with any external Workbench runner. The plugin validates
+its own exact inputs, but a separate process mutating the same site can still
+invalidate positional assumptions or make a success log misleading.

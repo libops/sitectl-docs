@@ -12,7 +12,7 @@ This boundary lets each Drupal site use mappings and identifier rules compiled f
 - Select the Drupal or Islandora context whose model you want to capture.
 - Install `crosswalk` on the machine running sitectl and place it on `PATH`. To use another executable path, set `SITECTL_CROSSWALK_BINARY`.
 - Choose a persistent Crosswalk configuration directory. Use the same directory for draft creation, validation, publication, and service startup.
-- Know the Drupal entity type and bundle represented by the profile. The usual Islandora object bundle is `node` / `islandora_object`.
+- Know the Drupal entity type and bundle represented by the profile. The usual Islandora object entity/bundle pair is `node` / `islandora_object`.
 
 <Warning>
   Profile creation runs `drush config:export -y` against the selected context before taking the snapshot. This updates that site's normal `config/sync` directory. Review any resulting configuration changes through the site's usual version-control workflow.
@@ -29,7 +29,12 @@ sitectl drupal crosswalk profile create repository-items \
   --output repository-items.draft.yaml
 ```
 
-sitectl exports the active configuration, streams a private bounded snapshot to Crosswalk, and removes its temporary copy afterward. The snapshot contains only site identity, field storage, field instance, and RDF mapping documents used to compile the metadata model. Crosswalk stores that immutable model in `--config-dir` and writes an ordered draft; it does not publish the generated mappings.
+sitectl exports the active configuration, streams a private bounded snapshot to Crosswalk, and removes its temporary copy afterward. The snapshot contains only `system.site.yml`, `field.storage.*.yml`, `field.field.*.yml`, and `rdf.mapping.*.yml` documents used to compile the metadata model. Crosswalk stores that immutable model in `--config-dir` and writes an ordered draft; it does not publish the generated mappings.
+
+The Crosswalk snapshot and the ordinary full Drupal config-export stream each
+have a hard 64 MiB compressed-output limit. Exceeding it fails the operation
+instead of publishing a truncated archive. Confirm the limit against a real
+institutional configuration before relying on the workflow in automation.
 
 Use `--entity-type` when the profile represents something other than a Drupal node. Use `--context` to capture a context other than the current one.
 
@@ -68,6 +73,86 @@ crosswalk profile publish \
 
 Validation seals the edited definition with fingerprints for the exact model and mapping policy. Publication atomically installs that sealed definition under its profile name.
 
+## Map and validate a human-readable sheet
+
+Compile a Workbench transformation draft from the published profile, review the
+source labels and aliases, and attach workflow validation rules to stable
+canonical field names:
+
+```bash
+crosswalk spec compile drupal \
+  --profile repository-items \
+  --output islandora-object-spec.draft.yaml
+
+crosswalk spec validate \
+  --input islandora-object-spec.draft.yaml \
+  --output islandora-object-spec.yaml
+```
+
+Compilation is strict about taxonomy existence by default. If the later
+Workbench create task is allowed to create missing plain term names, make that
+policy explicit in the draft:
+
+```bash
+crosswalk spec compile drupal \
+  --profile repository-items \
+  --allow-new-taxonomy-terms \
+  --output islandora-object-spec.draft.yaml
+```
+
+The option is sealed as `allow_new_names`; compilation remains offline and
+does not create or query terms. Numeric term IDs and authority URIs are never
+covered by the exception and must resolve during a live check.
+
+The frozen Drupal model supplies deterministic limits such as cardinality,
+configured scalar text/date maximum length (including `text` and EDTF), static
+allowed values, external-link policy, and finite numeric bounds. Media paths
+carry sealed `media_types` policies: Workbench filename `select_extensions`,
+model-derived `allowed_extensions`, and exactly one fallback. This applies to
+primary and both supplemental path columns. Profile compilation reads each
+standard media bundle only through its exact standard Workbench file field; it
+does not substitute another file-valued field or automatically add a custom
+bundle. A custom media bundle or filename selector therefore requires an
+explicit complete `media_types` policy in the reviewed, sealed specification.
+Directly mapped Drupal `file`, `image`, and `media_track` fields with
+`file_extensions` use their exact model field's extension list. No object-model
+label or second sheet column selects the rule.
+
+Profile identity rules that share one exact selector, including an `attr0`
+discriminator, must also share the same scheme, pattern, and canonicalizer or
+Workbench specification compilation fails. If equivalent rules describe
+identity levels that the shared cell cannot encode, Crosswalk chooses the
+lexicographically first rule name as the deterministic representative; the
+standard `doi`/`doi-version` pair therefore selects `doi` regardless of policy
+order.
+
+The profile-derived `created` field requires the timezone-bearing Workbench
+timestamp form and rejects future values. `langcode` is checked against the
+sealed Workbench-supported enum. Non-empty URL aliases require a leading `/`
+and must be unique within the sheet. The offline command stops there; the live
+service below also checks availability only on its fixed selected Drupal
+origin. Display labels are only accepted header vocabulary and diagnostic
+text; renaming one does not select a different rule.
+Download a Google Sheet tab as CSV and validate it directly—no JSON conversion
+is required for the CLI:
+
+```bash
+crosswalk workbench validate \
+  --input metadata.csv \
+  --spec islandora-object-spec.yaml \
+  --drupal-profile repository-items
+```
+
+This replaces Fabricator's **Check My Work** metadata logic; it does not invoke
+Islandora Workbench `--check`. Standalone Crosswalk validation is deterministic.
+It and offline transformation do not query Drupal or create taxonomy terms.
+The `serve` workflow below installs Crosswalk's trusted fixed-origin resolver;
+when it cannot see the Workbench host's staging mount, use a separate context
+operation such as the Islandora plugin's
+[`workbench-preflight`](/plugins/isle/workbench#preflight-media-paths).
+The complete mapping and rule schema is in the
+[Crosswalk transformation specification documentation](https://lehigh-university-libraries.github.io/crosswalk/specifications/).
+
 ## Serve the site profile
 
 Use sitectl to start Crosswalk with the selected context's named `jsonapi` route. Configure Crosswalk's HTTP authentication and, when the repository requires it, Drupal credentials in environment variables:
@@ -79,11 +164,67 @@ export DRUPAL_JSONAPI_TOKEN='replace-with-a-read-only-token'
 sitectl drupal crosswalk serve \
   --config-dir "$PWD/.crosswalk" \
   --drupal-profile repository-items \
-  --drupal-token-env DRUPAL_JSONAPI_TOKEN
+  --drupal-token-env DRUPAL_JSONAPI_TOKEN \
+  --workbench-allow-new-taxonomy-terms=true \
+  --workbench-staging-root /mnt/islandora_staging \
+  --workbench-allowed-absolute-roots '/home|/mnt'
 ```
 
-The plugin consumes `--context`, resolves the site's public JSON:API root from the context's ingress route catalog and active Traefik configuration, and forwards the remaining options to `crosswalk serve`. It rejects a caller-supplied `--drupal-jsonapi`; run Crosswalk directly only when intentionally using an endpoint outside the selected sitectl context.
+The plugin consumes `--context`, resolves the site's named `jsonapi` route from
+the context's ingress route catalog and active Traefik configuration, and
+forwards the remaining options to `crosswalk serve`. It rejects a
+caller-supplied `--drupal-jsonapi`; run Crosswalk directly only when
+intentionally using an endpoint outside the selected sitectl context. See
+[Endpoint resolution](/endpoint-resolution) for Traefik precedence, catalog
+fallback, local published ports, and remote-context behavior.
 
-Credentials stay in environment variables and are not added to child-process arguments or configuration snapshots. The Drupal credential should have only the read access needed for duplicate lookup. Crosswalk also requires either its shared-secret authentication or a complete Google identity policy before the HTTP server starts.
+With the resolved JSON:API root and exact profile, Crosswalk also installs its
+read-only Check My Work context. Mapping-declared checks may query node and
+entity existence and URL-alias availability on that fixed Drupal origin,
+including taxonomy term IDs, plain names, and authority URIs; validate numeric
+Getty TGN IDs on the fixed Getty origin; and inspect local staged files.
+Spreadsheet IDs, names, URIs, and aliases are inert query data and cannot
+select a network destination.
+
+Alias availability always uses the fixed `path_alias/path_alias` JSON:API
+collection beneath that selected root. The alias is URL-encoded only as the
+exact `alias` filter value; it never becomes a request path, host, or
+destination.
+
+Each live check independently caps both 4,096 distinct context lookups and
+4,096 outbound validation requests. Memoized repeats do not spend another
+lookup, while actual Drupal and Getty requests do spend the outbound budget;
+taxonomy bundle/URI-route fan-out and Getty requests share that limit. Hitting
+either cap fails the check before the next operation runs.
+
+`--workbench-allow-new-taxonomy-terms` defaults to true when the service
+compiles its profile-derived transformation, preserving Fabricator behavior.
+Set it to false to require all terms to exist. True permits only a plain name
+that the resolver positively reports missing for creation by the later
+Workbench task; IDs, URIs, and resolver errors still fail. If you forward an
+explicit sealed `--spec`, its `allow_new_names` values remain authoritative.
+
+Dynamic `allowed_values_function` callbacks fail explicitly until the site
+provides a reviewed fixed adapter. The shipped entity-reference resolver
+supports only Drupal core's exact `default:<entity_type>` handler for the
+sealed entity type. `views`, `views:*`, and every other custom handler fail
+closed pending their own fixed adapter; display labels never select handler
+behavior.
+
+The staging flags are forwarded Crosswalk options. Their environment
+equivalents are `CROSSWALK_WORKBENCH_STAGING_ROOT` and
+`CROSSWALK_WORKBENCH_ALLOWED_ABSOLUTE_ROOTS`; the latter is pipe-delimited.
+File checks run on the machine and as the user running the Crosswalk child
+process. Selecting a remote sitectl context resolves its Drupal endpoint but
+does not mount that context's filesystem locally. Run this service on the
+Workbench host with the exact staging mount, or use the Islandora plugin's
+[`workbench-preflight`](/plugins/isle/workbench#preflight-media-paths) for
+effective-user validation inside the selected context.
+
+Credentials stay in environment variables and are not added to child-process
+arguments or configuration snapshots. The Drupal credential should have only
+the read access needed for duplicate and validation queries. Crosswalk also
+requires either its shared-secret authentication or a complete Google identity
+policy before the HTTP server starts.
 
 When deploying the Workbench transformation produced from this profile, continue with [Crosswalk Workbench operations](/plugins/isle/workbench) to provision the reviewed artifact contract and operate against an Islandora context.
