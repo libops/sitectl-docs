@@ -1,0 +1,68 @@
+---
+title: Endpoint resolution
+description: How sitectl selects named application routes and resolves them through Traefik, local ports, or catalog fallback.
+---
+
+Application plugins declare the public routes they own. Core sitectl resolves
+those descriptors so health checks, statistics, service wrappers, and guarded
+jobs target the same selected context instead of independently guessing a URL.
+Route descriptors contain no credentials.
+
+## Route selection
+
+A provider may declare a primary application route and named secondary routes
+such as `jsonapi`, `fcrepo`, `iiif`, `cantaloupe`, `blazegraph`, API, or OAI.
+Selection is deterministic:
+
+1. A non-empty requested name selects the first exact name match.
+2. With no name, sitectl selects the first route marked primary.
+3. If no route is marked primary, the first declared route is used.
+4. An empty catalog or unknown requested name is a **missing route** error.
+
+A missing route is different from an **unresolved route**: the latter means the
+plugin declared the route, but neither the active Traefik configuration nor its
+catalog defaults produced a usable public URL. Automation should preserve that
+distinction instead of replacing either condition with a guessed address.
+
+## Resolution order
+
+Traefik is authoritative when it can be inspected. Sitectl combines the
+effective router, entrypoint scheme, domain, file-provider path, and local
+published port. A local override such as `8080:80` therefore resolves to the URL
+an operator can actually open from the host.
+
+When Traefik has no matching active route, sitectl may use the descriptor's
+catalog scheme, domain, and path. Results identify their source as `traefik` or
+`catalog`; [`sitectl stats`](/commands/stats) exposes that status. If Traefik
+inspection itself fails but a catalog URL exists, the resolver returns the
+fallback together with the inspection error. Each caller must explicitly decide
+whether degraded resolution is acceptable. A mutating job should normally fail
+instead of silently accepting degraded context evidence.
+
+Catalog fallback may use `localhost` only for a local context. Remote contexts
+must declare a real domain or resolve it from Traefik; sitectl never converts a
+missing remote route into `http://localhost` on the operator workstation.
+
+## Path composition
+
+Route paths are cleaned as absolute URL paths and composed exactly once with a
+discovered router path. If the catalog path is already contained in the Traefik
+path, it is not duplicated. The resolver requires a URL with both scheme and
+host and clears stale escaped-path state. Route descriptors must not contain
+user information or credentials; service wrappers pass credentials separately
+through environment variables or their scoped client configuration.
+
+## Operational use
+
+- [`sitectl stats`](/commands/stats) reports primary and named route URLs,
+  resolution source, and published ports.
+- [`sitectl healthcheck`](/commands/healthcheck) probes the same resolved public
+  URL and therefore follows ingress mode, domain, TLS, and local-port changes.
+- `sitectl drupal crosswalk serve` requires the selected context's named
+  `jsonapi` route and rejects a caller-supplied replacement endpoint.
+- Islandora Workbench retry and rollback require the configuration host to match
+  the selected context's resolved Drupal application origin.
+
+For remote automation, inspect route status during deployment and fail on an
+unresolved route before passing credentials or starting a mutation. Do not add a
+manual localhost fallback around the shared resolver.

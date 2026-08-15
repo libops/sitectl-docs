@@ -1,6 +1,6 @@
 ---
 title: Drupal plugin
-description: Drupal-oriented sitectl workflows including Composer, Drush, Solr configuration, login links, and database and config sync.
+description: Drupal-oriented sitectl workflows including Composer, Drush, Crosswalk metadata profiles, login links, and database and config sync.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -102,6 +102,23 @@ sitectl drupal sync config --source museum-prod --target museum-local
 ```
 
 This exports the config export from the source, stages it, and imports it into the target via `drush config:import`.
+
+### crosswalk
+
+Capture the selected site's active Drupal model as an editable Crosswalk profile draft, or run Crosswalk with the context's resolved JSON:API endpoint:
+
+```bash
+sitectl drupal crosswalk profile create repository-items \
+  --bundle islandora_object \
+  --config-dir "$PWD/.crosswalk" \
+  --output repository-items.draft.yaml
+
+sitectl drupal crosswalk serve \
+  --config-dir "$PWD/.crosswalk" \
+  --drupal-profile repository-items
+```
+
+Crosswalk owns the mappings and duplicate-detection policy; sitectl owns live Drupal configuration acquisition and endpoint resolution. See the [Crosswalk workflow](/plugins/drupal/crosswalk) for profile review, institution-specific identifiers, credentials, and deployment guidance.
 
 ### dev mode
 

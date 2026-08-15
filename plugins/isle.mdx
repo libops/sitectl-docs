@@ -1,6 +1,6 @@
 ---
 title: Islandora plugin
-description: Islandora sitectl workflows including guided site creation, component management, Fedora and Blazegraph sync, and migration utilities.
+description: Islandora sitectl workflows including guided site creation, component management, Workbench operations, Fedora and Blazegraph sync, and migration utilities.
 ---
 
 import { Compose } from "/snippets/compose-tooltip.mdx";
@@ -156,6 +156,22 @@ sitectl isle recovery validate --input /var/backups/isle/site-2026-08-08.tar.gz
 
 See [Full-state recovery](/plugins/isle/recovery) for the authoritative-state boundary, off-host storage requirements, destructive restore workflow, and recovery-drill gate.
 
+## Crosswalk Workbench operations
+
+Preflight media paths, reconcile profile-bound Crosswalk artifacts after node creation, retry only recognized media-upload timeout cascades, and roll back an exact Workbench create artifact with guarded context jobs:
+
+```bash
+sitectl job run workbench-preflight \
+  --input /var/lib/crosswalk/import-2026-08-13/target.csv
+
+sitectl job run workbench-reconcile-supplemental \
+  --input-dir /var/lib/crosswalk/import-2026-08-13 \
+  --contract /etc/sitectl/crosswalk-workbench-contract.json \
+  --rollback-csv /var/lib/workbench/rollback.csv
+```
+
+See [Crosswalk Workbench operations](/plugins/isle/workbench) for the artifact trust boundary, all four jobs, and rollback safety requirements.
+
 ## Validate
 
 Check that the active context's project configuration is valid:
@@ -189,4 +205,7 @@ sitectl drupal drush cr
 sitectl drupal solr-config refresh --reindex
 sitectl drupal sync database --source museum-prod --target museum-local
 sitectl drupal login
+sitectl drupal crosswalk profile create repository-items --bundle islandora_object
 ```
+
+See [Crosswalk](/plugins/drupal/crosswalk) for the site-bound profile and JSON:API endpoint workflow.
