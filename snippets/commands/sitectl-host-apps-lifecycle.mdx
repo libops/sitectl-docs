@@ -1,0 +1,12 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Run a validated lifecycle for managed applications
+
+```bash
+sitectl host apps lifecycle init|up|down|rollout
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--app` |   | Run only the named manifest application |
+| `--lock` | `/mnt/disks/data/.cloud-compose-lifecycle.lock` | Host lifecycle lock file |

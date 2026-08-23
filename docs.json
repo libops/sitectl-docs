@@ -85,7 +85,8 @@
                 "group": "Advanced",
                 "expanded": true,
                 "pages": [
-                  "commands/component"
+                  "commands/component",
+                  "commands/host"
                 ]
               }
             ]

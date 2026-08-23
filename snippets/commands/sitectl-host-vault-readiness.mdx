@@ -1,0 +1,14 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Manage Vault Agent sink-token readiness
+
+```bash
+sitectl host vault-readiness prepare|wait|clear
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--ready-marker` | `/run/cloud-compose/vault-agent.ready` | Current-boot Vault Agent readiness marker |
+| `--safe-dir` | `/mnt/disks/data/vault` | Root-only Vault Agent state directory |
+| `--timeout` | `1m0s` | Maximum wait for the Vault Agent sink token |
+| `--token` | `/mnt/disks/data/vault/token` | Dedicated Vault Agent sink-token path |

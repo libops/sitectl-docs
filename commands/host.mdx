@@ -1,0 +1,157 @@
+---
+title: host
+description: Provision and operate the current Linux VM with sitectl's managed-host runtime.
+---
+
+import HostCmd from "/snippets/commands/sitectl-host.mdx";
+import HostAppsCmd from "/snippets/commands/sitectl-host-apps.mdx";
+import HostAppsConvergeFilesystemsCmd from "/snippets/commands/sitectl-host-apps-converge-filesystems.mdx";
+import HostAppsLifecycleCmd from "/snippets/commands/sitectl-host-apps-lifecycle.mdx";
+import HostAppsPrepareCmd from "/snippets/commands/sitectl-host-apps-prepare.mdx";
+import HostAppsValidateCmd from "/snippets/commands/sitectl-host-apps-validate.mdx";
+import HostArtifactsCmd from "/snippets/commands/sitectl-host-artifacts.mdx";
+import HostArtifactsInstallCmd from "/snippets/commands/sitectl-host-artifacts-install.mdx";
+import HostBackupCmd from "/snippets/commands/sitectl-host-backup.mdx";
+import HostBackupMariaDBCmd from "/snippets/commands/sitectl-host-backup-mariadb.mdx";
+import HostBackupOffhostCmd from "/snippets/commands/sitectl-host-backup-offhost.mdx";
+import HostBackupRestoreTestCmd from "/snippets/commands/sitectl-host-backup-restore-test.mdx";
+import HostConfigureCmd from "/snippets/commands/sitectl-host-configure.mdx";
+import HostDiagnosticsCmd from "/snippets/commands/sitectl-host-diagnostics.mdx";
+import HostDiagnosticsDumpCmd from "/snippets/commands/sitectl-host-diagnostics-dump.mdx";
+import HostDiagnosticsStateCmd from "/snippets/commands/sitectl-host-diagnostics-state.mdx";
+import HostDiagnosticsStatusCmd from "/snippets/commands/sitectl-host-diagnostics-status.mdx";
+import HostDockerPluginsCmd from "/snippets/commands/sitectl-host-docker-plugins.mdx";
+import HostEnvCmd from "/snippets/commands/sitectl-host-env.mdx";
+import HostEnvComposeSetCmd from "/snippets/commands/sitectl-host-env-compose-set.mdx";
+import HostEnvComposeSyncCmd from "/snippets/commands/sitectl-host-env-compose-sync.mdx";
+import HostEnvSetCmd from "/snippets/commands/sitectl-host-env-set.mdx";
+import HostFilesystemsCmd from "/snippets/commands/sitectl-host-filesystems.mdx";
+import HostKeysCmd from "/snippets/commands/sitectl-host-keys.mdx";
+import HostKeysAppCmd from "/snippets/commands/sitectl-host-keys-app.mdx";
+import HostKeysAppRetireCmd from "/snippets/commands/sitectl-host-keys-app-retire.mdx";
+import HostKeysAppRollbackCmd from "/snippets/commands/sitectl-host-keys-app-rollback.mdx";
+import HostKeysAppRotateCmd from "/snippets/commands/sitectl-host-keys-app-rotate.mdx";
+import HostKeysDailyCmd from "/snippets/commands/sitectl-host-keys-daily.mdx";
+import HostKeysInternalCmd from "/snippets/commands/sitectl-host-keys-internal.mdx";
+import HostKeysInternalRollbackCmd from "/snippets/commands/sitectl-host-keys-internal-rollback.mdx";
+import HostKeysInternalRotateCmd from "/snippets/commands/sitectl-host-keys-internal-rotate.mdx";
+import HostMaintenanceCmd from "/snippets/commands/sitectl-host-maintenance.mdx";
+import HostMaintenanceDockerPruneCmd from "/snippets/commands/sitectl-host-maintenance-docker-prune.mdx";
+import HostMarkerCmd from "/snippets/commands/sitectl-host-marker.mdx";
+import HostMarkerAppStatusCmd from "/snippets/commands/sitectl-host-marker-app-status.mdx";
+import HostMarkerConsumeFreshCmd from "/snippets/commands/sitectl-host-marker-consume-fresh.mdx";
+import HostMarkerPublishCmd from "/snippets/commands/sitectl-host-marker-publish.mdx";
+import HostMarkerRequireInitializedCmd from "/snippets/commands/sitectl-host-marker-require-initialized.mdx";
+import HostMarkerValidCmd from "/snippets/commands/sitectl-host-marker-valid.mdx";
+import HostMetadataFirewallCmd from "/snippets/commands/sitectl-host-metadata-firewall.mdx";
+import HostOverlaysCmd from "/snippets/commands/sitectl-host-overlays.mdx";
+import HostRolloutServeCmd from "/snippets/commands/sitectl-host-rollout-serve.mdx";
+import HostRuntimeCmd from "/snippets/commands/sitectl-host-runtime.mdx";
+import HostRuntimeInstallCmd from "/snippets/commands/sitectl-host-runtime-install.mdx";
+import HostSecurityCmd from "/snippets/commands/sitectl-host-security.mdx";
+import HostSecuritySecureRuntimeCmd from "/snippets/commands/sitectl-host-security-secure-runtime.mdx";
+import HostSystemdCmd from "/snippets/commands/sitectl-host-systemd.mdx";
+import HostSystemdEnsureBootstrapCmd from "/snippets/commands/sitectl-host-systemd-ensure-bootstrap.mdx";
+import HostSystemdMigrateLegacyCmd from "/snippets/commands/sitectl-host-systemd-migrate-legacy.mdx";
+import HostSystemdStartWaitCmd from "/snippets/commands/sitectl-host-systemd-start-wait.mdx";
+import HostVaultAgentCmd from "/snippets/commands/sitectl-host-vault-agent.mdx";
+import HostVaultReadinessCmd from "/snippets/commands/sitectl-host-vault-readiness.mdx";
+
+`sitectl host` exposes the same tested host-runtime operations used by Cloud
+Compose so another provisioning system can assemble and operate a compatible
+Linux VM without reimplementing them in shell.
+
+Unlike commands that target a saved sitectl context, `host` acts on the machine
+where the command runs. Connect to the VM first or invoke it over SSH:
+
+```bash
+ssh root@compose.example.org sitectl host diagnostics status
+ssh root@compose.example.org sitectl host apps validate
+```
+
+Most provisioning operations require root. They also expect the managed-host
+layout to have been staged already: a validated `/home/cloud-compose/.env`, an
+application manifest, systemd units, and the declared persistent disks. The
+commands are composable provisioning primitives, not a one-command installer
+for an arbitrary server.
+
+Start with the read-only diagnostics and manifest validation commands. Before
+changing filesystems, credentials, backup state, firewall rules, or systemd
+units, confirm the target VM and review the command's flags.
+
+## Reference
+
+<HostCmd />
+
+## Applications
+
+<HostAppsCmd />
+<HostAppsValidateCmd />
+<HostAppsConvergeFilesystemsCmd />
+<HostAppsPrepareCmd />
+<HostAppsLifecycleCmd />
+
+## Runtime and host configuration
+
+<HostConfigureCmd />
+<HostFilesystemsCmd />
+<HostOverlaysCmd />
+<HostDockerPluginsCmd />
+<HostRuntimeCmd />
+<HostRuntimeInstallCmd />
+<HostArtifactsCmd />
+<HostArtifactsInstallCmd />
+<HostSecurityCmd />
+<HostSecuritySecureRuntimeCmd />
+
+## Environment files
+
+<HostEnvCmd />
+<HostEnvSetCmd />
+<HostEnvComposeSetCmd />
+<HostEnvComposeSyncCmd />
+
+## Services and readiness
+
+<HostSystemdCmd />
+<HostSystemdEnsureBootstrapCmd />
+<HostSystemdStartWaitCmd />
+<HostSystemdMigrateLegacyCmd />
+<HostMarkerCmd />
+<HostMarkerValidCmd />
+<HostMarkerPublishCmd />
+<HostMarkerConsumeFreshCmd />
+<HostMarkerAppStatusCmd />
+<HostMarkerRequireInitializedCmd />
+<HostVaultAgentCmd />
+<HostVaultReadinessCmd />
+<HostRolloutServeCmd />
+
+## Backups and maintenance
+
+<HostBackupCmd />
+<HostBackupMariaDBCmd />
+<HostBackupOffhostCmd />
+<HostBackupRestoreTestCmd />
+<HostMaintenanceCmd />
+<HostMaintenanceDockerPruneCmd />
+
+## GCP host operations
+
+<HostMetadataFirewallCmd />
+<HostKeysCmd />
+<HostKeysDailyCmd />
+<HostKeysAppCmd />
+<HostKeysAppRotateCmd />
+<HostKeysAppRollbackCmd />
+<HostKeysAppRetireCmd />
+<HostKeysInternalCmd />
+<HostKeysInternalRotateCmd />
+<HostKeysInternalRollbackCmd />
+
+## Diagnostics
+
+<HostDiagnosticsCmd />
+<HostDiagnosticsStatusCmd />
+<HostDiagnosticsStateCmd />
+<HostDiagnosticsDumpCmd />

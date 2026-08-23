@@ -1,0 +1,23 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Prepare and persist managed host filesystems
+
+```bash
+sitectl host filesystems
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--automount-wait` | `1m0s` | Maximum wait for provider automount activity |
+| `--data-device` |   | Block device dedicated to persistent application data |
+| `--data-mount` | `/mnt/disks/data` | Mount target for persistent application data |
+| `--device-wait` | `10m0s` | Maximum wait for each declared block device |
+| `--fresh-identity` |   | Identity recorded only when the data disk is first formatted |
+| `--fstab` | `/etc/fstab` | Filesystem table reconciled with the managed mount block |
+| `--fstab-lock` | `/run/cloud-compose-fstab.lock` | Lock serializing filesystem table updates |
+| `--overlay-device` |   | Optional read-only production volume block device |
+| `--overlay-mount` | `/mnt/disks/prod-readonly` | Mount target for the optional read-only production disk |
+| `--ready-marker` |   | Root-owned marker published after every required mount is verified |
+| `--systemd-dir` | `/etc/systemd/system` | Directory containing provider-generated mount units |
+| `--volumes-device` |   | Block device dedicated to Docker volume data |
+| `--volumes-mount` | `/mnt/disks/volumes` | Mount target for Docker volume data |

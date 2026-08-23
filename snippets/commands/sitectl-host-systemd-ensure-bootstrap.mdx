@@ -1,0 +1,12 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Start host bootstrap when its readiness marker is absent
+
+```bash
+sitectl host systemd ensure-bootstrap
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--marker` | `/var/lib/cloud-compose/bootstrap-complete` | Durable bootstrap readiness marker |
+| `--timeout` | `3h0m0s` | Maximum wait for host bootstrap |

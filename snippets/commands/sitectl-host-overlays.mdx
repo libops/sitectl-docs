@@ -1,0 +1,14 @@
+{/* Auto-generated from source. Run `make docs-snippets` to update. */}
+
+Mount declared read-only production volume overlays
+
+```bash
+sitectl host overlays
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--lower-root` | `/mnt/disks/prod-readonly` | Read-only production volume root |
+| `--reset` | `false` | Unmount and clear the writable overlay layer before remounting |
+| `--volume` | `[]` | Docker volume name to overlay; may be repeated |
+| `--volumes-root` | `/mnt/disks/volumes` | Writable Docker volume root |

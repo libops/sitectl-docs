@@ -2,10 +2,10 @@
   "sitectl": {
     "directory": "sitectl",
     "module": "github.com/libops/sitectl",
-    "module_version": "v1.9.1",
+    "module_version": "v1.12.1",
     "repository": "libops/sitectl",
-    "version": "v1.9.1",
-    "ref": "10afc6eae1c25fab99b4e8087dbb56e028883de5"
+    "version": "v1.12.1",
+    "ref": "16a007e13985faaf8df2726e7a0a3519fb228840"
   },
   "sitectl_archivesspace": {
     "directory": "sitectl-archivesspace",
